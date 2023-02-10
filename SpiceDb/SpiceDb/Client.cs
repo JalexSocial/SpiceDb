@@ -29,7 +29,7 @@ public class Client
         _core = new Core(serverAddress, token);
     }
 
-    public string Schema => _core!.ReadSchema();
+    public string Schema => _core!.ReadSchemaAsync().Result;
 
     public async Task<bool> CheckPermissionAsync(string resourceType, string resourceId, string permission,
         string subjectType, string subjectId)
@@ -37,43 +37,43 @@ public class Client
         return await _core!.CheckPermissionAsync(resourceType, resourceId, permission, subjectType, subjectId);
     }
 
-    public void AddRelation(string resourceType, string resourceId, string relation,
+    public async Task<ZedToken> AddRelationAsync(string resourceType, string resourceId, string relation,
         string subjectType, string subjectId, string optionalSubjectRelation = "")
     {
-        _core!.UpdateRelationship(resourceType, resourceId, relation, subjectType, subjectId, optionalSubjectRelation);
+        return await _core!.UpdateRelationshipAsync(resourceType, resourceId, relation, subjectType, subjectId, optionalSubjectRelation);
     }
 
-    public void DeleteRelation(string resourceType, string resourceId, string relation,
+    public async Task<ZedToken> DeleteRelationAsync(string resourceType, string resourceId, string relation,
         string subjectType, string subjectId, string optionalSubjectRelation = "")
     {
-        _core!.UpdateRelationship(resourceType, resourceId, relation, subjectType, subjectId, optionalSubjectRelation, RelationshipUpdate.Types.Operation.Delete);
+        return await _core!.UpdateRelationshipAsync(resourceType, resourceId, relation, subjectType, subjectId, optionalSubjectRelation, RelationshipUpdate.Types.Operation.Delete);
     }
 
-    public async Task<List<string>> GetResourcePermissions(string resourceType, string permission, string subjectType, string subjectId, ZedToken zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
+    public async Task<List<string>> GetResourcePermissionsAsync(string resourceType, string permission, string subjectType, string subjectId, ZedToken zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
     {
         return await _core!.GetResourcePermissionsAsync(resourceType, permission, subjectType, subjectId, zedToken);
     }
 
-    public void ImportSchemaFromFile(string filePath)
+    public async Task ImportSchemaFromFileAsync(string filePath)
     {
-        ImportSchemaFromString(File.ReadAllText(filePath));
+        await ImportSchemaFromStringAsync(File.ReadAllText(filePath));
     }
 
-    public void ImportSchemaFromString(string schema)
+    public async Task ImportSchemaFromStringAsync(string schema)
     {
-        _core!.WriteSchema(schema);
+        await _core!.WriteSchemaAsync(schema);
     }
 
-    public WriteRelationshipsResponse ImportRelationshipsFromFile(string filePath)
+    public async Task<WriteRelationshipsResponse> ImportRelationshipsFromFileAsync(string filePath)
     {
-        return ImportRelationships(File.ReadAllText(filePath));
+        return await ImportRelationshipsAsync(File.ReadAllText(filePath));
     }
-    public WriteRelationshipsResponse ImportRelationships(string content)
+
+    public async Task<WriteRelationshipsResponse> ImportRelationshipsAsync(string content)
     {
         // Read the file as one string.
         RelationshipUpdate.Types.Operation operation = RelationshipUpdate.Types.Operation.Touch;
         RepeatedField<RelationshipUpdate> updateCollection = new RepeatedField<RelationshipUpdate>();
-        RelationshipUpdate updateItem;
 
         var lines = content.Split("\n\r".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
 
@@ -82,16 +82,16 @@ public class Client
             string[] cols = System.Text.RegularExpressions.Regex.Split(line.Trim(), ":|@|#");//refer to authzed docs for separator meanings
             if (cols.Length == 5)
             {
-                updateItem = Core.GetRelationshipUpdate(cols[0], cols[1], cols[2], cols[3], cols[4], "", operation);
+                var updateItem = Core.GetRelationshipUpdate(cols[0], cols[1], cols[2], cols[3], cols[4], "", operation);
                 Core.UpdateRelationships(ref updateCollection, updateItem);
             }
             else if (cols.Length == 6)//contain an additional column of optional subject relation
             {
-                updateItem = Core.GetRelationshipUpdate(cols[0], cols[1], cols[2], cols[3], cols[4], cols[5], operation);
+                var updateItem = Core.GetRelationshipUpdate(cols[0], cols[1], cols[2], cols[3], cols[4], cols[5], operation);
                 Core.UpdateRelationships(ref updateCollection, updateItem);
             }
         }
 
-        return _core!.WriteRelationships(ref updateCollection);
+        return await _core!.WriteRelationshipsAsync(updateCollection);
     }
 }

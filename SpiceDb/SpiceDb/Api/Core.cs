@@ -166,20 +166,20 @@ namespace SpiceDb.Api
             return list;
         }
 
-        public string ReadSchema()
+        public async Task<string> ReadSchemaAsync()
         {
             ReadSchemaRequest req = new ReadSchemaRequest();
-            ReadSchemaResponse resp = _schema!.ReadSchema(req, _callOptions);
+            ReadSchemaResponse resp = await _schema!.ReadSchemaAsync(req, _callOptions);
             return resp.SchemaText;
         }
 
-        public WriteSchemaResponse WriteSchema(string schema)
+        public async Task<WriteSchemaResponse> WriteSchemaAsync(string schema)
         {
             WriteSchemaRequest req = new WriteSchemaRequest
             {
                 Schema = schema
             };
-            return _schema!.WriteSchema(req, _callOptions);
+            return await _schema!.WriteSchemaAsync(req, _callOptions);
         }
 
         private async Task<ChannelBase> CreateAuthenticatedChannelAsync(string address)
@@ -248,37 +248,35 @@ namespace SpiceDb.Api
         }
 
 
-        public WriteRelationshipsResponse WriteRelationships(ref RepeatedField<RelationshipUpdate> updateCollection)
+        public async Task<WriteRelationshipsResponse> WriteRelationshipsAsync(RepeatedField<RelationshipUpdate> updateCollection)
         {
-            WriteRelationshipsRequest req = new WriteRelationshipsRequest() { Updates = { updateCollection } }; //Wrapping the object in a curly bracket works!
-            return _acl!.WriteRelationships(req, _callOptions);
+            WriteRelationshipsRequest req = new WriteRelationshipsRequest() { Updates = { updateCollection } };
+            return await _acl!.WriteRelationshipsAsync(req, _callOptions);
         }
 
 
 
-        public ZedToken UpdateRelationship(string resourceType, string resourceId, string relation,
+        public async Task<ZedToken> UpdateRelationshipAsync(string resourceType, string resourceId, string relation,
                string subjectType, string subjectId, string optionalSubjectRelation = "",
               RelationshipUpdate.Types.Operation operation = RelationshipUpdate.Types.Operation.Touch)
         {
 
-           return UpdateRelationships(resourceType, resourceId, new[] { relation }, subjectType, subjectId, optionalSubjectRelation, operation);
+           return await UpdateRelationshipsAsync(resourceType, resourceId, new[] { relation }, subjectType, subjectId, optionalSubjectRelation, operation);
         }
 
-        public ZedToken UpdateRelationships(string resourceType, string resourceId, IEnumerable<string> relations, 
+        public async Task<ZedToken> UpdateRelationshipsAsync(string resourceType, string resourceId, IEnumerable<string> relations, 
                 string subjectType, string subjectId, string optionalSubjectRelation="",
                RelationshipUpdate.Types.Operation operation = RelationshipUpdate.Types.Operation.Touch)
         {
-
-            RelationshipUpdate updateItem;
             RepeatedField<RelationshipUpdate> updateCollection = new RepeatedField<RelationshipUpdate>();
 
             foreach (var relation in relations)
             {
-                updateItem = GetRelationshipUpdate(resourceType, resourceId, relation.ToLowerInvariant(), subjectType, subjectId, optionalSubjectRelation, operation);
+                var updateItem = GetRelationshipUpdate(resourceType, resourceId, relation.ToLowerInvariant(), subjectType, subjectId, optionalSubjectRelation, operation);
                 UpdateRelationships(ref updateCollection, updateItem);
             }
 
-            WriteRelationshipsResponse resp = WriteRelationships(ref updateCollection);
+            WriteRelationshipsResponse resp = await WriteRelationshipsAsync(updateCollection);
             return resp.WrittenAt;
         }
     }

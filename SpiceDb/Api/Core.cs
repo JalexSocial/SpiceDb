@@ -1,5 +1,6 @@
 ﻿using Authzed.Api.V1;
 using Google.Protobuf.Collections;
+using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Grpc.Net.Client;
 using SpiceDb.Enum;
@@ -86,7 +87,8 @@ namespace SpiceDb.Api
             string resourceId,
             string permission,
             string subjectType,
-            string subjectId, 
+            string subjectId,
+            Dictionary<string, object>? context = null,
             ZedToken? zedToken = null,
             CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
         {
@@ -95,7 +97,8 @@ namespace SpiceDb.Api
                 Consistency = new Consistency { MinimizeLatency = true, AtExactSnapshot = zedToken },
                 Permission = permission,
                 Resource = new ObjectReference { ObjectType = resourceType, ObjectId = resourceId },
-                Subject = new SubjectReference { Object = new ObjectReference { ObjectType = subjectType, ObjectId = subjectId } }
+                Subject = new SubjectReference { Object = new ObjectReference { ObjectType = subjectType, ObjectId = subjectId } },
+                Context = context?.ToStruct()
             };
 
             if (cacheFreshness == CacheFreshness.AtLeastAsFreshAs)

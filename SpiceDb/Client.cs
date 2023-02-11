@@ -33,14 +33,21 @@ public class Client
 
     public string Schema => _core!.ReadSchemaAsync().Result;
 
-    public async Task<bool> CheckPermissionAsync(SpiceDb.Models.Permission permission)
+    /// <summary>
+    /// Checks whether the permission exists or not. Contains support for context as well where context objects
+    /// can be string, bool, double, int, uint, or long.
+    /// </summary>
+    /// <param name="permission">Permission relationship to evaluate</param>
+    /// <param name="context">Additional context information that may be needed for evaluating caveats</param>
+    /// <returns></returns>
+    public async Task<bool> CheckPermissionAsync(SpiceDb.Models.Permission permission, Dictionary<string, object>? context = null)
     {
-        return await _core!.CheckPermissionAsync(permission.Resource.Type, permission.Resource.Id, permission.Relation, permission.Subject.Type, permission.Subject.Id);
+        return await _core!.CheckPermissionAsync(permission.Resource.Type, permission.Resource.Id, permission.Relation, permission.Subject.Type, permission.Subject.Id, context);
     }
 
-    public async Task<bool> CheckPermissionAsync(string permission) => await CheckPermissionAsync(new SpiceDb.Models.Permission(permission));
-    public bool CheckPermission(SpiceDb.Models.Permission permission) => CheckPermissionAsync(permission).Result;
-    public bool CheckPermission(string permission) => CheckPermissionAsync(new SpiceDb.Models.Permission(permission)).Result;
+    public async Task<bool> CheckPermissionAsync(string permission, Dictionary<string, object>? context = null) => await CheckPermissionAsync(new SpiceDb.Models.Permission(permission), context);
+    public bool CheckPermission(SpiceDb.Models.Permission permission, Dictionary<string, object>? context = null) => CheckPermissionAsync(permission, context).Result;
+    public bool CheckPermission(string permission, Dictionary<string, object>? context = null) => CheckPermissionAsync(new SpiceDb.Models.Permission(permission), context).Result;
 
     public async Task<ZedToken> AddRelationAsync(SpiceDb.Models.Relationship relation, string optionalSubjectRelation = "")
     {

@@ -4,13 +4,14 @@ package authzed.api.v1;
 option go_package = "github.com/authzed/authzed-go/proto/authzed/api/v1";
 option java_package = "com.authzed.api.v1";
 
+import "google/protobuf/struct.proto";
 import "google/api/annotations.proto";
 import "validate/validate.proto";
 
 import "authzed/api/v1/core.proto";
 
-// PermissionsService is used to perform permissions and relationship
-// operations.
+// PermissionsService implements a set of RPCs that perform operations on
+// relationships and permissions.
 service PermissionsService {
   // ReadRelationships reads a set of the relationships matching one or more
   // filters.
@@ -22,9 +23,9 @@ service PermissionsService {
       };
   }
 
-  // WriteRelationships writes and/or deletes a set of specified relationships,
-  // with an optional set of precondition relationships that must exist before
-  // the operation can commit.
+  // WriteRelationships atomically writes and/or deletes a set of specified
+  // relationships. An optional set of preconditions can be provided that must
+  // be satisfied for the operation to commit.
   rpc WriteRelationships(WriteRelationshipsRequest)
     returns (WriteRelationshipsResponse) {
       option (google.api.http) = {
@@ -33,8 +34,10 @@ service PermissionsService {
       };
     }
 
-  // DeleteRelationships deletes relationships matching one or more filters, in
-  // bulk.
+  // DeleteRelationships atomically bulk deletes all relationships matching the
+  // provided filter. If no relationships match, none will be deleted and the
+  // operation will succeed. An optional set of preconditions can be provided that must
+  // be satisfied for the operation to commit.
   rpc DeleteRelationships(DeleteRelationshipsRequest)
     returns (DeleteRelationshipsResponse) {
       option (google.api.http) = {
@@ -43,8 +46,8 @@ service PermissionsService {
       };
     }
 
-  // CheckPermission checks whether a subject has a particular permission or is
-  // a member of a particular relation, on a given resource.
+  // CheckPermission determines for a given resource whether a subject computes
+  // to having a permission or is a direct member of a particular relation.
   rpc CheckPermission(CheckPermissionRequest)
     returns (CheckPermissionResponse) {
       option (google.api.http) = {
@@ -53,8 +56,9 @@ service PermissionsService {
       };
     }
 
-  // ExpandPermissionTree expands the relationships reachable from a particular
-  // permission or relation of a given resource.
+  // ExpandPermissionTree reveals the graph structure for a resource's
+  // permission or relation. This RPC does not recurse infinitely deep and may
+  // require multiple calls to fully unnest a deeply nested graph.
   rpc ExpandPermissionTree(ExpandPermissionTreeRequest)
     returns (ExpandPermissionTreeResponse) {
       option (google.api.http) = {
@@ -63,13 +67,22 @@ service PermissionsService {
       };
     }
 
-  // LookupResources returns the IDs of all resources on which the specified
-  // subject has permission or on which the specified subject is a member of the
-  // relation.
+  // LookupResources returns all the resources of a given type that a subject
+  // can access whether via a computed permission or relation membership.
   rpc LookupResources(LookupResourcesRequest)
     returns (stream LookupResourcesResponse) {
       option (google.api.http) = {
         post: "/v1/permissions/resources"
+        body: "*"
+      };
+    }
+
+  // LookupSubjects returns all the subjects of a given type that
+  // have access whether via a computed permission or relation membership.
+  rpc LookupSubjects(LookupSubjectsRequest)
+    returns (stream LookupSubjectsResponse) {
+      option (google.api.http) = {
+        post: "/v1/permissions/subjects"
         body: "*"
       };
     }
@@ -113,17 +126,17 @@ message Consistency {
 // unspecified will not filter relationships.
 message RelationshipFilter {
   string resource_type = 1 [ (validate.rules).string = {
-    pattern : "^([a-z][a-z0-9_]{2,61}[a-z0-9]/)?[a-z][a-z0-9_]{2,62}[a-z0-9]$",
+    pattern : "^([a-z][a-z0-9_]{1,61}[a-z0-9]/)?[a-z][a-z0-9_]{1,62}[a-z0-9]$",
     max_bytes : 128,
   } ];
 
   string optional_resource_id = 2 [ (validate.rules).string = {
-    pattern : "^([a-zA-Z0-9_][a-zA-Z0-9/_-]{0,127})?$",
+    pattern : "^([a-zA-Z0-9_][a-zA-Z0-9/_|-]{0,127})?$",
     max_bytes : 128,
   } ];
 
   string optional_relation = 3 [ (validate.rules).string = {
-    pattern : "^([a-z][a-z0-9_]{2,62}[a-z0-9])?$",
+    pattern : "^([a-z][a-z0-9_]{1,62}[a-z0-9])?$",
     max_bytes : 64,
   } ];
 
@@ -137,18 +150,18 @@ message RelationshipFilter {
 message SubjectFilter {
   message RelationFilter {
     string relation = 1 [ (validate.rules).string = {
-      pattern : "^([a-z][a-z0-9_]{2,62}[a-z0-9])?$",
+      pattern : "^([a-z][a-z0-9_]{1,62}[a-z0-9])?$",
       max_bytes : 64,
     } ];
   }
 
   string subject_type = 1 [ (validate.rules).string = {
-    pattern : "^([a-z][a-z0-9_]{2,61}[a-z0-9]/)?[a-z][a-z0-9_]{2,62}[a-z0-9]$",
+    pattern : "^([a-z][a-z0-9_]{1,61}[a-z0-9]/)?[a-z][a-z0-9_]{1,62}[a-z0-9]$",
     max_bytes : 128,
   } ];
 
   string optional_subject_id = 2 [ (validate.rules).string = {
-    pattern : "^(([a-zA-Z0-9_][a-zA-Z0-9/_-]{0,127})|\\*)?$",
+    pattern : "^(([a-zA-Z0-9_][a-zA-Z0-9/_|-]{0,127})|\\*)?$",
     max_bytes : 128,
   } ];
 
@@ -167,8 +180,8 @@ message ReadRelationshipsRequest {
 // specified relationship filter(s). A instance of this response message will
 // be streamed to the client for each relationship found.
 message ReadRelationshipsResponse {
-  ZedToken read_at = 1;
-  Relationship relationship = 2;
+  ZedToken read_at = 1 [ (validate.rules).message.required = true ];
+  Relationship relationship = 2 [ (validate.rules).message.required = true ];
 }
 
 // Precondition specifies how and the existence or absence of certain
@@ -186,7 +199,7 @@ message Precondition {
     OPERATION_MUST_MATCH = 2;
   }
 
-  Operation operation = 1 [ (validate.rules).enum.defined_only = true ];
+  Operation operation = 1 [ (validate.rules).enum = {defined_only: true, not_in: [0]} ];
   RelationshipFilter filter = 2 [ (validate.rules).message.required = true ];
 }
 
@@ -232,12 +245,15 @@ message CheckPermissionRequest {
   // permission is the name of the permission (or relation) on which to execute
   // the check.
   string permission = 3 [ (validate.rules).string = {
-    pattern : "^([a-z][a-z0-9_]{2,62}[a-z0-9])?$",
+    pattern : "^([a-z][a-z0-9_]{1,62}[a-z0-9])?$",
     max_bytes : 64,
   } ];
 
   // subject is the subject that will be checked for the permission or relation.
   SubjectReference subject = 4 [ (validate.rules).message.required = true ];
+
+  /** context consists of named values that are injected into the caveat evaluation context **/
+  google.protobuf.Struct context = 5 [ (validate.rules).message.required = false ];
 }
 
 message CheckPermissionResponse {
@@ -245,9 +261,10 @@ message CheckPermissionResponse {
     PERMISSIONSHIP_UNSPECIFIED = 0;
     PERMISSIONSHIP_NO_PERMISSION = 1;
     PERMISSIONSHIP_HAS_PERMISSION = 2;
+    PERMISSIONSHIP_CONDITIONAL_PERMISSION = 3;
   }
 
-  ZedToken checked_at = 1;
+  ZedToken checked_at = 1 [ (validate.rules).message.required = false ];
 
   // Permissionship communicates whether or not the subject has the requested
   // permission or has a relationship with the given resource, over the given
@@ -257,7 +274,10 @@ message CheckPermissionResponse {
   // requested subject is a member of the computed permission set or there
   // exists a relationship with the requested relation from the given resource
   // to the given subject.
-  Permissionship permissionship = 2;
+  Permissionship permissionship = 2 [ (validate.rules).enum = {defined_only: true, not_in: [0]} ];
+
+  // partial_caveat_info holds information of a partially-evaluated caveated response
+  PartialCaveatInfo partial_caveat_info = 3 [ (validate.rules).message.required = false ];
 }
 
 // ExpandPermissionTreeRequest returns a tree representing the expansion of all
@@ -276,7 +296,7 @@ message ExpandPermissionTreeRequest {
   // permission is the name of the permission or relation over which to run the
   // expansion for the resource.
   string permission = 3 [ (validate.rules).string = {
-    pattern : "^([a-z][a-z0-9_]{2,62}[a-z0-9])?$",
+    pattern : "^([a-z][a-z0-9_]{1,62}[a-z0-9])?$",
     max_bytes : 64,
   } ];
 }
@@ -299,19 +319,29 @@ message LookupResourcesRequest {
   // resource_object_type is the type of resource object for which the IDs will
   // be returned.
   string resource_object_type = 2 [ (validate.rules).string = {
-    pattern : "^([a-z][a-z0-9_]{2,61}[a-z0-9]/)?[a-z][a-z0-9_]{2,62}[a-z0-9]$",
+    pattern : "^([a-z][a-z0-9_]{1,61}[a-z0-9]/)?[a-z][a-z0-9_]{1,62}[a-z0-9]$",
     max_bytes : 128,
   } ];
 
   // permission is the name of the permission or relation for which the subject
   // must Check.
   string permission = 3 [ (validate.rules).string = {
-    pattern : "^[a-z][a-z0-9_]{2,62}[a-z0-9]$",
+    pattern : "^[a-z][a-z0-9_]{1,62}[a-z0-9]$",
     max_bytes : 64,
   } ];
 
   // subject is the subject with access to the resources.
   SubjectReference subject = 4 [ (validate.rules).message.required = true ];
+
+  /** context consists of named values that are injected into the caveat evaluation context **/
+  google.protobuf.Struct context = 5 [ (validate.rules).message.required = false ];
+}
+
+// LookupPermissionship represents whether a Lookup response was partially evaluated or not
+enum LookupPermissionship {
+  LOOKUP_PERMISSIONSHIP_UNSPECIFIED = 0;
+  LOOKUP_PERMISSIONSHIP_HAS_PERMISSION = 1;
+  LOOKUP_PERMISSIONSHIP_CONDITIONAL_PERMISSION = 2;
 }
 
 // LookupResourcesResponse contains a single matching resource object ID for the
@@ -319,4 +349,90 @@ message LookupResourcesRequest {
 message LookupResourcesResponse {
   ZedToken looked_up_at = 1;
   string resource_object_id = 2;
+
+  // permissionship indicates whether the response was partially evaluated or not
+  LookupPermissionship permissionship = 3 [ (validate.rules).enum = {defined_only: true, not_in: [0]} ];
+
+  // partial_caveat_info holds information of a partially-evaluated caveated response
+  PartialCaveatInfo partial_caveat_info = 4  [ (validate.rules).message.required = false ];
+}
+
+// LookupSubjectsRequest performs a lookup of all subjects of a particular
+// kind for which the subject has the specified permission or the relation in
+// which the subject exists, streaming back the IDs of those subjects.
+message LookupSubjectsRequest {
+  Consistency consistency = 1;
+
+  // resource is the resource for which all matching subjects for the permission
+  // or relation will be returned.
+  ObjectReference resource = 2 [ (validate.rules).message.required = true ];
+
+  // permission is the name of the permission (or relation) for which to find
+  // the subjects.
+  string permission = 3 [ (validate.rules).string = {
+    pattern : "^([a-z][a-z0-9_]{1,62}[a-z0-9])?$",
+    max_bytes : 64,
+  } ];
+
+  // subject_object_type is the type of subject object for which the IDs will
+  // be returned.
+  string subject_object_type = 4 [ (validate.rules).string = {
+    pattern : "^([a-z][a-z0-9_]{1,61}[a-z0-9]/)?[a-z][a-z0-9_]{1,62}[a-z0-9]$",
+    max_bytes : 128,
+  } ];
+
+  // optional_subject_relation is the optional relation for the subject.
+  string optional_subject_relation = 5 [ (validate.rules).string = {
+    pattern : "^([a-z][a-z0-9_]{1,62}[a-z0-9])?$",
+    max_bytes : 64,
+  } ];
+
+  /** context consists of named values that are injected into the caveat evaluation context **/
+  google.protobuf.Struct context = 6 [ (validate.rules).message.required = false ];
+}
+
+// LookupSubjectsResponse contains a single matching subject object ID for the
+// requested subject object type on the permission or relation.
+message LookupSubjectsResponse {
+  ZedToken looked_up_at = 1;
+
+  // subject_object_id is the Object ID of the subject found. May be a `*` if
+  // a wildcard was found.
+  // deprecated: use `subject`
+  string subject_object_id = 2 [deprecated = true];
+
+  // excluded_subject_ids are the Object IDs of the subjects excluded. This list
+  // will only contain object IDs if `subject_object_id` is a wildcard (`*`) and
+  // will only be populated if exclusions exist from the wildcard.
+  // deprecated: use `excluded_subjects`
+  repeated string excluded_subject_ids = 3 [deprecated = true];
+
+  // permissionship indicates whether the response was partially evaluated or not
+  // deprecated: use `subject.permissionship`
+  LookupPermissionship permissionship = 4 [ deprecated = true, (validate.rules).enum = {defined_only: true, not_in: [0]} ];
+
+  // partial_caveat_info holds information of a partially-evaluated caveated response
+  // deprecated: use `subject.partial_caveat_info`
+  PartialCaveatInfo partial_caveat_info = 5 [ deprecated = true, (validate.rules).message.required = false ];
+
+  // subject is the subject found, along with its permissionship.
+  ResolvedSubject subject = 6;
+
+  // excluded_subjects are the subjects excluded. This list
+  // will only contain subjects if `subject.subject_object_id` is a wildcard (`*`) and
+  // will only be populated if exclusions exist from the wildcard.
+  repeated ResolvedSubject excluded_subjects = 7;
+}
+
+// ResolvedSubject is a single subject resolved within LookupSubjects.
+message ResolvedSubject {
+  // subject_object_id is the Object ID of the subject found. May be a `*` if
+  // a wildcard was found.
+  string subject_object_id = 1;
+
+  // permissionship indicates whether the response was partially evaluated or not
+  LookupPermissionship permissionship = 2 [ (validate.rules).enum = {defined_only: true, not_in: [0]} ];
+
+  // partial_caveat_info holds information of a partially-evaluated caveated response
+  PartialCaveatInfo partial_caveat_info = 3 [ (validate.rules).message.required = false ];
 }

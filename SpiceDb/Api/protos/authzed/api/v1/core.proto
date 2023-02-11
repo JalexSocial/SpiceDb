@@ -4,6 +4,7 @@ package authzed.api.v1;
 option go_package = "github.com/authzed/authzed-go/proto/authzed/api/v1";
 option java_package = "com.authzed.api.v1";
 
+import "google/protobuf/struct.proto";
 import "validate/validate.proto";
 
 // Relationship specifies how a resource relates to a subject. Relationships
@@ -15,12 +16,31 @@ message Relationship {
 
   // relation is how the resource and subject are related.
   string relation = 2 [ (validate.rules).string = {
-    pattern : "^[a-z][a-z0-9_]{2,62}[a-z0-9]$",
+    pattern : "^[a-z][a-z0-9_]{1,62}[a-z0-9]$",
     max_bytes : 64,
   } ];
 
   // subject is the subject to which the resource is related, in some manner.
   SubjectReference subject = 3 [ (validate.rules).message.required = true ];
+
+  // optional_caveat is a reference to a the caveat that must be enforced over the relationship
+  ContextualizedCaveat optional_caveat = 4 [ (validate.rules).message.required = false ];
+}
+
+/**
+ * ContextualizedCaveat represents a reference to a caveat to be used by caveated relationships.
+ * The context consists of key-value pairs that will be injected at evaluation time.
+ * The keys must match the arguments defined on the caveat in the schema.
+ */
+message ContextualizedCaveat {
+  /** caveat_name is the name of the caveat expression to use, as defined in the schema **/
+  string caveat_name = 1 [ (validate.rules).string = {
+    pattern : "^([a-zA-Z0-9_][a-zA-Z0-9/_|-]{0,127})$",
+    max_bytes : 128,
+  } ];
+
+  /** context consists of any named values that are defined at write time for the caveat expression **/
+  google.protobuf.Struct context = 2 [ (validate.rules).message.required = false ];
 }
 
 // SubjectReference is used for referring to the subject portion of a
@@ -29,7 +49,7 @@ message Relationship {
 message SubjectReference {
   ObjectReference object = 1 [ (validate.rules).message.required = true ];
   string optional_relation = 2 [ (validate.rules).string = {
-    pattern : "^([a-z][a-z0-9_]{2,62}[a-z0-9])?$",
+    pattern : "^([a-z][a-z0-9_]{1,62}[a-z0-9])?$",
     max_bytes : 64,
   } ];
 }
@@ -37,11 +57,11 @@ message SubjectReference {
 // ObjectReference is used to refer to a specific object in the system.
 message ObjectReference {
   string object_type = 1 [ (validate.rules).string = {
-    pattern : "^([a-z][a-z0-9_]{2,61}[a-z0-9]/)?[a-z][a-z0-9_]{2,62}[a-z0-9]$",
+    pattern : "^([a-z][a-z0-9_]{1,61}[a-z0-9]/)?[a-z][a-z0-9_]{1,62}[a-z0-9]$",
     max_bytes : 128,
   } ];
   string object_id = 2 [ (validate.rules).string = {
-    pattern : "^([a-zA-Z0-9_][a-zA-Z0-9/_-]{0,127})|\\*$",
+    pattern : "^(([a-zA-Z0-9_][a-zA-Z0-9/_|-]{0,127})|\\*)$",
     max_bytes : 128,
   } ];
 }
@@ -65,8 +85,8 @@ message ZedToken {
 // TOUCH will upsert the relationship, and will not error if it
 // already exists.
 //
-// DELETE will delete the relationship and error if it doesn't
-// exist.
+// DELETE will delete the relationship. If the relationship does not exist,
+// this operation will no-op.
 message RelationshipUpdate {
   enum Operation {
     OPERATION_UNSPECIFIED = 0;
@@ -74,7 +94,7 @@ message RelationshipUpdate {
     OPERATION_TOUCH = 2;
     OPERATION_DELETE = 3;
   }
-  Operation operation = 1 [ (validate.rules).enum.defined_only = true ];
+  Operation operation = 1 [ (validate.rules).enum = {defined_only: true, not_in: [0]} ];
   Relationship relationship = 2 [ (validate.rules).message.required = true ];
 }
 
@@ -109,9 +129,17 @@ message AlgebraicSubjectSet {
     OPERATION_EXCLUSION = 3;
   }
 
-  Operation operation = 1;
-  repeated PermissionRelationshipTree children = 2;
+  Operation operation = 1 [ (validate.rules).enum = {defined_only: true, not_in: [0]} ];
+  repeated PermissionRelationshipTree children = 2 [ (validate.rules).repeated.items.message.required = true ];
 }
 
 // DirectSubjectSet is a subject set which is simply a collection of subjects.
 message DirectSubjectSet { repeated SubjectReference subjects = 1; }
+
+// PartialCaveatInfo carries information necessary for the client to take action
+// in the event a response contains a partially evaluated caveat
+message PartialCaveatInfo {
+  // missing_required_context is a list of one or more fields that were missing and prevented caveats
+  // from being fully evaluated
+  repeated string missing_required_context = 1 [(validate.rules).repeated.min_items = 1];
+}

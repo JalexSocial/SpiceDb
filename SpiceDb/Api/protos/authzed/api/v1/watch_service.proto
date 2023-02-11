@@ -25,8 +25,8 @@ message WatchRequest {
   repeated string optional_object_types = 1 [
     (validate.rules).repeated .min_items = 0,
     (validate.rules).repeated .items.string = {
-      pattern : "^([a-z][a-z0-9_]{2,62}[a-z0-9]/"
-                ")?[a-z][a-z0-9_]{2,62}[a-z0-9]$",
+      pattern : "^([a-z][a-z0-9_]{1,62}[a-z0-9]/"
+                ")?[a-z][a-z0-9_]{1,62}[a-z0-9]$",
       max_bytes : 128,
     }
   ];

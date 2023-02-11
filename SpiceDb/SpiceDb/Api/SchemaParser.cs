@@ -95,7 +95,7 @@
         }
     }
 
-    public class SchemaEntity
+    internal class SchemaEntity
     {
         public string ResourceType { get; set; } = string.Empty;
 
@@ -104,7 +104,7 @@
         public List<Permission> Permissions { get; set; } = new List<Permission>();
     }
 
-    public class Permission
+    internal class Permission
     {
         public Permission(string name)
         {
@@ -113,7 +113,7 @@
         public string Name { get; private set; }
     }
 
-    public class Relation
+    internal class Relation
     {
         public Relation(string name, string resourceType, string subjectType, bool isSelfRelation)
         {

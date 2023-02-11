@@ -4,6 +4,18 @@
     <TargetFramework>net7.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+
+	<Authors>Michael Tanczos</Authors>
+	<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+	<Description>Breadcrumbs management for the RoverCore template</Description>
+	<Copyright>2023</Copyright>
+	<Product>JalexSocial.SpiceDb</Product>
+	<PackageProjectUrl>https://github.com/JalexSocial/SpiceDb</PackageProjectUrl>
+	<RepositoryType>git</RepositoryType>
+	<PackageIcon>logo.png</PackageIcon>
+	<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+	<PackageReadmeFile>README.md</PackageReadmeFile>
+	<Version>1.0.0</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -21,9 +33,26 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
+		<PackageReference Include="Microsoft.Extensions.Configuration" Version="7.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.0" />
 		<PackageReference Include="YamlDotNet" Version="11.2.1" />
 	</ItemGroup>
 	<ItemGroup>
 		<Protobuf Include="**/*.proto" ProtoRoot="Api/protos" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="Dto\" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="..\..\logo.png">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
+		<None Include="..\..\README.md">
+			<Pack>True</Pack>
+			<PackagePath></PackagePath>
+		</None>
+		<None Include="..\..\LICENSE.txt" Pack="true" PackagePath="..\..\LICENSE.txt" />
 	</ItemGroup>
 </Project>

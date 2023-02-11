@@ -57,6 +57,31 @@ namespace SpiceDb.Api
 
         }
 
+        public async Task<ExpandPermissionTreeResponse?> ExpandPermissionAsync(string resourceType,
+	        string resourceId,
+	        string permission, 
+	        ZedToken? zedToken = null,
+	        CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
+        {
+	        var req = new ExpandPermissionTreeRequest
+	        {
+		        Consistency = new Consistency { MinimizeLatency = true, AtExactSnapshot = zedToken },
+		        Permission = permission,
+		        Resource = new ObjectReference { ObjectType = resourceType, ObjectId = resourceId }
+	        };
+
+	        if (cacheFreshness == CacheFreshness.AtLeastAsFreshAs)
+	        {
+		        req.Consistency.AtLeastAsFresh = zedToken;
+	        }
+	        else if (cacheFreshness == CacheFreshness.MustRefresh || zedToken == null)
+	        {
+		        req.Consistency.FullyConsistent = true;
+	        }
+
+	        return await _acl!.ExpandPermissionTreeAsync(req, _callOptions);
+        }
+
         public async Task<bool> CheckPermissionAsync(string resourceType,
             string resourceId,
             string permission,
@@ -83,7 +108,7 @@ namespace SpiceDb.Api
             }
 
             var call = await _acl!.CheckPermissionAsync(req, _callOptions);
-
+            
             return call?.Permissionship == CheckPermissionResponse.Types.Permissionship.HasPermission;
         }
 

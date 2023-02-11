@@ -7,15 +7,17 @@ using Authzed.Api.V1;
 using Google.Protobuf.Collections;
 using SpiceDb.Api;
 using SpiceDb.Enum;
+using SpiceDb.Models;
 using static System.Formats.Asn1.AsnWriter;
+using Relationship = Authzed.Api.V1.Relationship;
 
 namespace SpiceDb;
 
 // Original code from SpiceDB.Hierarhical
 public class Client
 {
-    private readonly string _serverAddress = string.Empty;
-    private readonly string _token = string.Empty;
+    private readonly string _serverAddress;
+    private readonly string _token;
 
     private Core? _core;
 
@@ -31,22 +33,27 @@ public class Client
 
     public string Schema => _core!.ReadSchemaAsync().Result;
 
-    public async Task<bool> CheckPermissionAsync(string resourceType, string resourceId, string permission,
-        string subjectType, string subjectId)
+    public async Task<bool> CheckPermissionAsync(SpiceDb.Models.Permission permission)
     {
-        return await _core!.CheckPermissionAsync(resourceType, resourceId, permission, subjectType, subjectId);
+        return await _core!.CheckPermissionAsync(permission.Resource.Type, permission.Resource.Id, permission.Relation, permission.Subject.Type, permission.Subject.Id);
     }
 
-    public async Task<ZedToken> AddRelationAsync(string resourceType, string resourceId, string relation,
-        string subjectType, string subjectId, string optionalSubjectRelation = "")
+    public async Task<bool> CheckPermissionAsync(string permission) => await CheckPermissionAsync(new SpiceDb.Models.Permission(permission));
+    public bool CheckPermission(SpiceDb.Models.Permission permission) => CheckPermissionAsync(permission).Result;
+    public bool CheckPermission(string permission) => CheckPermissionAsync(new SpiceDb.Models.Permission(permission)).Result;
+
+    public async Task<ZedToken> AddRelationAsync(SpiceDb.Models.Relationship relation, string optionalSubjectRelation = "")
     {
-        return await _core!.UpdateRelationshipAsync(resourceType, resourceId, relation, subjectType, subjectId, optionalSubjectRelation);
+        return await _core!.UpdateRelationshipAsync(relation.Resource.Type, relation.Resource.Id, relation.Relation, relation.Subject.Type, relation.Subject.Id, optionalSubjectRelation);
     }
 
-    public async Task<ZedToken> DeleteRelationAsync(string resourceType, string resourceId, string relation,
-        string subjectType, string subjectId, string optionalSubjectRelation = "")
+    public ZedToken AddRelation(SpiceDb.Models.Relationship relation, string optionalSubjectRelation = "") => AddRelationAsync(relation, optionalSubjectRelation).Result;
+    public async Task<ZedToken> AddRelationAsync(string relation, string optionalSubjectRelation = "") => await AddRelationAsync(new SpiceDb.Models.Relationship(relation));
+    public ZedToken AddRelation(string relation, string optionalSubjectRelation = "") => AddRelationAsync(new SpiceDb.Models.Relationship(relation)).Result;
+
+    public async Task<ZedToken> DeleteRelationAsync(SpiceDb.Models.Relationship relation, string optionalSubjectRelation = "")
     {
-        return await _core!.UpdateRelationshipAsync(resourceType, resourceId, relation, subjectType, subjectId, optionalSubjectRelation, RelationshipUpdate.Types.Operation.Delete);
+        return await _core!.UpdateRelationshipAsync(relation.Resource.Type, relation.Resource.Id, relation.Relation, relation.Subject.Type, relation.Subject.Id, optionalSubjectRelation, RelationshipUpdate.Types.Operation.Delete);
     }
 
     public async Task<List<string>> GetResourcePermissionsAsync(string resourceType, string permission, string subjectType, string subjectId, ZedToken zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)

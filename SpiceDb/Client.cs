@@ -60,8 +60,8 @@ public class Client
     }
 
     public ZedToken AddRelation(SpiceDb.Models.Relationship relation, string optionalSubjectRelation = "") => AddRelationAsync(relation, optionalSubjectRelation).Result;
-    public async Task<ZedToken> AddRelationAsync(string relation, string optionalSubjectRelation = "") => await AddRelationAsync(new SpiceDb.Models.Relationship(relation));
-    public ZedToken AddRelation(string relation, string optionalSubjectRelation = "") => AddRelationAsync(new SpiceDb.Models.Relationship(relation)).Result;
+    public async Task<ZedToken> AddRelationAsync(string relation, string optionalSubjectRelation = "") => await AddRelationAsync(new SpiceDb.Models.Relationship(relation), optionalSubjectRelation);
+    public ZedToken AddRelation(string relation, string optionalSubjectRelation = "") => AddRelationAsync(new SpiceDb.Models.Relationship(relation), optionalSubjectRelation).Result;
 
     public async Task<ZedToken> DeleteRelationAsync(SpiceDb.Models.Relationship relation, string optionalSubjectRelation = "")
     {

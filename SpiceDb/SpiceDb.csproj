@@ -7,7 +7,7 @@
 
 	<Authors>Michael Tanczos</Authors>
 	<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-	<Description>Breadcrumbs management for the RoverCore template</Description>
+	<Description>SpiceDb/Authzed grpc compatible permissions library</Description>
 	<Copyright>2023</Copyright>
 	<Product>JalexSocial.SpiceDb</Product>
 	<PackageProjectUrl>https://github.com/JalexSocial/SpiceDb</PackageProjectUrl>
@@ -15,7 +15,7 @@
 	<PackageIcon>logo.png</PackageIcon>
 	<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
 	<PackageReadmeFile>README.md</PackageReadmeFile>
-	<Version>1.0.3</Version>
+	<Version>1.0.5</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

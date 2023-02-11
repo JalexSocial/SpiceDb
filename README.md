@@ -4,6 +4,15 @@ Simple SpiceDb client based on SpiceDB.Hierarchical.UI - Works with AuthZed
 
 https://github.com/MaheshBailwal/SpiceDB.Hierarchical.UI
 
+Available on Nuget at https://www.nuget.org/packages/SpiceDb
+
+## Usage
+
+### Install
+
+Install the package using NuGet  
+`Install-Package SpiceDb`
+
 
 Example Using UserSecrets
 

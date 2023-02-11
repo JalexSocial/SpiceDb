@@ -11,7 +11,7 @@ namespace SpiceDb.Example.MyObjects;
 //ZedDocument.WithId("abc").CanRead(ZedUser.WithId("cat"))
 public class ZedDocument : ResourceReference
 {
-	public ZedDocument(string id) : base($"arch/document:{id}")
+	private ZedDocument(string id) : base($"arch/document:{id}")
 	{
 	}
 
@@ -21,7 +21,7 @@ public class ZedDocument : ResourceReference
 
 public class ZedUser : ResourceReference
 {
-	public ZedUser(string id) : base($"arch/user:{id}")
+	private ZedUser(string id) : base($"arch/user:{id}")
 	{
 	}
 

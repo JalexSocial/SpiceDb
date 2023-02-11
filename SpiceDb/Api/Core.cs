@@ -4,6 +4,8 @@ using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Grpc.Net.Client;
 using SpiceDb.Enum;
+using SpiceDb.Models;
+using Relationship = Authzed.Api.V1.Relationship;
 
 namespace SpiceDb.Api
 {
@@ -83,7 +85,7 @@ namespace SpiceDb.Api
 	        return await _acl!.ExpandPermissionTreeAsync(req, _callOptions);
         }
 
-        public async Task<bool> CheckPermissionAsync(string resourceType,
+        public async Task<PermissionResponse> CheckPermissionAsync(string resourceType,
             string resourceId,
             string permission,
             string subjectType,
@@ -111,8 +113,12 @@ namespace SpiceDb.Api
             }
 
             var call = await _acl!.CheckPermissionAsync(req, _callOptions);
-            
-            return call?.Permissionship == CheckPermissionResponse.Types.Permissionship.HasPermission;
+
+            return new PermissionResponse
+            {
+	            HasPermission = call?.Permissionship == CheckPermissionResponse.Types.Permissionship.HasPermission,
+	            ZedToken = call?.CheckedAt
+            };
         }
 
         public async Task<List<string>> GetResourcePermissionsAsync(string resourceType,

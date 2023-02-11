@@ -2,6 +2,13 @@
 
 public class Relationship
 {
+	public Relationship(ResourceReference resource, string relation, ResourceReference subject)
+	{
+		Resource = resource;
+        Relation = relation;
+        Subject = subject;
+	}
+
     public Relationship(string resource, string relation, string subject)
     {
         Resource = new ResourceReference(resource);

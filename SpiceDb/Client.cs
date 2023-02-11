@@ -21,6 +21,10 @@ public class Client
 
     private Core? _core;
 
+    public Client(string token) : this("https://grpc.authzed.com", token)
+    {
+    }
+
     public Client(string serverAddress, string token)
     {
         if (string.IsNullOrEmpty(serverAddress) || string.IsNullOrEmpty(token))
@@ -39,15 +43,16 @@ public class Client
     /// </summary>
     /// <param name="permission">Permission relationship to evaluate</param>
     /// <param name="context">Additional context information that may be needed for evaluating caveats</param>
+    /// <param name="zedToken"></param>
     /// <returns></returns>
-    public async Task<bool> CheckPermissionAsync(SpiceDb.Models.Permission permission, Dictionary<string, object>? context = null)
+    public async Task<PermissionResponse> CheckPermissionAsync(SpiceDb.Models.Permission permission, Dictionary<string, object>? context = null, ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
     {
-        return await _core!.CheckPermissionAsync(permission.Resource.Type, permission.Resource.Id, permission.Relation, permission.Subject.Type, permission.Subject.Id, context);
+        return await _core!.CheckPermissionAsync(permission.Resource.Type, permission.Resource.Id, permission.Relation, permission.Subject.Type, permission.Subject.Id, context, zedToken, cacheFreshness);
     }
 
-    public async Task<bool> CheckPermissionAsync(string permission, Dictionary<string, object>? context = null) => await CheckPermissionAsync(new SpiceDb.Models.Permission(permission), context);
-    public bool CheckPermission(SpiceDb.Models.Permission permission, Dictionary<string, object>? context = null) => CheckPermissionAsync(permission, context).Result;
-    public bool CheckPermission(string permission, Dictionary<string, object>? context = null) => CheckPermissionAsync(new SpiceDb.Models.Permission(permission), context).Result;
+    public async Task<PermissionResponse> CheckPermissionAsync(string permission, Dictionary<string, object>? context = null, ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness) => await CheckPermissionAsync(new SpiceDb.Models.Permission(permission), context, zedToken, cacheFreshness);
+    public PermissionResponse CheckPermission(SpiceDb.Models.Permission permission, Dictionary<string, object>? context = null, ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness) => CheckPermissionAsync(permission, context, zedToken, cacheFreshness).Result;
+    public PermissionResponse CheckPermission(string permission, Dictionary<string, object>? context = null, ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness) => CheckPermissionAsync(new SpiceDb.Models.Permission(permission), context, zedToken, cacheFreshness).Result;
 
     public async Task<ZedToken> AddRelationAsync(SpiceDb.Models.Relationship relation, string optionalSubjectRelation = "")
     {

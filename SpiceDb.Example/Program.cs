@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using SpiceDb.Example;
+using SpiceDb.Example.MyObjects;
 using SpiceDb.Models;
 
 // This is just to keep the server address and token private
@@ -18,12 +19,21 @@ var client = new SpiceDb.Client(secrets.ServerAddress, secrets.Token);
 
 // Add relationship where user:bob is a reader of document:firstdoc
 client.AddRelation("arch/document:firstdoc#reader@arch/user:bob");
+client.AddRelation(new Relationship("arch/document:firstdoc", "reader", "arch/user:jacob"));
+
+// This approach uses a little syntactic sugar to define each of the relations
+client.AddRelation(ZedUser.WithId("carmella").CanRead(ZedDocument.WithId("firstdoc")));
 
 // Check to see if user:bob is in fact now a reader of document:firstdoc
-var canRead = client.CheckPermission(new Permission("arch/document:firstdoc#reader@arch/user:bob"));
+var bobCanRead = client.CheckPermission(new Permission("arch/document:firstdoc#reader@arch/user:bob"));
 
-Console.WriteLine($"Can user bob read document:firstdoc? {canRead}");
+Console.WriteLine($"Can user bob read document:firstdoc? {bobCanRead.HasPermission}");
+// true
 
+// Check to see if user:carmella is in fact now a reader of document:firstdoc
+var carmellaCanRead = client.CheckPermission(ZedUser.WithId("carmella").CanRead(ZedDocument.WithId("firstdoc")));
 
+Console.WriteLine($"Can user carmella read document:firstdoc? {carmellaCanRead.HasPermission}");
+// true
 
 

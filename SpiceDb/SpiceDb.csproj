@@ -15,7 +15,7 @@
 	<PackageIcon>logo.png</PackageIcon>
 	<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
 	<PackageReadmeFile>README.md</PackageReadmeFile>
-	<Version>1.0.1</Version>
+	<Version>1.0.3</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -39,9 +39,6 @@
 	</ItemGroup>
 	<ItemGroup>
 		<Protobuf Include="**/*.proto" ProtoRoot="Api/protos" />
-	</ItemGroup>
-	<ItemGroup>
-	  <Folder Include="Dto\" />
 	</ItemGroup>
 
 	<ItemGroup>

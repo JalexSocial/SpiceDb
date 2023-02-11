@@ -4,6 +4,9 @@ namespace SpiceDb.Models;
 
 public class Permission : Relationship
 {
+	public Permission(ResourceReference resource, string relation, ResourceReference subject) : base(resource,relation, subject)
+	{}
+
     public Permission(string resource, string relation, string subject) : base(resource, relation, subject)
     {
     }

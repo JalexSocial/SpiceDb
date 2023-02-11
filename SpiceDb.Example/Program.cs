@@ -19,6 +19,8 @@ var client = new SpiceDb.Client(secrets.ServerAddress, secrets.Token);
 
 // Add relationship where user:bob is a reader of document:firstdoc
 client.AddRelation("arch/document:firstdoc#reader@arch/user:bob");
+
+// Second approach to adding relationships
 client.AddRelation(new Relationship("arch/document:firstdoc", "reader", "arch/user:jacob"));
 
 // This approach uses a little syntactic sugar to define each of the relations

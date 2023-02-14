@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Configuration;
+using SpiceDb;
 using SpiceDb.Example;
 using SpiceDb.Example.MyObjects;
 using SpiceDb.Models;
@@ -15,7 +16,7 @@ if (secrets is null)
 	throw new ArgumentException("Invalid secrets configuration");
 
 // var serverAddress = "https://grpc.authzed.com";
-var client = new SpiceDb.Client(secrets.ServerAddress, secrets.Token);
+var client = new SpiceDbClient(secrets.ServerAddress, secrets.Token);
 
 // Add relationship where user:bob is a reader of document:firstdoc
 client.AddRelation("arch/document:firstdoc#reader@arch/user:bob");

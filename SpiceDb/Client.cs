@@ -54,14 +54,14 @@ public class Client
     public PermissionResponse CheckPermission(SpiceDb.Models.Permission permission, Dictionary<string, object>? context = null, ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness) => CheckPermissionAsync(permission, context, zedToken, cacheFreshness).Result;
     public PermissionResponse CheckPermission(string permission, Dictionary<string, object>? context = null, ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness) => CheckPermissionAsync(new SpiceDb.Models.Permission(permission), context, zedToken, cacheFreshness).Result;
 
-    public async Task<ZedToken> AddRelationAsync(SpiceDb.Models.Relationship relation, string optionalSubjectRelation = "")
+    public async Task<ZedToken> AddRelationAsync(SpiceDb.Models.Relationship relation)
     {
-        return await _core!.UpdateRelationshipAsync(relation.Resource.Type, relation.Resource.Id, relation.Relation, relation.Subject.Type, relation.Subject.Id, optionalSubjectRelation);
+        return await _core!.UpdateRelationshipAsync(relation.Resource.Type, relation.Resource.Id, relation.Relation, relation.Subject.Type, relation.Subject.Id, relation.Subject.Relation);
     }
 
-    public ZedToken AddRelation(SpiceDb.Models.Relationship relation, string optionalSubjectRelation = "") => AddRelationAsync(relation, optionalSubjectRelation).Result;
-    public async Task<ZedToken> AddRelationAsync(string relation, string optionalSubjectRelation = "") => await AddRelationAsync(new SpiceDb.Models.Relationship(relation), optionalSubjectRelation);
-    public ZedToken AddRelation(string relation, string optionalSubjectRelation = "") => AddRelationAsync(new SpiceDb.Models.Relationship(relation), optionalSubjectRelation).Result;
+    public ZedToken AddRelation(SpiceDb.Models.Relationship relation) => AddRelationAsync(relation).Result;
+    public async Task<ZedToken> AddRelationAsync(string relation) => await AddRelationAsync(new SpiceDb.Models.Relationship(relation));
+    public ZedToken AddRelation(string relation) => AddRelationAsync(new SpiceDb.Models.Relationship(relation)).Result;
 
     public async Task<ZedToken> DeleteRelationAsync(SpiceDb.Models.Relationship relation, string optionalSubjectRelation = "")
     {

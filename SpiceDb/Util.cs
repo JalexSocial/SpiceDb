@@ -31,4 +31,40 @@ internal static class Util
 
 		return ps;
 	}
+
+	public static string[] SplitOnFirst(this string strVal, char needle)
+	{
+		if (strVal == null) return Array.Empty<string>();
+		var pos = strVal.IndexOf(needle);
+		return pos == -1
+			? new[] { strVal }
+			: new[] { strVal.Substring(0, pos), strVal.Substring(pos + 1) };
+	}
+
+	public static string[] SplitOnFirst(this string strVal, string needle)
+	{
+		if (strVal == null) return Array.Empty<string>();
+		var pos = strVal.IndexOf(needle, StringComparison.OrdinalIgnoreCase);
+		return pos == -1
+			? new[] { strVal }
+			: new[] { strVal.Substring(0, pos), strVal.Substring(pos + needle.Length) };
+	}
+
+	public static string[] SplitOnLast(this string strVal, char needle)
+	{
+		if (strVal == null) return Array.Empty<string>();
+		var pos = strVal.LastIndexOf(needle);
+		return pos == -1
+			? new[] { strVal }
+			: new[] { strVal.Substring(0, pos), strVal.Substring(pos + 1) };
+	}
+
+	public static string[] SplitOnLast(this string strVal, string needle)
+	{
+		if (strVal == null) return Array.Empty<string>();
+		var pos = strVal.LastIndexOf(needle, StringComparison.OrdinalIgnoreCase);
+		return pos == -1
+			? new[] { strVal }
+			: new[] { strVal.Substring(0, pos), strVal.Substring(pos + needle.Length) };
+	}
 }

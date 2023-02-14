@@ -21,5 +21,5 @@ public class ResourceReference
     public string Type { get; set; }
     public string Id { get; set; }
 
-    public string AsFullKey() => $"{Type}:{Id}";
+    public string AsStringReference() => $"{Type}:{Id}";
 }

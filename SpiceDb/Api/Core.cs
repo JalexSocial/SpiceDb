@@ -1,4 +1,5 @@
-﻿using Authzed.Api.V1;
+﻿using System.Text.RegularExpressions;
+using Authzed.Api.V1;
 using Google.Protobuf.Collections;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
@@ -9,8 +10,8 @@ using Relationship = Authzed.Api.V1.Relationship;
 
 namespace SpiceDb.Api
 {
-    internal class Core
-    {
+	internal class Core 
+	{
         private PermissionsService.PermissionsServiceClient? _acl;
         private SchemaService.SchemaServiceClient? _schema;
         private CallOptions _callOptions;
@@ -209,6 +210,10 @@ namespace SpiceDb.Api
 
         public async Task<WriteSchemaResponse> WriteSchemaAsync(string schema)
         {
+	        var re = @"(@(?:""[^""]*"")+|""(?:[^""\n\\]+|\\.)*""|'(?:[^'\n\\]+|\\.)*')|//.*|/\*(?s:.*?)\*/";
+
+            schema = Regex.Replace(schema, re, "$1");
+
             WriteSchemaRequest req = new WriteSchemaRequest
             {
                 Schema = schema

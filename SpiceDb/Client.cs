@@ -14,7 +14,7 @@ using Relationship = Authzed.Api.V1.Relationship;
 namespace SpiceDb;
 
 // Original code from SpiceDB.Hierarhical
-public class Client
+public class Client 
 {
     private readonly string _serverAddress;
     private readonly string _token;
@@ -68,19 +68,57 @@ public class Client
         return await _core!.UpdateRelationshipAsync(relation.Resource.Type, relation.Resource.Id, relation.Relation, relation.Subject.Type, relation.Subject.Id, optionalSubjectRelation, RelationshipUpdate.Types.Operation.Delete);
     }
 
-    public async Task<List<string>> GetResourcePermissionsAsync(string resourceType, string permission, string subjectType, string subjectId, ZedToken zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
+    public async Task<List<string>> GetResourcePermissionsAsync(string resourceType, string permission, string subjectType, string subjectId, ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
     {
         return await _core!.GetResourcePermissionsAsync(resourceType, permission, subjectType, subjectId, zedToken);
     }
 
-    public async Task ImportSchemaFromFileAsync(string filePath)
+    public string ExportSchema()
     {
-        await ImportSchemaFromStringAsync(File.ReadAllText(filePath));
+        return _core!.ReadSchemaAsync().Result;
     }
 
-    public async Task ImportSchemaFromStringAsync(string schema)
+    public async Task ImportSchemaFromFileAsync(string filePath, string prefix = "")
     {
-        await _core!.WriteSchemaAsync(schema);
+        await ImportSchemaFromStringAsync(File.ReadAllText(filePath), prefix);
+    }
+
+    public async Task ImportSchemaFromStringAsync(string schema, string prefix = "")
+    {
+	    if (prefix.Length > 0 && !prefix.EndsWith("/")) prefix += "/";
+
+	    var parsed_schema = string.Empty;
+        var entities = SchemaParser.Parse(schema).ToList();
+
+	    foreach (var entity in entities)
+	    {
+		    var def = $"definition {prefix}{entity.ResourceType} " + "{\n";
+		    Dictionary<string, List<string>> relations = new();
+
+            entity.Relationships.ForEach(relationship =>
+            {
+                if (!relations.ContainsKey(relationship.Name))
+					relations.Add(relationship.Name, new());
+
+                relations[relationship.Name.Trim()].Add(relationship.SubjectType.Trim());
+            });
+
+            foreach (var key in relations.Keys)
+            {
+	            def += $"\trelation {key}: " + String.Join(" | ", relations[key].Select(x => $"{prefix}{x}").ToList()) + "\n";
+            }
+
+            foreach (var permission in entity.Permissions)
+            {
+	            def += $"\tpermission {permission.Name} = {permission.Definition}\n";
+            }
+
+		    def += "}\n\n";
+
+		    parsed_schema += def;
+	    }
+
+	    await _core!.WriteSchemaAsync(parsed_schema);
     }
 
     public async Task<WriteRelationshipsResponse> ImportRelationshipsFromFileAsync(string filePath)

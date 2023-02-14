@@ -1,4 +1,6 @@
-﻿namespace SpiceDb.Api
+﻿using SpiceDb.Models;
+
+namespace SpiceDb.Api
 {
     internal class SchemaParser
     {
@@ -61,7 +63,7 @@
 
                 var startRelationNameIndx = startIndx + "relation ".Length;
 
-                var arr = line.Substring(startRelationNameIndx).Split(':');
+                var arr = line.Substring(startRelationNameIndx).SplitOnFirst(':');
 
                 var subjectEntities = arr[1].Trim().Split('|');
 
@@ -90,7 +92,7 @@
                 var startRelationNameIndx = startIndx + "permission ".Length;
 
                 var arr = line.Substring(startRelationNameIndx).Split('=');
-                entity.Permissions.Add(new Permission(arr[0].Trim()));
+                entity.Permissions.Add(new PermissionDefinition(arr[0].Trim(), arr[1].Trim()));
             }
         }
     }
@@ -101,7 +103,7 @@
 
         public List<Relation> Relationships { get; set; } = new List<Relation>();
 
-        public List<Permission> Permissions { get; set; } = new List<Permission>();
+        public List<PermissionDefinition> Permissions { get; set; } = new List<PermissionDefinition>();
     }
 
     internal class Permission

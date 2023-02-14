@@ -29,12 +29,12 @@ public class ResourceReference
 
     private void ProcessId()
     {
-	    if (Id.Contains("#"))
-	    {
-		    var parts = Id.Split(":");
-		    Id = parts[0];
-		    Relation = parts[1];
-	    }
+        if (Id.Contains("#"))
+        {
+            var parts = Id.Split(":");
+            Id = parts[0];
+            Relation = parts[1];
+        }
     }
 
     public string AsStringReference() => $"{Type}:{Id}";
@@ -47,4 +47,6 @@ public class ResourceReference
     /// <param name="relation"></param>
     /// <returns></returns>
     public ResourceReference WithSubjectRelation(string relation) => new ResourceReference(this.Type, this.Id, relation);
+
+    public override string ToString() => $"{this.Type}:{this.Id}" + (!String.IsNullOrEmpty(Relation) ? "" : $"#{Relation}");
 }

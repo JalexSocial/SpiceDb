@@ -1,12 +1,10 @@
-﻿using Authzed.Api.V1;
-
-namespace SpiceDb.Models;
+﻿namespace SpiceDb.Models;
 
 public class PermissionDefinition
 {
     public PermissionDefinition(string name, string definition)
     {
-	    Name = name;
+        Name = name;
         Definition = definition;
     }
 

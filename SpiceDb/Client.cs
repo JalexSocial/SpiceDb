@@ -1,20 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Authzed.Api.V1;
+﻿using Authzed.Api.V1;
 using Google.Protobuf.Collections;
 using SpiceDb.Api;
 using SpiceDb.Enum;
 using SpiceDb.Models;
-using static System.Formats.Asn1.AsnWriter;
-using Relationship = Authzed.Api.V1.Relationship;
 
 namespace SpiceDb;
 
 // Original code from SpiceDB.Hierarhical
-public class Client 
+public class Client
 {
     private readonly string _serverAddress;
     private readonly string _token;
@@ -85,40 +78,40 @@ public class Client
 
     public async Task ImportSchemaFromStringAsync(string schema, string prefix = "")
     {
-	    if (prefix.Length > 0 && !prefix.EndsWith("/")) prefix += "/";
+        if (prefix.Length > 0 && !prefix.EndsWith("/")) prefix += "/";
 
-	    var parsed_schema = string.Empty;
+        var parsed_schema = string.Empty;
         var entities = SchemaParser.Parse(schema).ToList();
 
-	    foreach (var entity in entities)
-	    {
-		    var def = $"definition {prefix}{entity.ResourceType} " + "{\n";
-		    Dictionary<string, List<string>> relations = new();
+        foreach (var entity in entities)
+        {
+            var def = $"definition {prefix}{entity.ResourceType} " + "{\n";
+            Dictionary<string, List<string>> relations = new();
 
             entity.Relationships.ForEach(relationship =>
             {
                 if (!relations.ContainsKey(relationship.Name))
-					relations.Add(relationship.Name, new());
+                    relations.Add(relationship.Name, new());
 
                 relations[relationship.Name.Trim()].Add(relationship.SubjectType.Trim());
             });
 
             foreach (var key in relations.Keys)
             {
-	            def += $"\trelation {key}: " + String.Join(" | ", relations[key].Select(x => $"{prefix}{x}").ToList()) + "\n";
+                def += $"\trelation {key}: " + String.Join(" | ", relations[key].Select(x => $"{prefix}{x}").ToList()) + "\n";
             }
 
             foreach (var permission in entity.Permissions)
             {
-	            def += $"\tpermission {permission.Name} = {permission.Definition}\n";
+                def += $"\tpermission {permission.Name} = {permission.Definition}\n";
             }
 
-		    def += "}\n\n";
+            def += "}\n\n";
 
-		    parsed_schema += def;
-	    }
+            parsed_schema += def;
+        }
 
-	    await _core!.WriteSchemaAsync(parsed_schema);
+        await _core!.WriteSchemaAsync(parsed_schema);
     }
 
     public async Task<WriteRelationshipsResponse> ImportRelationshipsFromFileAsync(string filePath)

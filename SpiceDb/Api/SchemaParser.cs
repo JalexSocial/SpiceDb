@@ -1,141 +1,139 @@
 ﻿using SpiceDb.Models;
 
-namespace SpiceDb.Api
+namespace SpiceDb.Api;
+
+internal class SchemaParser
 {
-    internal class SchemaParser
+    static List<SchemaEntity> _entities = new List<SchemaEntity>();
+
+    public static IEnumerable<SchemaEntity> Parse(string schema)
     {
-        static List<SchemaEntity> _entities = new List<SchemaEntity>();
-
-        public static IEnumerable<SchemaEntity> Parse(string schema)
+        var indx = 0;
+        _entities = new List<SchemaEntity>();
+        while (indx < schema.Length)
         {
-            var indx = 0;
-            _entities = new List<SchemaEntity>();
-            while (indx < schema.Length)
-            {
-                var remainingSchema = schema.Substring(indx);
-                var newindx = ParseEntity(indx, remainingSchema);
-                indx = indx + newindx;
-            }
-
-            return _entities;
+            var remainingSchema = schema.Substring(indx);
+            var newindx = ParseEntity(indx, remainingSchema);
+            indx = indx + newindx;
         }
 
-        static int ParseEntity(int _index, string text)
+        return _entities;
+    }
+
+    static int ParseEntity(int _index, string text)
+    {
+        var tt = text;
+
+        var startindex = tt.IndexOf("definition ");
+        if (startindex == -1)
+            return int.MaxValue;
+
+        SchemaEntity entity = new SchemaEntity();
+
+        var nameStartIndex = startindex + "definition ".Length;
+
+        var nameLastIndex = tt.IndexOf("{", nameStartIndex);
+
+        var name = tt.Substring(nameStartIndex, nameLastIndex - nameStartIndex).Trim();
+        entity.ResourceType = name;
+
+        var closingBracesIndex = tt.IndexOf("}", nameStartIndex);
+
+        var defenation = tt.Substring(nameLastIndex, (closingBracesIndex - nameLastIndex) + 1);
+
+        ReadRelationShip(defenation, entity);
+        ReadPermissions(defenation, entity);
+
+        _entities.Add(entity);
+
+        return closingBracesIndex + 1;
+    }
+
+    static void ReadRelationShip(string txt, SchemaEntity entity)
+    {
+        var lines = txt.Split("\n\r".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
+
+        foreach (var line in lines)
         {
-            var tt = text;
 
-            var startindex = tt.IndexOf("definition ");
-            if (startindex == -1)
-                return int.MaxValue;
+            var startIndx = line.IndexOf("relation ");
 
-            SchemaEntity entity = new SchemaEntity();
+            if (startIndx == -1)
+                continue;
 
-            var nameStartIndex = startindex + "definition ".Length;
+            var startRelationNameIndx = startIndx + "relation ".Length;
 
-            var nameLastIndex = tt.IndexOf("{", nameStartIndex);
+            var arr = line.Substring(startRelationNameIndx).Split(':', 2);
 
-            var name = tt.Substring(nameStartIndex, nameLastIndex - nameStartIndex).Trim();
-            entity.ResourceType = name;
+            var subjectEntities = arr[1].Trim().Split('|');
 
-            var closingBracesIndex = tt.IndexOf("}", nameStartIndex);
-
-            var defenation = tt.Substring(nameLastIndex, (closingBracesIndex - nameLastIndex) + 1);
-
-            ReadRelationShip(defenation, entity);
-            ReadPermissions(defenation, entity);
-
-            _entities.Add(entity);
-
-            return closingBracesIndex + 1;
-        }
-
-        static void ReadRelationShip(string txt, SchemaEntity entity)
-        {
-            var lines = txt.Split("\n\r".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
-
-            foreach (var line in lines)
+            foreach (var subjectEntity in subjectEntities)
             {
-
-                var startIndx = line.IndexOf("relation ");
-
-                if (startIndx == -1)
-                    continue;
-
-                var startRelationNameIndx = startIndx + "relation ".Length;
-
-                var arr = line.Substring(startRelationNameIndx).Split(':', 2);
-
-                var subjectEntities = arr[1].Trim().Split('|');
-
-                foreach (var subjectEntity in subjectEntities)
-                {
-                    var relationship = new Relation(arr[0].Trim(), entity.ResourceType, subjectEntity, subjectEntity == entity.ResourceType);
-                    entity.Relationships.Add(relationship);
-                }
-            }
-        }
-
-        static void ReadPermissions(string txt, SchemaEntity entity)
-        {
-            var lines = txt.Split("\n\r".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
-
-            foreach (var line in lines)
-            {
-                if (line == null)
-                    continue;
-
-                var startIndx = line!.IndexOf("permission ");
-
-                if (startIndx == -1)
-                    continue;
-
-                var startRelationNameIndx = startIndx + "permission ".Length;
-
-                var arr = line.Substring(startRelationNameIndx).Split('=');
-                entity.Permissions.Add(new PermissionDefinition(arr[0].Trim(), arr[1].Trim()));
+                var relationship = new Relation(arr[0].Trim(), entity.ResourceType, subjectEntity, subjectEntity == entity.ResourceType);
+                entity.Relationships.Add(relationship);
             }
         }
     }
 
-    internal class SchemaEntity
+    static void ReadPermissions(string txt, SchemaEntity entity)
     {
-        public string ResourceType { get; set; } = string.Empty;
+        var lines = txt.Split("\n\r".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
 
-        public List<Relation> Relationships { get; set; } = new List<Relation>();
+        foreach (var line in lines)
+        {
+            if (line == null)
+                continue;
 
-        public List<PermissionDefinition> Permissions { get; set; } = new List<PermissionDefinition>();
+            var startIndx = line!.IndexOf("permission ");
+
+            if (startIndx == -1)
+                continue;
+
+            var startRelationNameIndx = startIndx + "permission ".Length;
+
+            var arr = line.Substring(startRelationNameIndx).Split('=');
+            entity.Permissions.Add(new PermissionDefinition(arr[0].Trim(), arr[1].Trim()));
+        }
     }
+}
 
-    internal class Permission
+internal class SchemaEntity
+{
+    public string ResourceType { get; set; } = string.Empty;
+
+    public List<Relation> Relationships { get; set; } = new List<Relation>();
+
+    public List<PermissionDefinition> Permissions { get; set; } = new List<PermissionDefinition>();
+}
+
+internal class Permission
+{
+    public Permission(string name)
     {
-        public Permission(string name)
-        {
-            Name = name;
-        }
-        public string Name { get; private set; }
+        Name = name;
     }
+    public string Name { get; private set; }
+}
 
-    internal class Relation
+internal class Relation
+{
+    public Relation(string name, string resourceType, string subjectType, bool isSelfRelation)
     {
-        public Relation(string name, string resourceType, string subjectType, bool isSelfRelation)
-        {
-            Name = name;
-            ResourceType = resourceType;
-            SubjectType = subjectType;
-            IsSelfRelation = isSelfRelation;
-        }
-        public string Name { get; private set; }
-        public string ResourceType { get; private set; }
-        public string SubjectType { get; private set; }
-
-        public string SubjectTypeWithoutHash
-        {
-            get
-            {
-                return SubjectType.Split('#')[0].Trim();
-            }
-        }
-        public bool IsSelfRelation { get; private set; }
+        Name = name;
+        ResourceType = resourceType;
+        SubjectType = subjectType;
+        IsSelfRelation = isSelfRelation;
     }
+    public string Name { get; private set; }
+    public string ResourceType { get; private set; }
+    public string SubjectType { get; private set; }
 
+    public string SubjectTypeWithoutHash
+    {
+        get
+        {
+            return SubjectType.Split('#')[0].Trim();
+        }
+    }
+    public bool IsSelfRelation { get; private set; }
 }

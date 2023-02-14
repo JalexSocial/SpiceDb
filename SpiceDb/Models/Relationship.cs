@@ -2,12 +2,12 @@
 
 public class Relationship
 {
-	public Relationship(ResourceReference resource, string relation, ResourceReference subject)
-	{
-		Resource = resource;
+    public Relationship(ResourceReference resource, string relation, ResourceReference subject)
+    {
+        Resource = resource;
         Relation = relation;
         Subject = subject;
-	}
+    }
 
     public Relationship(string resource, string relation, string subject)
     {
@@ -24,7 +24,7 @@ public class Relationship
     /// <exception cref="ArgumentException"></exception>
     public Relationship(string relation)
     {
-        var parts = relation.Split('#', '@' );
+        var parts = relation.Split(new char[] {'#', '@'}, 3);
 
         if (parts.Length != 3)
             throw new ArgumentException($"Bad {this.GetType().Name.ToLower()} string provided");
@@ -40,6 +40,6 @@ public class Relationship
 
     public override string ToString()
     {
-	    return $"{Resource.Type}:{Resource.Id}#{this.Relation}@{Subject.Type}:{Subject.Id}";
+        return $"{Resource.ToString()}#{this.Relation}@{Subject.ToString()}";
     }
 }

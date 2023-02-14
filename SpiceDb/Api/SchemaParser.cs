@@ -63,7 +63,7 @@ namespace SpiceDb.Api
 
                 var startRelationNameIndx = startIndx + "relation ".Length;
 
-                var arr = line.Substring(startRelationNameIndx).SplitOnFirst(':');
+                var arr = line.Substring(startRelationNameIndx).Split(':', 2);
 
                 var subjectEntities = arr[1].Trim().Split('|');
 

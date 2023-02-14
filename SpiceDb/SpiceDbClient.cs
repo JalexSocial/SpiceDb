@@ -7,18 +7,18 @@ using SpiceDb.Models;
 namespace SpiceDb;
 
 // Original code from SpiceDB.Hierarhical
-public class Client
+public class SpiceDbClient : ISpiceDbClient
 {
     private readonly string _serverAddress;
     private readonly string _token;
 
     private Core? _core;
 
-    public Client(string token) : this("https://grpc.authzed.com", token)
+    public SpiceDbClient(string token) : this("https://grpc.authzed.com", token)
     {
     }
 
-    public Client(string serverAddress, string token)
+    public SpiceDbClient(string serverAddress, string token)
     {
         if (string.IsNullOrEmpty(serverAddress) || string.IsNullOrEmpty(token))
             throw new ArgumentNullException("Missing server address or token");

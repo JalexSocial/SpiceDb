@@ -25,7 +25,7 @@ public class ResourceReference
 
     public string Type { get; set; }
     public string Id { get; set; }
-    public string Relation { get; set; }
+    public string Relation { get; set; } = string.Empty;
 
     private void ProcessId()
     {

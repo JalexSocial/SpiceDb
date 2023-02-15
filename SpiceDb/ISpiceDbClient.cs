@@ -19,11 +19,12 @@ public interface ISpiceDbClient
 	Task<PermissionResponse> CheckPermissionAsync(string permission, Dictionary<string, object>? context = null, ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness);
 	PermissionResponse CheckPermission(SpiceDb.Models.Permission permission, Dictionary<string, object>? context = null, ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness);
 	PermissionResponse CheckPermission(string permission, Dictionary<string, object>? context = null, ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness);
-	Task<ZedToken> AddRelationAsync(SpiceDb.Models.Relationship relation);
-	Task<ZedToken> AddRelationAsync(string relation);
-	ZedToken AddRelation(SpiceDb.Models.Relationship relation);
-	ZedToken AddRelation(string relation);
-	Task<ZedToken> DeleteRelationAsync(SpiceDb.Models.Relationship relation, string optionalSubjectRelation = "");
+    Task<ExpandPermissionTreeResponse?> ExpandPermissionAsync(ResourceReference resource, string permission, ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness);
+    Task<ZedToken> AddRelationshipAsync(SpiceDb.Models.Relationship relation);
+	Task<ZedToken> AddRelationshipAsync(string relation);
+	ZedToken AddRelationship(SpiceDb.Models.Relationship relation);
+	ZedToken AddRelationship(string relation);
+	Task<ZedToken> DeleteRelationshipAsync(SpiceDb.Models.Relationship relation, string optionalSubjectRelation = "");
 	Task<List<string>> GetResourcePermissionsAsync(string resourceType, string permission, string subjectType, string subjectId, ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness);
 	string ExportSchema();
 	Task ImportSchemaFromFileAsync(string filePath, string prefix = "");

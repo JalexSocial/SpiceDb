@@ -66,6 +66,20 @@ public class SpiceDbClient : ISpiceDbClient
         return await _core!.UpdateRelationshipAsync(relation.Resource.Type, relation.Resource.Id, relation.Relation, relation.Subject.Type, relation.Subject.Id, optionalSubjectRelation, RelationshipUpdate.Types.Operation.Delete);
     }
 
+    public async Task<List<SpiceDb.Models.Relationship>> ReadRelationshipsAsync(Models.RelationshipFilter resource, Models.RelationshipFilter? subject = null, 
+        ZedToken? zedToken = null,
+        CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
+    {
+        var response = await _core!.ReadRelationshipsAsync(resource.Type, resource.OptionalId,resource.OptionalRelation,
+            subject?.Type ?? string.Empty, subject?.OptionalId ?? string.Empty, subject?.OptionalRelation ?? string.Empty, zedToken, cacheFreshness);
+
+        return response.Select(x => new SpiceDb.Models.Relationship(
+                new ResourceReference(x.Resource.ObjectType, x.Resource.ObjectId),
+                x.Relation,
+                new ResourceReference(x.Subject.Object.ObjectType, x.Subject.Object.ObjectId, x.Subject.OptionalRelation)))
+            .ToList();
+    }
+
     public async Task<List<string>> GetResourcePermissionsAsync(string resourceType, string permission, string subjectType, string subjectId, ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
     {
         return await _core!.GetResourcePermissionsAsync(resourceType, permission, subjectType, subjectId, zedToken);
@@ -119,12 +133,12 @@ public class SpiceDbClient : ISpiceDbClient
         await _core!.WriteSchemaAsync(parsed_schema);
     }
 
-    public async Task<WriteRelationshipsResponse> ImportRelationshipsFromFileAsync(string filePath)
+    public async Task<ZedToken?> ImportRelationshipsFromFileAsync(string filePath)
     {
         return await ImportRelationshipsAsync(File.ReadAllText(filePath));
     }
 
-    public async Task<WriteRelationshipsResponse> ImportRelationshipsAsync(string content)
+    public async Task<ZedToken?> ImportRelationshipsAsync(string content)
     {
         // Read the file as one string.
         RelationshipUpdate.Types.Operation operation = RelationshipUpdate.Types.Operation.Touch;
@@ -147,6 +161,6 @@ public class SpiceDbClient : ISpiceDbClient
             }
         }
 
-        return await _core!.WriteRelationshipsAsync(updateCollection);
+        return (await _core!.WriteRelationshipsAsync(updateCollection)).WrittenAt;
     }
 }

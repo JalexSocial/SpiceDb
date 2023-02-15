@@ -166,7 +166,7 @@ internal class Core
         ReadRelationshipsRequest req = new ReadRelationshipsRequest()
         {
             Consistency = new Consistency { MinimizeLatency = true, AtExactSnapshot = zedToken },
-            RelationshipFilter = new RelationshipFilter
+            RelationshipFilter = new Authzed.Api.V1.RelationshipFilter
             {
                 ResourceType = resourceType,
                 OptionalRelation = optionalRelation,

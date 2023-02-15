@@ -25,10 +25,11 @@ public interface ISpiceDbClient
 	ZedToken AddRelationship(SpiceDb.Models.Relationship relation);
 	ZedToken AddRelationship(string relation);
 	Task<ZedToken> DeleteRelationshipAsync(SpiceDb.Models.Relationship relation, string optionalSubjectRelation = "");
-	Task<List<string>> GetResourcePermissionsAsync(string resourceType, string permission, string subjectType, string subjectId, ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness);
+    Task<List<SpiceDb.Models.Relationship>> ReadRelationshipsAsync(Models.RelationshipFilter resource, Models.RelationshipFilter? subject = null, ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness);
+    Task<List<string>> GetResourcePermissionsAsync(string resourceType, string permission, string subjectType, string subjectId, ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness);
 	string ExportSchema();
 	Task ImportSchemaFromFileAsync(string filePath, string prefix = "");
 	Task ImportSchemaFromStringAsync(string schema, string prefix = "");
-	Task<WriteRelationshipsResponse> ImportRelationshipsFromFileAsync(string filePath);
-	Task<WriteRelationshipsResponse> ImportRelationshipsAsync(string content);
+	Task<ZedToken?> ImportRelationshipsFromFileAsync(string filePath);
+	Task<ZedToken?> ImportRelationshipsAsync(string content);
 }

@@ -2,18 +2,19 @@
 
 public class Relationship
 {
-    public Relationship(ResourceReference resource, string relation, ResourceReference subject)
+    public Relationship(ResourceReference resource, string relation, ResourceReference subject, Caveat? optionalCaveat = null)
     {
         Resource = resource;
         Relation = relation;
         Subject = subject;
     }
 
-    public Relationship(string resource, string relation, string subject)
+    public Relationship(string resource, string relation, string subject, Caveat? optionalCaveat = null)
     {
         Resource = new ResourceReference(resource);
         Relation = relation;
         Subject = new ResourceReference(subject);
+        OptionalCaveat = optionalCaveat;
     }
 
     /// <summary>
@@ -22,7 +23,7 @@ public class Relationship
     /// </summary>
     /// <param name="permission"></param>
     /// <exception cref="ArgumentException"></exception>
-    public Relationship(string relation)
+    public Relationship(string relation, Caveat? optionalCaveat = null)
     {
         var parts = relation.Split(new char[] {'#', '@'}, 3);
 
@@ -32,11 +33,28 @@ public class Relationship
         Resource = new ResourceReference(parts[0]);
         Relation = parts[1];
         Subject = new ResourceReference(parts[2]);
+        OptionalCaveat = optionalCaveat;
     }
 
+    /// <summary>
+    /// Resource is the resource to which the subject is related, in some manner
+    /// </summary>
     public ResourceReference Resource { get; set; }
+
+    /// <summary>
+    /// Relation is how the resource and subject are related.
+    /// </summary>
     public string Relation { get; set; }
+
+    /// <summary>
+    /// Subject is the subject to which the resource is related, in some manner.
+    /// </summary>
     public ResourceReference Subject { get; set; }
+
+    /// <summary>
+    /// OptionalCaveat is a reference to a the caveat that must be enforced over the relationship
+    /// </summary>
+    public Caveat? OptionalCaveat { get; set; }
 
     public override string ToString()
     {

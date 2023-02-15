@@ -1,8 +1,23 @@
 ﻿using Google.Protobuf.WellKnownTypes;
+using System.Diagnostics;
 
 namespace SpiceDb;
 internal static class Util
 {
+    public static Dictionary<string, object> FromStruct (this Struct s)
+    {
+        var ps = new Dictionary<string, object>();
+        
+        foreach (var key in s.Fields.Keys)
+        {
+            if (key is null) continue;
+
+            ps.Add(key, s.Fields[key]);
+        }
+
+        return ps;
+    }
+
     public static Struct ToStruct(this Dictionary<string, object> dict)
     {
         var ps = new Struct();

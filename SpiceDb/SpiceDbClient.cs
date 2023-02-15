@@ -1,8 +1,10 @@
-﻿using Authzed.Api.V1;
+﻿using System.Diagnostics;
+using Authzed.Api.V1;
 using Google.Protobuf.Collections;
 using SpiceDb.Api;
 using SpiceDb.Enum;
 using SpiceDb.Models;
+
 
 namespace SpiceDb;
 
@@ -12,7 +14,7 @@ public class SpiceDbClient : ISpiceDbClient
     private readonly string _serverAddress;
     private readonly string _token;
 
-    private Core? _core;
+    private readonly Core? _core;
 
     public SpiceDbClient(string token) : this("https://grpc.authzed.com", token)
     {
@@ -47,6 +49,15 @@ public class SpiceDbClient : ISpiceDbClient
     public PermissionResponse CheckPermission(SpiceDb.Models.Permission permission, Dictionary<string, object>? context = null, ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness) => CheckPermissionAsync(permission, context, zedToken, cacheFreshness).Result;
     public PermissionResponse CheckPermission(string permission, Dictionary<string, object>? context = null, ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness) => CheckPermissionAsync(new SpiceDb.Models.Permission(permission), context, zedToken, cacheFreshness).Result;
 
+    /// <summary>
+    /// ExpandPermissionTree reveals the graph structure for a resource's permission or relation. This RPC does not recurse infinitely
+    /// deep and may require multiple calls to fully unnest a deeply nested graph.
+    /// </summary>
+    /// <param name="resource"></param>
+    /// <param name="permission"></param>
+    /// <param name="zedToken"></param>
+    /// <param name="cacheFreshness"></param>
+    /// <returns></returns>
     public async Task<ExpandPermissionTreeResponse?> ExpandPermissionAsync(ResourceReference resource, string permission, ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
     {
         return await _core!.ExpandPermissionAsync(resource.Type, resource.Id, permission, zedToken, cacheFreshness);
@@ -63,7 +74,42 @@ public class SpiceDbClient : ISpiceDbClient
 
     public async Task<ZedToken> DeleteRelationshipAsync(SpiceDb.Models.Relationship relation)
     {
-        return await _core!.UpdateRelationshipAsync(relation.Resource.Type, relation.Resource.Id, relation.Relation, relation.Subject.Type, relation.Subject.Id, relation.Subject.Relation, RelationshipUpdate.Types.Operation.Delete);
+        return await _core!.UpdateRelationshipAsync(relation.Resource.Type, relation.Resource.Id, relation.Relation, relation.Subject.Type, relation.Subject.Id, relation.Subject.Relation, Authzed.Api.V1.RelationshipUpdate.Types.Operation.Delete);
+    }
+
+    public async Task<ZedToken?> WriteRelationshipsAsync(List<SpiceDb.Models.RelationshipUpdate>? relationships)
+    {
+        if (relationships is null) return null;
+
+        RepeatedField<Authzed.Api.V1.RelationshipUpdate> updateCollection = new();
+
+        var updates = relationships?.Select(x => new Authzed.Api.V1.RelationshipUpdate
+        {
+            Operation = x.Operation switch
+            {
+                RelationshipUpdateOperation.Delete => Authzed.Api.V1.RelationshipUpdate.Types.Operation.Delete,
+                RelationshipUpdateOperation.Upsert => Authzed.Api.V1.RelationshipUpdate.Types.Operation.Touch,
+                RelationshipUpdateOperation.Create => Authzed.Api.V1.RelationshipUpdate.Types.Operation.Create,
+                _ => Authzed.Api.V1.RelationshipUpdate.Types.Operation.Unspecified
+            },
+            Relationship = new Authzed.Api.V1.Relationship
+            {
+                Resource = new ObjectReference { ObjectType = x.Relationship.Resource.Type, ObjectId = x.Relationship.Resource.Id },
+                Relation = x.Relationship.Relation,
+                Subject = new SubjectReference
+                {
+                    Object = new ObjectReference { ObjectType = x.Relationship.Subject.Type, ObjectId = x.Relationship.Subject.Id },
+                    OptionalRelation = x.Relationship.Subject.Relation
+                },
+                OptionalCaveat = x.Relationship.OptionalCaveat != null ? new ContextualizedCaveat { CaveatName = x.Relationship.OptionalCaveat.Name, Context = x.Relationship.OptionalCaveat.Context.ToStruct() } : null
+            }
+        }).ToList() ?? new List<Authzed.Api.V1.RelationshipUpdate>();
+
+        updateCollection.AddRange(updates);
+
+        var response = await _core!.WriteRelationshipsAsync(updateCollection);
+
+        return response?.WrittenAt;
     }
 
     public async Task<List<SpiceDb.Models.Relationship>> ReadRelationshipsAsync(Models.RelationshipFilter resource, Models.RelationshipFilter? subject = null, 
@@ -76,7 +122,8 @@ public class SpiceDbClient : ISpiceDbClient
         return response.Select(x => new SpiceDb.Models.Relationship(
                 new ResourceReference(x.Resource.ObjectType, x.Resource.ObjectId),
                 x.Relation,
-                new ResourceReference(x.Subject.Object.ObjectType, x.Subject.Object.ObjectId, x.Subject.OptionalRelation)))
+                new ResourceReference(x.Subject.Object.ObjectType, x.Subject.Object.ObjectId, x.Subject.OptionalRelation),
+                x.OptionalCaveat != null ? new Caveat { Name = x.OptionalCaveat.CaveatName, Context = x.OptionalCaveat.Context.FromStruct() } : null))
             .ToList();
     }
 
@@ -99,7 +146,7 @@ public class SpiceDbClient : ISpiceDbClient
     {
         if (prefix.Length > 0 && !prefix.EndsWith("/")) prefix += "/";
 
-        var parsed_schema = string.Empty;
+        var parsedSchema = string.Empty;
         var entities = SchemaParser.Parse(schema).ToList();
 
         foreach (var entity in entities)
@@ -127,10 +174,10 @@ public class SpiceDbClient : ISpiceDbClient
 
             def += "}\n\n";
 
-            parsed_schema += def;
+            parsedSchema += def;
         }
         
-        await _core!.WriteSchemaAsync(parsed_schema);
+        await _core!.WriteSchemaAsync(parsedSchema);
     }
 
     public async Task<ZedToken?> ImportRelationshipsFromFileAsync(string filePath)
@@ -141,8 +188,8 @@ public class SpiceDbClient : ISpiceDbClient
     public async Task<ZedToken?> ImportRelationshipsAsync(string content)
     {
         // Read the file as one string.
-        RelationshipUpdate.Types.Operation operation = RelationshipUpdate.Types.Operation.Touch;
-        RepeatedField<RelationshipUpdate> updateCollection = new RepeatedField<RelationshipUpdate>();
+        Authzed.Api.V1.RelationshipUpdate.Types.Operation operation = Authzed.Api.V1.RelationshipUpdate.Types.Operation.Touch;
+        RepeatedField<Authzed.Api.V1.RelationshipUpdate> updateCollection = new RepeatedField<Authzed.Api.V1.RelationshipUpdate>();
 
         var lines = content.Split("\n\r".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
 

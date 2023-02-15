@@ -6,6 +6,7 @@ using SpiceDb.Enum;
 using SpiceDb.Models;
 using System.Text.RegularExpressions;
 using Relationship = Authzed.Api.V1.Relationship;
+using RelationshipUpdate = Authzed.Api.V1.RelationshipUpdate;
 
 namespace SpiceDb.Api;
 

@@ -32,4 +32,5 @@ public interface ISpiceDbClient
 	Task ImportSchemaFromStringAsync(string schema, string prefix = "");
 	Task<ZedToken?> ImportRelationshipsFromFileAsync(string filePath);
 	Task<ZedToken?> ImportRelationshipsAsync(string content);
+    Task<ZedToken?> WriteRelationshipsAsync(List<SpiceDb.Models.RelationshipUpdate>? relationships);
 }

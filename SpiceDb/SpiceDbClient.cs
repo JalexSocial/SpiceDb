@@ -61,9 +61,9 @@ public class SpiceDbClient : ISpiceDbClient
     public async Task<ZedToken> AddRelationshipAsync(string relation) => await AddRelationshipAsync(new SpiceDb.Models.Relationship(relation));
     public ZedToken AddRelationship(string relation) => AddRelationshipAsync(new SpiceDb.Models.Relationship(relation)).Result;
 
-    public async Task<ZedToken> DeleteRelationshipAsync(SpiceDb.Models.Relationship relation, string optionalSubjectRelation = "")
+    public async Task<ZedToken> DeleteRelationshipAsync(SpiceDb.Models.Relationship relation)
     {
-        return await _core!.UpdateRelationshipAsync(relation.Resource.Type, relation.Resource.Id, relation.Relation, relation.Subject.Type, relation.Subject.Id, optionalSubjectRelation, RelationshipUpdate.Types.Operation.Delete);
+        return await _core!.UpdateRelationshipAsync(relation.Resource.Type, relation.Resource.Id, relation.Relation, relation.Subject.Type, relation.Subject.Id, relation.Subject.Relation, RelationshipUpdate.Types.Operation.Delete);
     }
 
     public async Task<List<SpiceDb.Models.Relationship>> ReadRelationshipsAsync(Models.RelationshipFilter resource, Models.RelationshipFilter? subject = null, 
@@ -80,9 +80,9 @@ public class SpiceDbClient : ISpiceDbClient
             .ToList();
     }
 
-    public async Task<List<string>> GetResourcePermissionsAsync(string resourceType, string permission, string subjectType, string subjectId, ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
+    public async Task<List<string>> GetResourcePermissionsAsync(string resourceType, string permission, ResourceReference subject, ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
     {
-        return await _core!.GetResourcePermissionsAsync(resourceType, permission, subjectType, subjectId, zedToken);
+        return await _core!.GetResourcePermissionsAsync(resourceType, permission, subject.Type, subject.Id, zedToken);
     }
 
     public string ExportSchema()

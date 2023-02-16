@@ -158,6 +158,23 @@ Console.WriteLine($"Can user carmella read document:firstdoc? {carmellaCanRead.H
         Dictionary<string, object>? context = null,
         ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness);
 
+    /// <summary>
+    /// LookupResources returns all the resources of a given type that a subject can access whether via
+    /// a computed permission or relation membership.
+    /// </summary>
+    /// <param name="resourceType">The type of resource object for which the IDs will be returned.</param>
+    /// <param name="permission">The name of the permission or relation for which the subject must check</param>
+    /// <param name="subject">The subject with access to the resources</param>
+    /// <param name="context">Dictionary of values that are injected into the caveat evaluation context</param>
+    /// <param name="zedToken"></param>
+    /// <param name="cacheFreshness"></param>
+    /// <returns></returns>
+    IAsyncEnumerable<SpiceDb.Models.LookupResourcesResponse> LookupResources(string resourceType,
+        string permission,
+        ResourceReference subject,
+        Dictionary<string, object>? context = null,
+        ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness);
+
     Task<List<string>> GetResourcePermissionsAsync(string resourceType, string permission, ResourceReference subject, ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness);
     string ReadSchema();
     Task ImportSchemaFromFileAsync(string filePath, string prefix = "");

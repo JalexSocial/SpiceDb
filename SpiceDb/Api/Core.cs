@@ -5,6 +5,7 @@ using Grpc.Net.Client;
 using SpiceDb.Enum;
 using SpiceDb.Models;
 using System.Text.RegularExpressions;
+using LookupResourcesResponse = Authzed.Api.V1.LookupResourcesResponse;
 using LookupSubjectsResponse = SpiceDb.Models.LookupSubjectsResponse;
 using Precondition = Authzed.Api.V1.Precondition;
 using Relationship = Authzed.Api.V1.Relationship;
@@ -184,6 +185,50 @@ internal class Core
                     },
                     MissingRequiredContext = rs.PartialCaveatInfo.MissingRequiredContext.Where(x => !string.IsNullOrEmpty(x)).Select(x => x).ToList()
                 }).ToList()
+            };
+
+            yield return response;
+        }
+    }
+
+    public async IAsyncEnumerable<SpiceDb.Models.LookupResourcesResponse> LookupResources(string resourceType,
+        string permission,
+        string subjectType, string subjectId, string optionalSubjectRelation = "",
+        Dictionary<string, object>? context = null,
+        ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
+    {
+        LookupResourcesRequest req = new LookupResourcesRequest
+        {
+            Consistency = new Consistency { MinimizeLatency = true, AtExactSnapshot = zedToken },
+            ResourceObjectType = resourceType,
+            Permission = permission,
+            Subject = new SubjectReference
+            {
+                Object = new ObjectReference { ObjectType = subjectType, ObjectId = subjectId },
+                OptionalRelation = optionalSubjectRelation
+            },
+            Context = context?.ToStruct()
+        };
+
+        var call = _acl!.LookupResources(req, _callOptions);
+
+
+        await foreach (var resp in call.ResponseStream.ReadAllAsync())
+        {
+            if (resp is null) continue;
+
+            var response = new SpiceDb.Models.LookupResourcesResponse
+            {
+                LookedUpAt = resp.LookedUpAt,
+                Permissionship = resp.Permissionship switch
+                {
+                    Authzed.Api.V1.LookupPermissionship.HasPermission => Permissionship.HasPermission,
+                    Authzed.Api.V1.LookupPermissionship.ConditionalPermission => Permissionship.ConditionalPermission,
+                    _ => Permissionship.Unspecified
+                },
+
+                MissingRequiredContext = resp.PartialCaveatInfo.MissingRequiredContext
+                    .Where(x => !String.IsNullOrEmpty(x)).Select(x => x).ToList()
             };
 
             yield return response;

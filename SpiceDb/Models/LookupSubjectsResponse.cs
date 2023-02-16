@@ -7,7 +7,7 @@ public class ResolvedSubject
 {
     public string Id { get; set; } = string.Empty;
     public Permissionship Permissionship { get; set; } = Permissionship.Unspecified;
-    public List<string> MissingRequiredContext = new();
+    public List<string> MissingRequiredContext { get; set; } = new();
 }
 
 public class LookupSubjectsResponse

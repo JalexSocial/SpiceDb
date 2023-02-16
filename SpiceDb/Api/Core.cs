@@ -1,4 +1,5 @@
-﻿using Authzed.Api.V1;
+﻿using System.Runtime.CompilerServices;
+using Authzed.Api.V1;
 using Google.Protobuf.Collections;
 using Grpc.Core;
 using Grpc.Net.Client;
@@ -17,6 +18,7 @@ internal class Core
 {
     private PermissionsService.PermissionsServiceClient? _acl;
     private SchemaService.SchemaServiceClient? _schema;
+    private WatchService.WatchServiceClient? _watch;
     private CallOptions _callOptions;
     private Metadata? _headers;
 
@@ -43,6 +45,7 @@ internal class Core
         //initializes new clients for interacting with Authzed.
         _acl = new PermissionsService.PermissionsServiceClient(channel.Result);
         _schema = new SchemaService.SchemaServiceClient(channel.Result);
+        _watch = new WatchService.WatchServiceClient(channel.Result);
 
         _headers = new()
         {
@@ -232,6 +235,50 @@ internal class Core
             };
 
             yield return response;
+        }
+    }
+
+    public async IAsyncEnumerable<SpiceDb.Models.WatchResponse> Watch(List<string>? optionalSubjectTypes = null, 
+        ZedToken? zedToken = null,
+        DateTime? deadline = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        var request = new WatchRequest
+        {
+            OptionalStartCursor   = zedToken
+        };
+
+        request.OptionalObjectTypes.AddRange(optionalSubjectTypes ?? new List<string>());
+
+        var call = _watch!.Watch(request, _headers, deadline, cancellationToken);
+
+        await foreach (var resp in call.ResponseStream.ReadAllAsync(cancellationToken))
+        {
+            if (resp is null) continue;
+
+            yield return new SpiceDb.Models.WatchResponse
+            {
+                ChangesThrough = resp.ChangesThrough,
+                Updates = resp.Updates.Select(x => new SpiceDb.Models.RelationshipUpdate
+                {
+                    Operation = x.Operation switch
+                    {
+                        RelationshipUpdate.Types.Operation.Create => RelationshipUpdateOperation.Create,
+                        RelationshipUpdate.Types.Operation.Delete => RelationshipUpdateOperation.Delete,
+                        RelationshipUpdate.Types.Operation.Touch => RelationshipUpdateOperation.Upsert,
+                        _ => RelationshipUpdateOperation.Upsert
+                    },
+                    Relationship = new SpiceDb.Models.Relationship(
+                        resource: new ResourceReference(x.Relationship.Resource.ObjectType, x.Relationship.Resource.ObjectId),
+                        relation: x.Relationship.Relation,
+                        subject: new ResourceReference(x.Relationship.Subject.Object.ObjectType, x.Relationship.Subject.Object.ObjectId, x.Relationship.Subject.OptionalRelation),
+                        optionalCaveat: new Caveat
+                        {
+                            Name = x.Relationship.OptionalCaveat.CaveatName,
+                            Context = x.Relationship.OptionalCaveat.Context.FromStruct()
+                        })
+                }).ToList()
+            };
+                
         }
     }
 

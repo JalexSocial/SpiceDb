@@ -1,4 +1,5 @@
-﻿using Authzed.Api.V1;
+﻿using System.Runtime.CompilerServices;
+using Authzed.Api.V1;
 using SpiceDb.Enum;
 using SpiceDb.Models;
 
@@ -116,6 +117,10 @@ public interface ISpiceDbClient
         ResourceReference subject,
         Dictionary<string, object>? context = null,
         ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness);
+
+    IAsyncEnumerable<SpiceDb.Models.WatchResponse> Watch(List<string>? optionalSubjectTypes = null,
+        ZedToken? zedToken = null,
+        DateTime? deadline = null, [EnumeratorCancellation] CancellationToken cancellationToken = default);
 
     Task<List<string>> GetResourcePermissionsAsync(string resourceType, string permission, ResourceReference subject, ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness);
     string ReadSchema();

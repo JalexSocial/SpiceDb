@@ -73,7 +73,7 @@ Console.WriteLine($"Can user carmella read document:firstdoc? {carmellaCanRead.H
 | LookupSubjects | Yes  |
 | ReadSchema | Yes  |
 | WriteSchema | Yes, as Import* methods |
-| Watch | No  |
+| Watch | Yes  |
 
 
 ### API Methods

@@ -3,6 +3,7 @@ using Google.Protobuf.Collections;
 using SpiceDb.Api;
 using SpiceDb.Enum;
 using SpiceDb.Models;
+using System.Runtime.CompilerServices;
 using Precondition = Authzed.Api.V1.Precondition;
 
 namespace SpiceDb;
@@ -263,6 +264,16 @@ public class SpiceDbClient : ISpiceDbClient
         await foreach (var response in _core!.LookupResources(resourceType, permission, 
                            subject.Type, subject.Id, subject.Relation,
                            context, zedToken, cacheFreshness))
+        {
+            yield return response;
+        }
+    }
+
+    public async IAsyncEnumerable<SpiceDb.Models.WatchResponse> Watch(List<string>? optionalSubjectTypes = null,
+        ZedToken? zedToken = null,
+        DateTime? deadline = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        await foreach (var response in _core!.Watch(optionalSubjectTypes, zedToken, deadline, cancellationToken))
         {
             yield return response;
         }

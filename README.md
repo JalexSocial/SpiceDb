@@ -3,7 +3,8 @@
 Simple SpiceDb client originally based on code from SpiceDB.Hierarchical.UI - Works with AuthZed
 https://github.com/MaheshBailwal/SpiceDB.Hierarchical.UI
 
-This API does not directly 
+This API does not directly expose the SpiceDb grpc client but instead wraps it and exposes a few additional helper methods to
+make development easier.
 
 Available on Nuget at https://www.nuget.org/packages/SpiceDb
 

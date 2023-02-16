@@ -16,7 +16,8 @@ Install the package using NuGet
 
 Example Using UserSecrets
 
-```
+```csharp
+
 using Microsoft.Extensions.Configuration;
 using SpiceDb.Example;
 using SpiceDb.Example.MyObjects;

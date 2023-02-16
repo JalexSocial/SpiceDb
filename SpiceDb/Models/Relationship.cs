@@ -58,13 +58,6 @@ public class Relationship
 
     public override string ToString()
     {
-        var relationship = $"{Resource.ToString()}#{this.Relation}@{Subject.ToString()}";
-
-        if (!string.IsNullOrEmpty(this.Subject.Relation))
-        {
-            relationship += $"#{this.Subject.Relation}";
-        }
-
-        return relationship;
+        return $"{Resource.ToString()}#{this.Relation}@{Subject.ToString()}";
     }
 }

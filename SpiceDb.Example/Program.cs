@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using SpiceDb;
+using SpiceDb.Enum;
 using SpiceDb.Example;
 using SpiceDb.Example.MyObjects;
 using SpiceDb.Models;

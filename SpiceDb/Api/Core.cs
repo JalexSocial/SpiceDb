@@ -118,7 +118,13 @@ internal class Core
 
         return new PermissionResponse
         {
-            HasPermission = call?.Permissionship == CheckPermissionResponse.Types.Permissionship.HasPermission,
+            Permissionship = call?.Permissionship switch
+            {
+	            CheckPermissionResponse.Types.Permissionship.NoPermission => Permissionship.NoPermission,
+                CheckPermissionResponse.Types.Permissionship.HasPermission => Permissionship.HasPermission,
+	            CheckPermissionResponse.Types.Permissionship.ConditionalPermission => Permissionship.ConditionalPermission,
+                _ => Permissionship.Unspecified
+            },
             ZedToken = call?.CheckedAt
         };
     }
@@ -220,7 +226,7 @@ internal class Core
         return list;
     }
 
-    public async Task<List<Relationship>> ReadRelationshipsAsync(string resourceType, string optionalResourceId = "",
+    public async IAsyncEnumerable<SpiceDb.Models.ReadRelationshipsResponse> ReadRelationshipsAsync(string resourceType, string optionalResourceId = "",
      string optionalRelation = "", string optionalSubjectType = "", string optionalSubjectId = "", string optionalSubjectRelation = "",
      ZedToken? zedToken = null,
      CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
@@ -252,14 +258,27 @@ internal class Core
             req.Consistency.FullyConsistent = true;
         }
         var call = _acl!.ReadRelationships(req, _callOptions);
-        List<Relationship> list = new List<Relationship>();
 
         await foreach (var resp in call.ResponseStream.ReadAllAsync())
         {
-            list.Add(resp.Relationship);
-        }
+	        var response = new SpiceDb.Models.ReadRelationshipsResponse
+	        {
+                Token = resp.ReadAt,
+		        Relationship = new SpiceDb.Models.Relationship (
+			        resource: new ResourceReference(resp.Relationship.Resource.ObjectType, resp.Relationship.Resource.ObjectId),
+			        relation: resp.Relationship.Relation,
+			        subject: new ResourceReference(resp.Relationship.Subject.Object.ObjectType, resp.Relationship.Subject.Object.ObjectId, resp.Relationship.Subject.OptionalRelation),
+			        optionalCaveat: resp.Relationship.OptionalCaveat != null
+				        ? new Caveat {
+					        Name = resp.Relationship.OptionalCaveat.CaveatName,
+					        Context = resp.Relationship.OptionalCaveat.Context.FromStruct()
+				        }
+				        : null
+                    )
+	        };
 
-        return list;
+	        yield return response;
+        }
     }
 
     public async Task<string> ReadSchemaAsync()
@@ -348,9 +367,14 @@ internal class Core
     }
 
 
-    public async Task<WriteRelationshipsResponse> WriteRelationshipsAsync(RepeatedField<RelationshipUpdate> updateCollection)
+    public async Task<WriteRelationshipsResponse> WriteRelationshipsAsync(RepeatedField<RelationshipUpdate> updateCollection, RepeatedField<Authzed.Api.V1.Precondition>? optionalPreconditions = null)
     {
-        WriteRelationshipsRequest req = new WriteRelationshipsRequest() { Updates = { updateCollection } };
+        WriteRelationshipsRequest req = new WriteRelationshipsRequest()
+        {
+	        Updates = { updateCollection },
+            OptionalPreconditions = { optionalPreconditions ?? new() }
+        };
+
         return await _acl!.WriteRelationshipsAsync(req, _callOptions);
     }
 

@@ -6,10 +6,9 @@ using System.Threading.Tasks;
 
 namespace SpiceDb.Enum;
 
-public enum Permissionship
+public enum PreconditionOperation
 {
     Unspecified = 0,
-    HasPermission = 1,
-    NoPermission,
-    ConditionalPermission = 3
+    MustNotMatch = 1,
+    MustMatch = 2
 }

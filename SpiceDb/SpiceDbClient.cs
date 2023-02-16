@@ -4,11 +4,12 @@ using Google.Protobuf.Collections;
 using SpiceDb.Api;
 using SpiceDb.Enum;
 using SpiceDb.Models;
+using Precondition = Authzed.Api.V1.Precondition;
 
 
 namespace SpiceDb;
 
-// Original code from SpiceDB.Hierarhical
+// Original code from SpiceDB.Hierarchical
 public class SpiceDbClient : ISpiceDbClient
 {
     private readonly string _serverAddress;
@@ -28,6 +29,96 @@ public class SpiceDbClient : ISpiceDbClient
         _serverAddress = serverAddress;
         _token = token;
         _core = new Core(serverAddress, token);
+    }
+
+    /// <summary>
+    /// ReadRelationships reads a set of the relationships matching one or more filters.
+    /// </summary>
+    /// <param name="resource"></param>
+    /// <param name="subject"></param>
+    /// <param name="zedToken"></param>
+    /// <param name="cacheFreshness"></param>
+    /// <returns></returns>
+    public async IAsyncEnumerable<SpiceDb.Models.ReadRelationshipsResponse> ReadRelationshipsAsync(Models.RelationshipFilter resource, Models.RelationshipFilter? subject = null,
+	    ZedToken? zedToken = null,
+	    CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
+    {
+	    await foreach (var rs in _core!.ReadRelationshipsAsync(resource.Type, resource.OptionalId,
+		                   resource.OptionalRelation,
+		                   subject?.Type ?? string.Empty, subject?.OptionalId ?? string.Empty,
+		                   subject?.OptionalRelation ?? string.Empty, zedToken, cacheFreshness))
+	    {
+		    yield return rs;
+	    }
+    }
+
+    /// <summary>
+    /// WriteRelationships atomically writes and/or deletes a set of specified relationships. An optional set of
+    /// preconditions can be provided that must be satisfied for the operation to commit.
+    /// </summary>
+    /// <param name="relationships"></param>
+    /// <returns></returns>
+    public async Task<ZedToken?> WriteRelationshipsAsync(List<SpiceDb.Models.RelationshipUpdate>? relationships, List<SpiceDb.Models.Precondition>? preconditions = null)
+    {
+	    if (relationships is null) return null;
+
+	    RepeatedField<Authzed.Api.V1.RelationshipUpdate> updateCollection = new();
+	    RepeatedField<Authzed.Api.V1.Precondition> preconditionCollection = new();
+
+	    var updates = relationships?.Select(x => new Authzed.Api.V1.RelationshipUpdate
+	    {
+		    Operation = x.Operation switch
+		    {
+			    RelationshipUpdateOperation.Delete => Authzed.Api.V1.RelationshipUpdate.Types.Operation.Delete,
+			    RelationshipUpdateOperation.Upsert => Authzed.Api.V1.RelationshipUpdate.Types.Operation.Touch,
+			    RelationshipUpdateOperation.Create => Authzed.Api.V1.RelationshipUpdate.Types.Operation.Create,
+			    _ => Authzed.Api.V1.RelationshipUpdate.Types.Operation.Unspecified
+		    },
+		    Relationship = new Authzed.Api.V1.Relationship
+		    {
+			    Resource = new ObjectReference { ObjectType = x.Relationship.Resource.Type, ObjectId = x.Relationship.Resource.Id },
+			    Relation = x.Relationship.Relation,
+			    Subject = new SubjectReference
+			    {
+				    Object = new ObjectReference { ObjectType = x.Relationship.Subject.Type, ObjectId = x.Relationship.Subject.Id },
+				    OptionalRelation = x.Relationship.Subject.Relation
+			    },
+			    OptionalCaveat = x.Relationship.OptionalCaveat != null ? new ContextualizedCaveat { CaveatName = x.Relationship.OptionalCaveat.Name, Context = x.Relationship.OptionalCaveat.Context.ToStruct() } : null
+		    }
+	    }).ToList() ?? new List<Authzed.Api.V1.RelationshipUpdate>();
+
+	    updateCollection.AddRange(updates);
+
+	    var conditions = preconditions?.Select(x => new Authzed.Api.V1.Precondition
+	    {
+		    Filter = new Authzed.Api.V1.RelationshipFilter
+		    {
+                ResourceType = x.Filter.Type,
+                OptionalResourceId = x.Filter.OptionalId,
+                OptionalRelation = x.Filter.OptionalRelation,
+                OptionalSubjectFilter = x.OptionalSubjectFilter == null ? null : new SubjectFilter
+                {
+                    SubjectType = x.OptionalSubjectFilter.Type,
+                    OptionalSubjectId = x.OptionalSubjectFilter.OptionalId,
+                    OptionalRelation = new SubjectFilter.Types.RelationFilter
+                    {
+                        Relation = x.OptionalSubjectFilter.OptionalRelation
+                    }
+                }
+            },
+		    Operation = x.Operation switch
+		    {
+			    PreconditionOperation.MustMatch => Precondition.Types.Operation.MustMatch,
+			    PreconditionOperation.MustNotMatch => Precondition.Types.Operation.MustNotMatch,
+			    _ => Precondition.Types.Operation.Unspecified
+		    }
+	    }).ToList() ?? new();
+
+        preconditionCollection.AddRange(conditions);
+
+	    var response = await _core!.WriteRelationshipsAsync(updateCollection, preconditionCollection);
+
+	    return response?.WrittenAt;
     }
 
     public string Schema => _core!.ReadSchemaAsync().Result;
@@ -77,55 +168,7 @@ public class SpiceDbClient : ISpiceDbClient
         return await _core!.UpdateRelationshipAsync(relation.Resource.Type, relation.Resource.Id, relation.Relation, relation.Subject.Type, relation.Subject.Id, relation.Subject.Relation, Authzed.Api.V1.RelationshipUpdate.Types.Operation.Delete);
     }
 
-    public async Task<ZedToken?> WriteRelationshipsAsync(List<SpiceDb.Models.RelationshipUpdate>? relationships)
-    {
-        if (relationships is null) return null;
 
-        RepeatedField<Authzed.Api.V1.RelationshipUpdate> updateCollection = new();
-
-        var updates = relationships?.Select(x => new Authzed.Api.V1.RelationshipUpdate
-        {
-            Operation = x.Operation switch
-            {
-                RelationshipUpdateOperation.Delete => Authzed.Api.V1.RelationshipUpdate.Types.Operation.Delete,
-                RelationshipUpdateOperation.Upsert => Authzed.Api.V1.RelationshipUpdate.Types.Operation.Touch,
-                RelationshipUpdateOperation.Create => Authzed.Api.V1.RelationshipUpdate.Types.Operation.Create,
-                _ => Authzed.Api.V1.RelationshipUpdate.Types.Operation.Unspecified
-            },
-            Relationship = new Authzed.Api.V1.Relationship
-            {
-                Resource = new ObjectReference { ObjectType = x.Relationship.Resource.Type, ObjectId = x.Relationship.Resource.Id },
-                Relation = x.Relationship.Relation,
-                Subject = new SubjectReference
-                {
-                    Object = new ObjectReference { ObjectType = x.Relationship.Subject.Type, ObjectId = x.Relationship.Subject.Id },
-                    OptionalRelation = x.Relationship.Subject.Relation
-                },
-                OptionalCaveat = x.Relationship.OptionalCaveat != null ? new ContextualizedCaveat { CaveatName = x.Relationship.OptionalCaveat.Name, Context = x.Relationship.OptionalCaveat.Context.ToStruct() } : null
-            }
-        }).ToList() ?? new List<Authzed.Api.V1.RelationshipUpdate>();
-
-        updateCollection.AddRange(updates);
-
-        var response = await _core!.WriteRelationshipsAsync(updateCollection);
-
-        return response?.WrittenAt;
-    }
-
-    public async Task<List<SpiceDb.Models.Relationship>> ReadRelationshipsAsync(Models.RelationshipFilter resource, Models.RelationshipFilter? subject = null, 
-        ZedToken? zedToken = null,
-        CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
-    {
-        var response = await _core!.ReadRelationshipsAsync(resource.Type, resource.OptionalId,resource.OptionalRelation,
-            subject?.Type ?? string.Empty, subject?.OptionalId ?? string.Empty, subject?.OptionalRelation ?? string.Empty, zedToken, cacheFreshness);
-
-        return response.Select(x => new SpiceDb.Models.Relationship(
-                new ResourceReference(x.Resource.ObjectType, x.Resource.ObjectId),
-                x.Relation,
-                new ResourceReference(x.Subject.Object.ObjectType, x.Subject.Object.ObjectId, x.Subject.OptionalRelation),
-                x.OptionalCaveat != null ? new Caveat { Name = x.OptionalCaveat.CaveatName, Context = x.OptionalCaveat.Context.FromStruct() } : null))
-            .ToList();
-    }
 
     /// <summary>
     /// LookupSubjects returns all the subjects of a given type that have access whether via a computed permission or relation membership.

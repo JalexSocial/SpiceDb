@@ -31,7 +31,7 @@ public class ResourceReference
     {
         if (Id.Contains("#"))
         {
-            var parts = Id.Split(":");
+            var parts = Id.Split("#");
             Id = parts[0];
             Relation = parts[1];
         }

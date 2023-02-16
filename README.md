@@ -1,8 +1,9 @@
 # SpiceDb
 
-Simple SpiceDb client based on SpiceDB.Hierarchical.UI - Works with AuthZed
-
+Simple SpiceDb client originally based on code from SpiceDB.Hierarchical.UI - Works with AuthZed
 https://github.com/MaheshBailwal/SpiceDB.Hierarchical.UI
+
+This API does not directly 
 
 Available on Nuget at https://www.nuget.org/packages/SpiceDb
 
@@ -58,6 +59,21 @@ Console.WriteLine($"Can user carmella read document:firstdoc? {carmellaCanRead.H
 
 
 ```
+
+## API Coverage
+
+| authzed.api.v1 method  | Implemented |
+| ------------- | ------------- |
+| ReadRelationships | Yes  |
+| WriteRelationships | Yes  |
+| DeleteRelationships | Yes  |
+| CheckPermission | Yes  |
+| ExpandPermissionTree | Yes  |
+| LookupResources | Yes  |
+| LookupSubjects | Yes  |
+| ReadSchema | Yes  |
+| WriteSchema | Yes, as Import* methods |
+| Watch | No  |
 
 
 ### API Methods

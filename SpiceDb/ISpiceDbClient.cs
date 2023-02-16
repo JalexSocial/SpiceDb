@@ -33,4 +33,9 @@ public interface ISpiceDbClient
 	Task<ZedToken?> ImportRelationshipsFromFileAsync(string filePath);
 	Task<ZedToken?> ImportRelationshipsAsync(string content);
     Task<ZedToken?> WriteRelationshipsAsync(List<SpiceDb.Models.RelationshipUpdate>? relationships);
+    IAsyncEnumerable<SpiceDb.Models.LookupSubjectsResponse> LookupSubjects(ResourceReference resource,
+	    string permission,
+	    string subjectType, string optionalSubjectRelation = "",
+	    Dictionary<string, object>? context = null,
+	    ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness);
 }

@@ -127,6 +127,31 @@ public class SpiceDbClient : ISpiceDbClient
             .ToList();
     }
 
+    /// <summary>
+    /// LookupSubjects returns all the subjects of a given type that have access whether via a computed permission or relation membership.
+    /// </summary>
+    /// <param name="resource">Resource is the resource for which all matching subjects for the permission or relation will be returned.</param>
+    /// <param name="permission">permission is the name of the permission (or relation) for which to find the subjects</param>
+    /// <param name="subjectType">subjecttype is the type of subject object for which the IDs will be returned</param>
+    /// <param name="optionalSubjectRelation">optionalSubjectRelation is the optional relation for the subject.</param>
+    /// <param name="context">context consists of named values that are injected into the caveat evaluation context *</param>
+    /// <param name="zedToken"></param>
+    /// <param name="cacheFreshness"></param>
+    /// <returns></returns>
+    public async IAsyncEnumerable<SpiceDb.Models.LookupSubjectsResponse> LookupSubjects(ResourceReference resource,
+	    string permission,
+	    string subjectType, string optionalSubjectRelation = "", 
+	    Dictionary<string, object>? context = null,
+	    ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
+    {
+	    await foreach (var response in _core!.LookupSubjects(resource.Type, resource.Id, permission, subjectType,
+		                   optionalSubjectRelation,
+		                   context, zedToken, cacheFreshness))
+	    {
+		    yield return response;
+	    }
+    }
+
     public async Task<List<string>> GetResourcePermissionsAsync(string resourceType, string permission, ResourceReference subject, ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
     {
         return await _core!.GetResourcePermissionsAsync(resourceType, permission, subject.Type, subject.Id, zedToken);
@@ -142,6 +167,12 @@ public class SpiceDbClient : ISpiceDbClient
         await ImportSchemaFromStringAsync(File.ReadAllText(filePath), prefix);
     }
 
+    /// <summary>
+    /// Imports an Authzed Playground compatible schema (not a yaml file, just the commented schema)
+    /// </summary>
+    /// <param name="schema"></param>
+    /// <param name="prefix"></param>
+    /// <returns></returns>
     public async Task ImportSchemaFromStringAsync(string schema, string prefix = "")
     {
         if (prefix.Length > 0 && !prefix.EndsWith("/")) prefix += "/";

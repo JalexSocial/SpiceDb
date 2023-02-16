@@ -5,6 +5,7 @@ using Grpc.Net.Client;
 using SpiceDb.Enum;
 using SpiceDb.Models;
 using System.Text.RegularExpressions;
+using LookupSubjectsResponse = SpiceDb.Models.LookupSubjectsResponse;
 using Relationship = Authzed.Api.V1.Relationship;
 using RelationshipUpdate = Authzed.Api.V1.RelationshipUpdate;
 
@@ -122,6 +123,66 @@ internal class Core
         };
     }
 
+    public async IAsyncEnumerable<LookupSubjectsResponse> LookupSubjects(string resourceType, string resourceId, string permission,
+	    string subjectType, string optionalSubjectRelation = "", Dictionary<string, object>? context = null,
+        ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
+    {
+	    LookupSubjectsRequest req = new LookupSubjectsRequest
+	    {
+		    Consistency = new Consistency { MinimizeLatency = true, AtExactSnapshot = zedToken },
+            Resource = new ObjectReference { ObjectType = resourceType, ObjectId = resourceId },
+            Permission = permission,
+            SubjectObjectType = subjectType,
+            OptionalSubjectRelation = optionalSubjectRelation,
+            Context = context?.ToStruct()
+        };
+
+	    if (cacheFreshness == CacheFreshness.AtLeastAsFreshAs)
+	    {
+		    req.Consistency.AtLeastAsFresh = zedToken;
+	    }
+	    else if (cacheFreshness == CacheFreshness.MustRefresh || zedToken == null)
+	    {
+		    req.Consistency.FullyConsistent = true;
+	    }
+
+	    var call = _acl!.LookupSubjects(req, _callOptions);
+
+	    await foreach (var resp in call.ResponseStream.ReadAllAsync())
+	    {
+		    if (resp is null) continue;
+
+		    LookupSubjectsResponse response = new LookupSubjectsResponse
+		    {
+			    LookedUpAt = resp.LookedUpAt,
+                Subject = new SpiceDb.Models.ResolvedSubject
+                {
+                    Id = resp.Subject.SubjectObjectId,
+                    Permissionship = resp.Subject.Permissionship switch
+                    {
+                        Authzed.Api.V1.LookupPermissionship.HasPermission => Permissionship.HasPermission,
+                        Authzed.Api.V1.LookupPermissionship.ConditionalPermission => Permissionship.ConditionalPermission,
+                        _ => Permissionship.Unspecified
+                    },
+                    MissingRequiredContext = resp.Subject.PartialCaveatInfo.MissingRequiredContext.Where(x => !String.IsNullOrEmpty(x)).Select(x => x).ToList()
+                },
+                ExcludedSubjects = resp.ExcludedSubjects.Select(rs => new SpiceDb.Models.ResolvedSubject
+                {
+                    Id = rs.SubjectObjectId,
+                    Permissionship = rs.Permissionship switch
+                    {
+	                    Authzed.Api.V1.LookupPermissionship.HasPermission => Permissionship.HasPermission,
+	                    Authzed.Api.V1.LookupPermissionship.ConditionalPermission => Permissionship.ConditionalPermission,
+	                    _ => Permissionship.Unspecified
+                    },
+                    MissingRequiredContext = rs.PartialCaveatInfo.MissingRequiredContext.Where(x => !string.IsNullOrEmpty(x)).Select(x => x).ToList()
+                }).ToList()
+		    };
+
+		    yield return response;
+	    }
+    }
+
     public async Task<List<string>> GetResourcePermissionsAsync(string resourceType,
                                                            string permission,
                                                            string subjectType,
@@ -154,7 +215,7 @@ internal class Core
         //The IAsyncStreamReader<T>.ReadAllAsync() extension method reads all messages from the response stream
         await foreach (var resp in call.ResponseStream.ReadAllAsync())
         {
-            list.Add(resp.ResourceObjectId);
+	        list.Add(resp.ResourceObjectId);
         }
         return list;
     }

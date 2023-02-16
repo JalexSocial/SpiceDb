@@ -61,7 +61,8 @@ Console.WriteLine($"Can user carmella read document:firstdoc? {carmellaCanRead.H
 
 ### API Methods
 
-```
+```csharp
+
 /// <summary>
 /// ReadRelationships reads a set of the relationships matching one or more filters.
 /// </summary>

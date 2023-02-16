@@ -191,6 +191,10 @@ Console.WriteLine($"Can user carmella read document:firstdoc? {carmellaCanRead.H
         Dictionary<string, object>? context = null,
         ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness);
 
+    IAsyncEnumerable<SpiceDb.Models.WatchResponse> Watch(List<string>? optionalSubjectTypes = null,
+        ZedToken? zedToken = null,
+        DateTime? deadline = null, [EnumeratorCancellation] CancellationToken cancellationToken = default);
+
     Task<List<string>> GetResourcePermissionsAsync(string resourceType, string permission, ResourceReference subject, ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness);
     string ReadSchema();
     Task ImportSchemaFromFileAsync(string filePath, string prefix = "");

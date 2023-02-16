@@ -1,20 +1,15 @@
-﻿using System.Diagnostics;
-using Authzed.Api.V1;
+﻿using Authzed.Api.V1;
 using Google.Protobuf.Collections;
 using SpiceDb.Api;
 using SpiceDb.Enum;
 using SpiceDb.Models;
 using Precondition = Authzed.Api.V1.Precondition;
 
-
 namespace SpiceDb;
 
 // Original code from SpiceDB.Hierarchical
 public class SpiceDbClient : ISpiceDbClient
 {
-    private readonly string _serverAddress;
-    private readonly string _token;
-
     private readonly Core? _core;
 
     public SpiceDbClient(string token) : this("https://grpc.authzed.com", token)
@@ -24,10 +19,8 @@ public class SpiceDbClient : ISpiceDbClient
     public SpiceDbClient(string serverAddress, string token)
     {
         if (string.IsNullOrEmpty(serverAddress) || string.IsNullOrEmpty(token))
-            throw new ArgumentNullException("Missing server address or token");
+            throw new Exception("Missing server address or token");
 
-        _serverAddress = serverAddress;
-        _token = token;
         _core = new Core(serverAddress, token);
     }
 
@@ -40,16 +33,16 @@ public class SpiceDbClient : ISpiceDbClient
     /// <param name="cacheFreshness"></param>
     /// <returns></returns>
     public async IAsyncEnumerable<SpiceDb.Models.ReadRelationshipsResponse> ReadRelationshipsAsync(Models.RelationshipFilter resource, Models.RelationshipFilter? subject = null,
-	    ZedToken? zedToken = null,
-	    CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
+        ZedToken? zedToken = null,
+        CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
     {
-	    await foreach (var rs in _core!.ReadRelationshipsAsync(resource.Type, resource.OptionalId,
-		                   resource.OptionalRelation,
-		                   subject?.Type ?? string.Empty, subject?.OptionalId ?? string.Empty,
-		                   subject?.OptionalRelation ?? string.Empty, zedToken, cacheFreshness))
-	    {
-		    yield return rs;
-	    }
+        await foreach (var rs in _core!.ReadRelationshipsAsync(resource.Type, resource.OptionalId,
+                           resource.OptionalRelation,
+                           subject?.Type ?? string.Empty, subject?.OptionalId ?? string.Empty,
+                           subject?.OptionalRelation ?? string.Empty, zedToken, cacheFreshness))
+        {
+            yield return rs;
+        }
     }
 
     /// <summary>
@@ -57,42 +50,43 @@ public class SpiceDbClient : ISpiceDbClient
     /// preconditions can be provided that must be satisfied for the operation to commit.
     /// </summary>
     /// <param name="relationships"></param>
+    /// <param name="optionalPreconditions"></param>
     /// <returns></returns>
-    public async Task<ZedToken?> WriteRelationshipsAsync(List<SpiceDb.Models.RelationshipUpdate>? relationships, List<SpiceDb.Models.Precondition>? preconditions = null)
+    public async Task<ZedToken?> WriteRelationshipsAsync(List<SpiceDb.Models.RelationshipUpdate>? relationships, List<SpiceDb.Models.Precondition>? optionalPreconditions = null)
     {
-	    if (relationships is null) return null;
+        if (relationships is null) return null;
 
-	    RepeatedField<Authzed.Api.V1.RelationshipUpdate> updateCollection = new();
-	    RepeatedField<Authzed.Api.V1.Precondition> preconditionCollection = new();
+        RepeatedField<Authzed.Api.V1.RelationshipUpdate> updateCollection = new();
+        RepeatedField<Authzed.Api.V1.Precondition> preconditionCollection = new();
 
-	    var updates = relationships?.Select(x => new Authzed.Api.V1.RelationshipUpdate
-	    {
-		    Operation = x.Operation switch
-		    {
-			    RelationshipUpdateOperation.Delete => Authzed.Api.V1.RelationshipUpdate.Types.Operation.Delete,
-			    RelationshipUpdateOperation.Upsert => Authzed.Api.V1.RelationshipUpdate.Types.Operation.Touch,
-			    RelationshipUpdateOperation.Create => Authzed.Api.V1.RelationshipUpdate.Types.Operation.Create,
-			    _ => Authzed.Api.V1.RelationshipUpdate.Types.Operation.Unspecified
-		    },
-		    Relationship = new Authzed.Api.V1.Relationship
-		    {
-			    Resource = new ObjectReference { ObjectType = x.Relationship.Resource.Type, ObjectId = x.Relationship.Resource.Id },
-			    Relation = x.Relationship.Relation,
-			    Subject = new SubjectReference
-			    {
-				    Object = new ObjectReference { ObjectType = x.Relationship.Subject.Type, ObjectId = x.Relationship.Subject.Id },
-				    OptionalRelation = x.Relationship.Subject.Relation
-			    },
-			    OptionalCaveat = x.Relationship.OptionalCaveat != null ? new ContextualizedCaveat { CaveatName = x.Relationship.OptionalCaveat.Name, Context = x.Relationship.OptionalCaveat.Context.ToStruct() } : null
-		    }
-	    }).ToList() ?? new List<Authzed.Api.V1.RelationshipUpdate>();
+        var updates = relationships?.Select(x => new Authzed.Api.V1.RelationshipUpdate
+        {
+            Operation = x.Operation switch
+            {
+                RelationshipUpdateOperation.Delete => Authzed.Api.V1.RelationshipUpdate.Types.Operation.Delete,
+                RelationshipUpdateOperation.Upsert => Authzed.Api.V1.RelationshipUpdate.Types.Operation.Touch,
+                RelationshipUpdateOperation.Create => Authzed.Api.V1.RelationshipUpdate.Types.Operation.Create,
+                _ => Authzed.Api.V1.RelationshipUpdate.Types.Operation.Unspecified
+            },
+            Relationship = new Authzed.Api.V1.Relationship
+            {
+                Resource = new ObjectReference { ObjectType = x.Relationship.Resource.Type, ObjectId = x.Relationship.Resource.Id },
+                Relation = x.Relationship.Relation,
+                Subject = new SubjectReference
+                {
+                    Object = new ObjectReference { ObjectType = x.Relationship.Subject.Type, ObjectId = x.Relationship.Subject.Id },
+                    OptionalRelation = x.Relationship.Subject.Relation
+                },
+                OptionalCaveat = x.Relationship.OptionalCaveat != null ? new ContextualizedCaveat { CaveatName = x.Relationship.OptionalCaveat.Name, Context = x.Relationship.OptionalCaveat.Context.ToStruct() } : null
+            }
+        }).ToList() ?? new List<Authzed.Api.V1.RelationshipUpdate>();
 
-	    updateCollection.AddRange(updates);
+        updateCollection.AddRange(updates);
 
-	    var conditions = preconditions?.Select(x => new Authzed.Api.V1.Precondition
-	    {
-		    Filter = new Authzed.Api.V1.RelationshipFilter
-		    {
+        var conditions = optionalPreconditions?.Select(x => new Authzed.Api.V1.Precondition
+        {
+            Filter = new Authzed.Api.V1.RelationshipFilter
+            {
                 ResourceType = x.Filter.Type,
                 OptionalResourceId = x.Filter.OptionalId,
                 OptionalRelation = x.Filter.OptionalRelation,
@@ -106,26 +100,71 @@ public class SpiceDbClient : ISpiceDbClient
                     }
                 }
             },
-		    Operation = x.Operation switch
-		    {
-			    PreconditionOperation.MustMatch => Precondition.Types.Operation.MustMatch,
-			    PreconditionOperation.MustNotMatch => Precondition.Types.Operation.MustNotMatch,
-			    _ => Precondition.Types.Operation.Unspecified
-		    }
-	    }).ToList() ?? new();
+            Operation = x.Operation switch
+            {
+                PreconditionOperation.MustMatch => Precondition.Types.Operation.MustMatch,
+                PreconditionOperation.MustNotMatch => Precondition.Types.Operation.MustNotMatch,
+                _ => Precondition.Types.Operation.Unspecified
+            }
+        }).ToList() ?? new();
 
         preconditionCollection.AddRange(conditions);
 
-	    var response = await _core!.WriteRelationshipsAsync(updateCollection, preconditionCollection);
+        var response = await _core!.WriteRelationshipsAsync(updateCollection, preconditionCollection);
 
-	    return response?.WrittenAt;
+        return response?.WrittenAt;
     }
 
-    public string Schema => _core!.ReadSchemaAsync().Result;
+    /// <summary>
+    /// DeleteRelationships atomically bulk deletes all relationships matching the provided filter. If no relationships
+    /// match, none will be deleted and the operation will succeed. An optional set of preconditions can be provided
+    /// that must be satisfied for the operation to commit.
+    /// </summary>
+    /// <param name="resourceFilter">resourceFilter.Type is required, all other fields are optional</param>
+    /// <param name="optionalSubjectFilter">An optional additional subject filter</param>
+    /// <param name="optionalPreconditions">An optional set of preconditions can be provided that must be satisfied for the operation to commit.</param>
+    /// <param name="deadline">An optional deadline for the call. The call will be cancelled if deadline is hit.</param>
+    /// <param name="cancellationToken">An optional token for canceling the call.</param>
+    /// <returns></returns>
+    public async Task<ZedToken?> DeleteRelationshipsAsync(SpiceDb.Models.RelationshipFilter resourceFilter, Models.RelationshipFilter? optionalSubjectFilter = null, List<SpiceDb.Models.Precondition>? optionalPreconditions = null, DateTime? deadline = null, CancellationToken cancellationToken = default(CancellationToken))
+    {
+        RepeatedField<Authzed.Api.V1.Precondition> preconditionCollection = new();
+
+        var conditions = optionalPreconditions?.Select(x => new Authzed.Api.V1.Precondition
+        {
+            Filter = new Authzed.Api.V1.RelationshipFilter
+            {
+                ResourceType = x.Filter.Type,
+                OptionalResourceId = x.Filter.OptionalId,
+                OptionalRelation = x.Filter.OptionalRelation,
+                OptionalSubjectFilter = x.OptionalSubjectFilter == null ? null : new SubjectFilter
+                {
+                    SubjectType = x.OptionalSubjectFilter.Type,
+                    OptionalSubjectId = x.OptionalSubjectFilter.OptionalId,
+                    OptionalRelation = new SubjectFilter.Types.RelationFilter
+                    {
+                        Relation = x.OptionalSubjectFilter.OptionalRelation
+                    }
+                }
+            },
+            Operation = x.Operation switch
+            {
+                PreconditionOperation.MustMatch => Precondition.Types.Operation.MustMatch,
+                PreconditionOperation.MustNotMatch => Precondition.Types.Operation.MustNotMatch,
+                _ => Precondition.Types.Operation.Unspecified
+            }
+        }).ToList() ?? new();
+
+        preconditionCollection.AddRange(conditions);
+
+        return await _core!.DeleteRelationshipsAsync(resourceFilter.Type, resourceFilter.OptionalId, resourceFilter.OptionalRelation,
+            optionalSubjectFilter?.Type ?? string.Empty, optionalSubjectFilter?.OptionalId ?? string.Empty,
+            optionalSubjectFilter?.OptionalRelation ?? string.Empty, preconditionCollection, deadline, cancellationToken);
+    }
 
     /// <summary>
-    /// Checks whether the permission exists or not. Contains support for context as well where context objects
-    /// can be string, bool, double, int, uint, or long.
+    /// CheckPermission determines for a given resource whether a subject computes to having a permission or is a direct member of
+    /// a particular relation. Contains support for context as well where context objects can be string, bool, double, int, uint, or long.
     /// </summary>
     /// <param name="permission">Permission relationship to evaluate</param>
     /// <param name="context">Additional context information that may be needed for evaluating caveats</param>
@@ -154,6 +193,11 @@ public class SpiceDbClient : ISpiceDbClient
         return await _core!.ExpandPermissionAsync(resource.Type, resource.Id, permission, zedToken, cacheFreshness);
     }
 
+    /// <summary>
+    /// Add or update a relationship
+    /// </summary>
+    /// <param name="relation"></param>
+    /// <returns></returns>
     public async Task<ZedToken> AddRelationshipAsync(SpiceDb.Models.Relationship relation)
     {
         return await _core!.UpdateRelationshipAsync(relation.Resource.Type, relation.Resource.Id, relation.Relation, relation.Subject.Type, relation.Subject.Id, relation.Subject.Relation);
@@ -163,12 +207,15 @@ public class SpiceDbClient : ISpiceDbClient
     public async Task<ZedToken> AddRelationshipAsync(string relation) => await AddRelationshipAsync(new SpiceDb.Models.Relationship(relation));
     public ZedToken AddRelationship(string relation) => AddRelationshipAsync(new SpiceDb.Models.Relationship(relation)).Result;
 
+    /// <summary>
+    /// Removes an existing relationship (if it exists)
+    /// </summary>
+    /// <param name="relation"></param>
+    /// <returns></returns>
     public async Task<ZedToken> DeleteRelationshipAsync(SpiceDb.Models.Relationship relation)
     {
         return await _core!.UpdateRelationshipAsync(relation.Resource.Type, relation.Resource.Id, relation.Relation, relation.Subject.Type, relation.Subject.Id, relation.Subject.Relation, Authzed.Api.V1.RelationshipUpdate.Types.Operation.Delete);
     }
-
-
 
     /// <summary>
     /// LookupSubjects returns all the subjects of a given type that have access whether via a computed permission or relation membership.
@@ -182,17 +229,17 @@ public class SpiceDbClient : ISpiceDbClient
     /// <param name="cacheFreshness"></param>
     /// <returns></returns>
     public async IAsyncEnumerable<SpiceDb.Models.LookupSubjectsResponse> LookupSubjects(ResourceReference resource,
-	    string permission,
-	    string subjectType, string optionalSubjectRelation = "", 
-	    Dictionary<string, object>? context = null,
-	    ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
+        string permission,
+        string subjectType, string optionalSubjectRelation = "",
+        Dictionary<string, object>? context = null,
+        ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
     {
-	    await foreach (var response in _core!.LookupSubjects(resource.Type, resource.Id, permission, subjectType,
-		                   optionalSubjectRelation,
-		                   context, zedToken, cacheFreshness))
-	    {
-		    yield return response;
-	    }
+        await foreach (var response in _core!.LookupSubjects(resource.Type, resource.Id, permission, subjectType,
+                           optionalSubjectRelation,
+                           context, zedToken, cacheFreshness))
+        {
+            yield return response;
+        }
     }
 
     public async Task<List<string>> GetResourcePermissionsAsync(string resourceType, string permission, ResourceReference subject, ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
@@ -200,14 +247,11 @@ public class SpiceDbClient : ISpiceDbClient
         return await _core!.GetResourcePermissionsAsync(resourceType, permission, subject.Type, subject.Id, zedToken);
     }
 
-    public string ExportSchema()
-    {
-        return _core!.ReadSchemaAsync().Result;
-    }
+    public string ReadSchema() => _core!.ReadSchemaAsync().Result;
 
     public async Task ImportSchemaFromFileAsync(string filePath, string prefix = "")
     {
-        await ImportSchemaFromStringAsync(File.ReadAllText(filePath), prefix);
+        await ImportSchemaFromStringAsync(await File.ReadAllTextAsync(filePath), prefix);
     }
 
     /// <summary>
@@ -250,13 +294,13 @@ public class SpiceDbClient : ISpiceDbClient
 
             parsedSchema += def;
         }
-        
+
         await _core!.WriteSchemaAsync(parsedSchema);
     }
 
     public async Task<ZedToken?> ImportRelationshipsFromFileAsync(string filePath)
     {
-        return await ImportRelationshipsAsync(File.ReadAllText(filePath));
+        return await ImportRelationshipsAsync(await File.ReadAllTextAsync(filePath));
     }
 
     public async Task<ZedToken?> ImportRelationshipsAsync(string content)

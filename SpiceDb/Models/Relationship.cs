@@ -25,7 +25,7 @@ public class Relationship
     /// <exception cref="ArgumentException"></exception>
     public Relationship(string relation, Caveat? optionalCaveat = null)
     {
-        var parts = relation.Split(new char[] {'#', '@'}, 3);
+        var parts = relation.Split(new char[] { '#', '@' }, 3);
 
         if (parts.Length != 3)
             throw new ArgumentException($"Bad {this.GetType().Name.ToLower()} string provided");

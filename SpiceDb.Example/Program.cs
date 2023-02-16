@@ -1,20 +1,19 @@
 ﻿using Microsoft.Extensions.Configuration;
 using SpiceDb;
-using SpiceDb.Enum;
 using SpiceDb.Example;
 using SpiceDb.Example.MyObjects;
 using SpiceDb.Models;
 
 // This is just to keep the server address and token private
 var builder = new ConfigurationBuilder()
-	.AddUserSecrets(typeof(Secrets).Assembly)
-	.AddEnvironmentVariables();
+    .AddUserSecrets(typeof(Secrets).Assembly)
+    .AddEnvironmentVariables();
 var configurationRoot = builder.Build();
 
 var secrets = configurationRoot.GetSection("AuthZed").Get<Secrets>();
 
 if (secrets is null)
-	throw new ArgumentException("Invalid secrets configuration");
+    throw new ArgumentException("Invalid secrets configuration");
 
 // var serverAddress = "https://grpc.authzed.com";
 var client = new SpiceDbClient(secrets.ServerAddress, secrets.Token);

@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using SpiceDb.Models;
+﻿using SpiceDb.Models;
 
 namespace SpiceDb.Example.MyObjects;
 
@@ -11,25 +6,25 @@ namespace SpiceDb.Example.MyObjects;
 //ZedDocument.WithId("abc").CanRead(ZedUser.WithId("cat"))
 public class ZedDocument : ResourceReference
 {
-	private ZedDocument(string id) : base($"arch/document:{id}")
-	{
-	}
+    private ZedDocument(string id) : base($"arch/document:{id}")
+    {
+    }
 
-	// Create Document object
-	public static ZedDocument WithId (string id) => new ZedDocument(id);
+    // Create Document object
+    public static ZedDocument WithId(string id) => new ZedDocument(id);
 }
 
 public class ZedUser : ResourceReference
 {
-	private ZedUser(string id) : base($"arch/user:{id}")
-	{
-	}
+    private ZedUser(string id) : base($"arch/user:{id}")
+    {
+    }
 
-	// Create Document object
-	public static ZedUser WithId(string id) => new ZedUser(id);
+    // Create Document object
+    public static ZedUser WithId(string id) => new ZedUser(id);
 
-	// Define relationship to other objects (note that the "reader" relation is originally defined in the Document object,
-	// but we ensure we reference a ZedDocument object that represents the Document in the parameter
-	public Permission CanRead(ZedDocument resource) => new Permission(resource, "reader", this);
+    // Define relationship to other objects (note that the "reader" relation is originally defined in the Document object,
+    // but we ensure we reference a ZedDocument object that represents the Document in the parameter
+    public Permission CanRead(ZedDocument resource) => new Permission(resource, "reader", this);
 }
 

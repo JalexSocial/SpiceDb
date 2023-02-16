@@ -6,6 +6,7 @@ using SpiceDb.Enum;
 using SpiceDb.Models;
 using System.Text.RegularExpressions;
 using LookupSubjectsResponse = SpiceDb.Models.LookupSubjectsResponse;
+using Precondition = Authzed.Api.V1.Precondition;
 using Relationship = Authzed.Api.V1.Relationship;
 using RelationshipUpdate = Authzed.Api.V1.RelationshipUpdate;
 
@@ -120,9 +121,9 @@ internal class Core
         {
             Permissionship = call?.Permissionship switch
             {
-	            CheckPermissionResponse.Types.Permissionship.NoPermission => Permissionship.NoPermission,
+                CheckPermissionResponse.Types.Permissionship.NoPermission => Permissionship.NoPermission,
                 CheckPermissionResponse.Types.Permissionship.HasPermission => Permissionship.HasPermission,
-	            CheckPermissionResponse.Types.Permissionship.ConditionalPermission => Permissionship.ConditionalPermission,
+                CheckPermissionResponse.Types.Permissionship.ConditionalPermission => Permissionship.ConditionalPermission,
                 _ => Permissionship.Unspecified
             },
             ZedToken = call?.CheckedAt
@@ -130,12 +131,12 @@ internal class Core
     }
 
     public async IAsyncEnumerable<LookupSubjectsResponse> LookupSubjects(string resourceType, string resourceId, string permission,
-	    string subjectType, string optionalSubjectRelation = "", Dictionary<string, object>? context = null,
+        string subjectType, string optionalSubjectRelation = "", Dictionary<string, object>? context = null,
         ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
     {
-	    LookupSubjectsRequest req = new LookupSubjectsRequest
-	    {
-		    Consistency = new Consistency { MinimizeLatency = true, AtExactSnapshot = zedToken },
+        LookupSubjectsRequest req = new LookupSubjectsRequest
+        {
+            Consistency = new Consistency { MinimizeLatency = true, AtExactSnapshot = zedToken },
             Resource = new ObjectReference { ObjectType = resourceType, ObjectId = resourceId },
             Permission = permission,
             SubjectObjectType = subjectType,
@@ -143,24 +144,24 @@ internal class Core
             Context = context?.ToStruct()
         };
 
-	    if (cacheFreshness == CacheFreshness.AtLeastAsFreshAs)
-	    {
-		    req.Consistency.AtLeastAsFresh = zedToken;
-	    }
-	    else if (cacheFreshness == CacheFreshness.MustRefresh || zedToken == null)
-	    {
-		    req.Consistency.FullyConsistent = true;
-	    }
+        if (cacheFreshness == CacheFreshness.AtLeastAsFreshAs)
+        {
+            req.Consistency.AtLeastAsFresh = zedToken;
+        }
+        else if (cacheFreshness == CacheFreshness.MustRefresh || zedToken == null)
+        {
+            req.Consistency.FullyConsistent = true;
+        }
 
-	    var call = _acl!.LookupSubjects(req, _callOptions);
+        var call = _acl!.LookupSubjects(req, _callOptions);
 
-	    await foreach (var resp in call.ResponseStream.ReadAllAsync())
-	    {
-		    if (resp is null) continue;
+        await foreach (var resp in call.ResponseStream.ReadAllAsync())
+        {
+            if (resp is null) continue;
 
-		    LookupSubjectsResponse response = new LookupSubjectsResponse
-		    {
-			    LookedUpAt = resp.LookedUpAt,
+            LookupSubjectsResponse response = new LookupSubjectsResponse
+            {
+                LookedUpAt = resp.LookedUpAt,
                 Subject = new SpiceDb.Models.ResolvedSubject
                 {
                     Id = resp.Subject.SubjectObjectId,
@@ -177,16 +178,16 @@ internal class Core
                     Id = rs.SubjectObjectId,
                     Permissionship = rs.Permissionship switch
                     {
-	                    Authzed.Api.V1.LookupPermissionship.HasPermission => Permissionship.HasPermission,
-	                    Authzed.Api.V1.LookupPermissionship.ConditionalPermission => Permissionship.ConditionalPermission,
-	                    _ => Permissionship.Unspecified
+                        Authzed.Api.V1.LookupPermissionship.HasPermission => Permissionship.HasPermission,
+                        Authzed.Api.V1.LookupPermissionship.ConditionalPermission => Permissionship.ConditionalPermission,
+                        _ => Permissionship.Unspecified
                     },
                     MissingRequiredContext = rs.PartialCaveatInfo.MissingRequiredContext.Where(x => !string.IsNullOrEmpty(x)).Select(x => x).ToList()
                 }).ToList()
-		    };
+            };
 
-		    yield return response;
-	    }
+            yield return response;
+        }
     }
 
     public async Task<List<string>> GetResourcePermissionsAsync(string resourceType,
@@ -221,7 +222,7 @@ internal class Core
         //The IAsyncStreamReader<T>.ReadAllAsync() extension method reads all messages from the response stream
         await foreach (var resp in call.ResponseStream.ReadAllAsync())
         {
-	        list.Add(resp.ResourceObjectId);
+            list.Add(resp.ResourceObjectId);
         }
         return list;
     }
@@ -261,23 +262,24 @@ internal class Core
 
         await foreach (var resp in call.ResponseStream.ReadAllAsync())
         {
-	        var response = new SpiceDb.Models.ReadRelationshipsResponse
-	        {
+            var response = new SpiceDb.Models.ReadRelationshipsResponse
+            {
                 Token = resp.ReadAt,
-		        Relationship = new SpiceDb.Models.Relationship (
-			        resource: new ResourceReference(resp.Relationship.Resource.ObjectType, resp.Relationship.Resource.ObjectId),
-			        relation: resp.Relationship.Relation,
-			        subject: new ResourceReference(resp.Relationship.Subject.Object.ObjectType, resp.Relationship.Subject.Object.ObjectId, resp.Relationship.Subject.OptionalRelation),
-			        optionalCaveat: resp.Relationship.OptionalCaveat != null
-				        ? new Caveat {
-					        Name = resp.Relationship.OptionalCaveat.CaveatName,
-					        Context = resp.Relationship.OptionalCaveat.Context.FromStruct()
-				        }
-				        : null
+                Relationship = new SpiceDb.Models.Relationship(
+                    resource: new ResourceReference(resp.Relationship.Resource.ObjectType, resp.Relationship.Resource.ObjectId),
+                    relation: resp.Relationship.Relation,
+                    subject: new ResourceReference(resp.Relationship.Subject.Object.ObjectType, resp.Relationship.Subject.Object.ObjectId, resp.Relationship.Subject.OptionalRelation),
+                    optionalCaveat: resp.Relationship.OptionalCaveat != null
+                        ? new Caveat
+                        {
+                            Name = resp.Relationship.OptionalCaveat.CaveatName,
+                            Context = resp.Relationship.OptionalCaveat.Context.FromStruct()
+                        }
+                        : null
                     )
-	        };
+            };
 
-	        yield return response;
+            yield return response;
         }
     }
 
@@ -350,6 +352,35 @@ internal class Core
         }
     }
 
+    public async Task<ZedToken?> DeleteRelationshipsAsync(string resourceType, string optionalResourceId = "", string optionalRelation = "", string optionalSubjectType = "", string optionalSubjectId = "", string optionalSubjectRelation = "", RepeatedField<Precondition>? optionalPreconditions = null, DateTime? deadline = null, CancellationToken cancellationToken = default(CancellationToken))
+    {
+        var req = new DeleteRelationshipsRequest
+        {
+            OptionalPreconditions = { optionalPreconditions },
+            RelationshipFilter = new Authzed.Api.V1.RelationshipFilter
+            {
+                ResourceType = resourceType,
+                OptionalRelation = optionalRelation,
+                OptionalResourceId = optionalResourceId
+            }
+        };
+        if (!String.IsNullOrEmpty(optionalSubjectType))
+        {
+            req.RelationshipFilter.OptionalSubjectFilter = new SubjectFilter() { SubjectType = optionalSubjectType, OptionalSubjectId = optionalSubjectId };
+            if (!String.IsNullOrEmpty(optionalSubjectRelation))
+            {
+                req.RelationshipFilter.OptionalSubjectFilter.OptionalRelation = new SubjectFilter.Types.RelationFilter()
+                {
+                    Relation = optionalSubjectRelation
+                };
+            }
+        }
+
+        var response = await _acl!.DeleteRelationshipsAsync(req, _headers, deadline, cancellationToken);
+
+        return response?.DeletedAt;
+    }
+
     public static RelationshipUpdate GetRelationshipUpdate(string resourceType, string resourceId,
            string relation, string subjectType, string subjectId, string optionalSubjectRelation = "",
            RelationshipUpdate.Types.Operation operation = RelationshipUpdate.Types.Operation.Touch)
@@ -371,7 +402,7 @@ internal class Core
     {
         WriteRelationshipsRequest req = new WriteRelationshipsRequest()
         {
-	        Updates = { updateCollection },
+            Updates = { updateCollection },
             OptionalPreconditions = { optionalPreconditions ?? new() }
         };
 

@@ -67,6 +67,13 @@ public interface ISpiceDbClient
     Task<ExpandPermissionTreeResponse?> ExpandPermissionAsync(ResourceReference resource, string permission, ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness);
 
     /// <summary>
+    /// Add or update multiple relationships as a single atomic update
+    /// </summary>
+    /// <param name="relationships"></param>
+    /// <returns></returns>
+    Task<ZedToken?> AddRelationshipsAsync(List<SpiceDb.Models.Relationship> relationships);
+
+    /// <summary>
     /// Add or update a relationship
     /// </summary>
     /// <param name="relation"></param>

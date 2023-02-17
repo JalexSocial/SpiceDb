@@ -196,6 +196,22 @@ public class SpiceDbClient : ISpiceDbClient
     }
 
     /// <summary>
+    /// Add or update multiple relationships as a single atomic update
+    /// </summary>
+    /// <param name="relationships"></param>
+    /// <returns></returns>
+    public async Task<ZedToken?> AddRelationshipsAsync(List<SpiceDb.Models.Relationship> relationships)
+    {
+	    var request = relationships.Select(x => new SpiceDb.Models.RelationshipUpdate
+	    {
+		    Relationship = x,
+		    Operation = RelationshipUpdateOperation.Upsert
+	    }).ToList();
+
+	    return await WriteRelationshipsAsync(request);
+    }
+
+    /// <summary>
     /// Add or update a relationship
     /// </summary>
     /// <param name="relation"></param>

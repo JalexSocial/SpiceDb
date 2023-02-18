@@ -207,7 +207,7 @@ public class SpiceDbClient : ISpiceDbClient
     {
 	    node.ExpandedObject = new ResourceReference(original.ExpandedObject.ObjectType, original.ExpandedObject.ObjectId);
 	    node.ExpandedRelation = original.ExpandedRelation;
-
+        
         switch (original.TreeTypeCase)
         {
             case Authzed.Api.V1.PermissionRelationshipTree.TreeTypeOneofCase.Intermediate:
@@ -229,11 +229,13 @@ public class SpiceDbClient : ISpiceDbClient
                 break;
             case Authzed.Api.V1.PermissionRelationshipTree.TreeTypeOneofCase.Leaf:
 	            node.TreeType = TreeType.Leaf;
-	            node.Leaf = new DirectSubjectSet
-	            {
-		            Subjects = original.Leaf.Subjects.Select(x =>
-			            new ResourceReference(x.Object.ObjectType, x.Object.ObjectId, x.OptionalRelation)).ToList()
-	            };
+	            node.Leaf = new DirectSubjectSet();
+
+                foreach (var subject in original.Leaf.Subjects)
+                {
+	                node.Leaf.Subjects.Add(new ResourceReference(subject.Object.ObjectType, subject.Object.ObjectId, subject.OptionalRelation));
+                };
+
 	            break;
         }
 
@@ -243,7 +245,7 @@ public class SpiceDbClient : ISpiceDbClient
     /// <summary>
     /// Add or update multiple relationships as a single atomic update
     /// </summary>
-    /// <param name="relationships"></param>
+    /// <param name="relationships">List of relationships to add</param>
     /// <returns></returns>
     public async Task<ZedToken?> AddRelationshipsAsync(List<SpiceDb.Models.Relationship> relationships)
     {

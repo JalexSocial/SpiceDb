@@ -21,7 +21,8 @@ public class Relationship
     /// Creates a permission based on the format resource#relation@subject
     /// Example: user:1234#view@user:1 (can user:1 view user:1234?)
     /// </summary>
-    /// <param name="permission"></param>
+    /// <param name="relation"></param>
+    /// <param name="optionalCaveat"></param>
     /// <exception cref="ArgumentException"></exception>
     public Relationship(string relation, Caveat? optionalCaveat = null)
     {

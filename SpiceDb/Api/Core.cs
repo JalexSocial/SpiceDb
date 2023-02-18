@@ -11,6 +11,7 @@ using LookupSubjectsResponse = SpiceDb.Models.LookupSubjectsResponse;
 using Precondition = Authzed.Api.V1.Precondition;
 using Relationship = Authzed.Api.V1.Relationship;
 using RelationshipUpdate = Authzed.Api.V1.RelationshipUpdate;
+using ZedToken = Authzed.Api.V1.ZedToken;
 
 namespace SpiceDb.Api;
 
@@ -67,7 +68,7 @@ internal class Core
 
     }
 
-    public async Task<ExpandPermissionTreeResponse?> ExpandPermissionAsync(string resourceType,
+    public async Task<Authzed.Api.V1.ExpandPermissionTreeResponse?> ExpandPermissionAsync(string resourceType,
             string resourceId,
             string permission,
             ZedToken? zedToken = null,
@@ -130,7 +131,7 @@ internal class Core
                 CheckPermissionResponse.Types.Permissionship.ConditionalPermission => Permissionship.ConditionalPermission,
                 _ => Permissionship.Unspecified
             },
-            ZedToken = call?.CheckedAt
+            ZedToken = call?.CheckedAt.ToSpiceDbToken()
         };
     }
 
@@ -165,7 +166,7 @@ internal class Core
 
             LookupSubjectsResponse response = new LookupSubjectsResponse
             {
-                LookedUpAt = resp.LookedUpAt,
+                LookedUpAt = resp.LookedUpAt.ToSpiceDbToken(),
                 Subject = new SpiceDb.Models.ResolvedSubject
                 {
                     Id = resp.Subject.SubjectObjectId,
@@ -222,7 +223,7 @@ internal class Core
 
             var response = new SpiceDb.Models.LookupResourcesResponse
             {
-                LookedUpAt = resp.LookedUpAt,
+                LookedUpAt = resp.LookedUpAt.ToSpiceDbToken(),
                 Permissionship = resp.Permissionship switch
                 {
                     Authzed.Api.V1.LookupPermissionship.HasPermission => Permissionship.HasPermission,
@@ -257,7 +258,7 @@ internal class Core
 
             yield return new SpiceDb.Models.WatchResponse
             {
-                ChangesThrough = resp.ChangesThrough,
+                ChangesThrough = resp.ChangesThrough.ToSpiceDbToken(),
                 Updates = resp.Updates.Select(x => new SpiceDb.Models.RelationshipUpdate
                 {
                     Operation = x.Operation switch
@@ -356,7 +357,7 @@ internal class Core
         {
             var response = new SpiceDb.Models.ReadRelationshipsResponse
             {
-                Token = resp.ReadAt,
+                Token = resp.ReadAt.ToSpiceDbToken(),
                 Relationship = new SpiceDb.Models.Relationship(
                     resource: new ResourceReference(resp.Relationship.Resource.ObjectType, resp.Relationship.Resource.ObjectId),
                     relation: resp.Relationship.Relation,

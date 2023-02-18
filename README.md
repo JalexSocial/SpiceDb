@@ -90,8 +90,8 @@ Console.WriteLine($"Can user carmella read document:firstdoc? {carmellaCanRead.H
 /// <param name="cacheFreshness"></param>
 /// <returns></returns>
 IAsyncEnumerable<SpiceDb.Models.ReadRelationshipsResponse> ReadRelationshipsAsync(Models.RelationshipFilter resource, Models.RelationshipFilter? subject = null,
-    ZedToken? zedToken = null,
-    CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness);
+	ZedToken? zedToken = null,
+	CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness);
 
 /// <summary>
 /// WriteRelationships atomically writes and/or deletes a set of specified relationships. An optional set of
@@ -145,7 +145,7 @@ Task<ExpandPermissionTreeResponse?> ExpandPermissionAsync(ResourceReference reso
 /// </summary>
 /// <param name="relationships"></param>
 /// <returns></returns>
-Task<ZedToken?> AddRelationshipsAsync(List<SpiceDb.Models.Relationship> relationships)
+Task<ZedToken?> AddRelationshipsAsync(List<SpiceDb.Models.Relationship> relationships);
 
 /// <summary>
 /// Add or update a relationship
@@ -177,10 +177,10 @@ Task<ZedToken> DeleteRelationshipAsync(SpiceDb.Models.Relationship relation);
 /// <param name="cacheFreshness"></param>
 /// <returns></returns>
 IAsyncEnumerable<SpiceDb.Models.LookupSubjectsResponse> LookupSubjects(ResourceReference resource,
-    string permission,
-    string subjectType, string optionalSubjectRelation = "",
-    Dictionary<string, object>? context = null,
-    ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness);
+	string permission,
+	string subjectType, string optionalSubjectRelation = "",
+	Dictionary<string, object>? context = null,
+	ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness);
 
 /// <summary>
 /// LookupResources returns all the resources of a given type that a subject can access whether via
@@ -194,14 +194,14 @@ IAsyncEnumerable<SpiceDb.Models.LookupSubjectsResponse> LookupSubjects(ResourceR
 /// <param name="cacheFreshness"></param>
 /// <returns></returns>
 IAsyncEnumerable<SpiceDb.Models.LookupResourcesResponse> LookupResources(string resourceType,
-    string permission,
-    ResourceReference subject,
-    Dictionary<string, object>? context = null,
-    ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness);
+	string permission,
+	ResourceReference subject,
+	Dictionary<string, object>? context = null,
+	ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness);
 
 IAsyncEnumerable<SpiceDb.Models.WatchResponse> Watch(List<string>? optionalSubjectTypes = null,
-    ZedToken? zedToken = null,
-    DateTime? deadline = null, [EnumeratorCancellation] CancellationToken cancellationToken = default);
+	ZedToken? zedToken = null,
+	DateTime? deadline = null, [EnumeratorCancellation] CancellationToken cancellationToken = default);
 
 Task<List<string>> GetResourcePermissionsAsync(string resourceType, string permission, ResourceReference subject, ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness);
 string ReadSchema();
@@ -217,5 +217,6 @@ Task ImportSchemaFromStringAsync(string schema, string prefix = "");
 
 Task<ZedToken?> ImportRelationshipsFromFileAsync(string filePath);
 Task<ZedToken?> ImportRelationshipsAsync(string content);
+
 
 ```

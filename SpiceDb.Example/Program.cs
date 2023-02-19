@@ -38,7 +38,7 @@ Console.WriteLine($"Can user bob read document:firstdoc? {bobCanRead.HasPermissi
 // true
 
 // This is a similar check but without adding prefixes
-var kevinCanRead = client.CheckPermission(new Permission("document:firstdoc#reader@user:bob"));
+var kevinCanRead = client.CheckPermission("document:firstdoc#reader@user:bob");
 
 Console.WriteLine($"Can user kevin read document:firstdoc? {kevinCanRead.HasPermission}");
 // true

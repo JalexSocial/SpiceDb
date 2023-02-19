@@ -26,7 +26,7 @@ public class SpiceDbClientTests
 		var serverAddress = configurationRoot.GetValue<string>("AuthZed.ServerAddress");
 		var token = configurationRoot.GetValue<string>("AuthZed.Token");
 
-		_client = new SpiceDbClient(serverAddress!, token!, "client");
+		_client = new SpiceDbClient(serverAddress!, token!, _prefix);
         _schema = assembly.ReadResourceAsync("schema.txt").Result;
         _relationships = assembly.ReadResourceAsync("relationships.txt").Result;
 

@@ -37,6 +37,7 @@ if (secrets is null)
     throw new ArgumentException("Invalid secrets configuration");
 
 // var serverAddress = "https://grpc.authzed.com";
+// Create a new client with a prefix of "arch" for all defined objects
 var client = new SpiceDbClient(secrets.ServerAddress, secrets.Token, "arch");
 
 // Add relationship where user:bob is a reader of document:firstdoc

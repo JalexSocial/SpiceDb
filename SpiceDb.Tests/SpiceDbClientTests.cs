@@ -16,7 +16,6 @@ public class SpiceDbClientTests
     [OneTimeSetUp]
 	public void SetUp()
 	{
-        /*
 		var assembly = Assembly.GetExecutingAssembly();
 
 		var builder = new ConfigurationBuilder()
@@ -26,6 +25,11 @@ public class SpiceDbClientTests
 
 		var serverAddress = configurationRoot.GetValue<string>("SERVER_ADDRESS");
 		var token = configurationRoot.GetValue<string>("TOKEN");
+
+		if (string.IsNullOrEmpty(serverAddress) || string.IsNullOrEmpty(token))
+		{
+            Assert.Fail("Unable to load service configuration from environment variables");
+		}
 
 		_client = new SpiceDbClient(serverAddress!, token!, _prefix);
         _schema = assembly.ReadResourceAsync("schema.txt").Result;
@@ -45,7 +49,6 @@ public class SpiceDbClientTests
         ).Result;
 
         _client.ImportRelationshipsAsync(_relationships).GetAwaiter().GetResult();
-        */
 	}
 
     // TODO: Implement all tests

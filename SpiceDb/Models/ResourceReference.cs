@@ -48,5 +48,16 @@ public class ResourceReference
     /// <returns></returns>
     public ResourceReference WithSubjectRelation(string relation) => new ResourceReference(this.Type, this.Id, relation);
 
+    public ResourceReference EnsurePrefix(string prefix)
+    {
+        var type = this.Type;
+        type = string.IsNullOrEmpty(type) ? type : type.StartsWith(prefix + "/") ? type : $"{prefix}/{type}";
+
+        if (type == this.Type)
+	        return this;
+
+        return new ResourceReference(type, this.Id, this.Relation);
+    }
+
     public override string ToString() => $"{this.Type}:{this.Id}" + (!String.IsNullOrEmpty(Relation) ? "" : $"#{Relation}");
 }

@@ -16,10 +16,14 @@ if (secrets is null)
     throw new ArgumentException("Invalid secrets configuration");
 
 // var serverAddress = "https://grpc.authzed.com";
-var client = new SpiceDbClient(secrets.ServerAddress, secrets.Token);
+var client = new SpiceDbClient(secrets.ServerAddress, secrets.Token, "arch");
 
 // Add relationship where user:bob is a reader of document:firstdoc
+// Note that because the schema prefix is set in the client it is not necessary to always prefix every resource definition 
 client.AddRelationship("arch/document:firstdoc#reader@arch/user:bob");
+
+// This also works
+client.AddRelationship("document:firstdoc#reader@user:kevin");
 
 // Second approach to adding relationships
 client.AddRelationship(new Relationship("arch/document:firstdoc", "reader", "arch/user:jacob"));
@@ -32,6 +36,13 @@ var bobCanRead = client.CheckPermission(new Permission("arch/document:firstdoc#r
 
 Console.WriteLine($"Can user bob read document:firstdoc? {bobCanRead.HasPermission}");
 // true
+
+// This is a similar check but without adding prefixes
+var kevinCanRead = client.CheckPermission(new Permission("document:firstdoc#reader@user:bob"));
+
+Console.WriteLine($"Can user kevin read document:firstdoc? {kevinCanRead.HasPermission}");
+// true
+
 
 // Check to see if user:carmella is in fact now a reader of document:firstdoc
 var carmellaCanRead = client.CheckPermission(ZedUser.WithId("carmella").CanRead(ZedDocument.WithId("firstdoc")));

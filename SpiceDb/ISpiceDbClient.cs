@@ -68,7 +68,7 @@ public interface ISpiceDbClient
 	/// <summary>
 	/// Add or update multiple relationships as a single atomic update
 	/// </summary>
-	/// <param name="relationships"></param>
+	/// <param name="relationships">List of relationships to add</param>
 	/// <returns></returns>
 	Task<ZedToken?> AddRelationshipsAsync(List<SpiceDb.Models.Relationship> relationships);
 
@@ -130,7 +130,7 @@ public interface ISpiceDbClient
 
 	Task<List<string>> GetResourcePermissionsAsync(string resourceType, string permission, ResourceReference subject, ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness);
 	string ReadSchema();
-	Task ImportSchemaFromFileAsync(string filePath, string prefix = "");
+	Task ImportSchemaFromFileAsync(string filePath);
 
 	/// <summary>
 	/// Imports an Authzed Playground compatible schema (not a yaml file, just the commented schema)
@@ -138,7 +138,7 @@ public interface ISpiceDbClient
 	/// <param name="schema"></param>
 	/// <param name="prefix"></param>
 	/// <returns></returns>
-	Task ImportSchemaFromStringAsync(string schema, string prefix = "");
+	Task ImportSchemaFromStringAsync(string schema);
 
 	Task<ZedToken?> ImportRelationshipsFromFileAsync(string filePath);
 	Task<ZedToken?> ImportRelationshipsAsync(string content);

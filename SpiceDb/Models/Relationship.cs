@@ -57,7 +57,7 @@ public class Relationship
     /// </summary>
     public Caveat? OptionalCaveat { get; set; }
 
-    public override string ToString()
+	public override string ToString()
     {
         return $"{Resource.ToString()}#{this.Relation}@{Subject.ToString()}";
     }

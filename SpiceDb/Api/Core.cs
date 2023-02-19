@@ -469,7 +469,7 @@ internal class Core
             }
         }
 
-        var response = await _acl!.DeleteRelationshipsAsync(req, _headers, deadline, cancellationToken);
+        var response = await _acl!.DeleteRelationshipsAsync(req, deadline: deadline, cancellationToken:cancellationToken);
 
         return response?.DeletedAt;
     }

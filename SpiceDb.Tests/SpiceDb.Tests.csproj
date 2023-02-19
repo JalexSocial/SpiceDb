@@ -1,0 +1,30 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+
+    <IsPackable>false</IsPackable>
+
+    <UserSecretsId>991c8072-ae76-4e2e-8727-505d7b9cdfb0</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Schema\relationships.txt">
+      <SubType>Component</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Schema\schema.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
+	  <PackageReference Include="nunit" Version="3.13.3" />
+	  <PackageReference Include="NUnit3TestAdapter" Version="4.3.1" />
+	  <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.4.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SpiceDb\SpiceDb.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -3,25 +3,35 @@ using SpiceDb.Api;
 using SpiceDb.Enum;
 using SpiceDb.Models;
 using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 
 namespace SpiceDb;
 
 public class SpiceDbClient : ISpiceDbClient
 {
     // Original code from SpiceDB.Hierarchical
-
+    private readonly string _prefix;
     private readonly Core? _core;
 
-    public SpiceDbClient(string token) : this("https://grpc.authzed.com", token)
+    /// <summary>
+    /// Create a new client with the default Authzed server address
+    /// </summary>
+    /// <param name="token">Token with admin privileges that can manipulate the desired permission system</param>
+    /// <param name="schemaPrefix">Schema prefix used for permission system</param>
+    public SpiceDbClient(string token, string schemaPrefix) : this("https://grpc.authzed.com", token, schemaPrefix)
     {
     }
 
-    public SpiceDbClient(string serverAddress, string token)
+    public SpiceDbClient(string serverAddress, string token, string schemaPrefix)
     {
         if (string.IsNullOrEmpty(serverAddress) || string.IsNullOrEmpty(token))
             throw new Exception("Missing server address or token");
 
+        if (!Regex.IsMatch(schemaPrefix, @"[a-z0-9]{4,64}$"))
+	        throw new Exception("Schema prefixes must be alphanumeric, lowercase, between 4-64 characters and not end in an underscore");
+
         _core = new Core(serverAddress, token);
+        _prefix = schemaPrefix;
     }
 
     /// <summary>
@@ -36,9 +46,9 @@ public class SpiceDbClient : ISpiceDbClient
         ZedToken? zedToken = null,
         CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
     {
-        await foreach (var rs in _core!.ReadRelationshipsAsync(resource.Type, resource.OptionalId,
+        await foreach (var rs in _core!.ReadRelationshipsAsync(EnsurePrefix(resource.Type)!, resource.OptionalId,
                            resource.OptionalRelation,
-                           subject?.Type ?? string.Empty, subject?.OptionalId ?? string.Empty,
+                           EnsurePrefix(subject?.Type) ?? string.Empty, subject?.OptionalId ?? string.Empty,
                            subject?.OptionalRelation ?? string.Empty, zedToken.ToAuthzedToken(), cacheFreshness))
         {
             yield return rs;
@@ -70,11 +80,11 @@ public class SpiceDbClient : ISpiceDbClient
             },
             Relationship = new Authzed.Api.V1.Relationship
             {
-                Resource = new Authzed.Api.V1.ObjectReference { ObjectType = x.Relationship.Resource.Type, ObjectId = x.Relationship.Resource.Id },
+                Resource = new Authzed.Api.V1.ObjectReference { ObjectType = EnsurePrefix(x.Relationship.Resource.Type), ObjectId = x.Relationship.Resource.Id },
                 Relation = x.Relationship.Relation,
                 Subject = new Authzed.Api.V1.SubjectReference
                 {
-                    Object = new Authzed.Api.V1.ObjectReference { ObjectType = x.Relationship.Subject.Type, ObjectId = x.Relationship.Subject.Id },
+                    Object = new Authzed.Api.V1.ObjectReference { ObjectType = EnsurePrefix(x.Relationship.Subject.Type), ObjectId = x.Relationship.Subject.Id },
                     OptionalRelation = x.Relationship.Subject.Relation
                 },
                 OptionalCaveat = x.Relationship.OptionalCaveat != null ? new Authzed.Api.V1.ContextualizedCaveat { CaveatName = x.Relationship.OptionalCaveat.Name, Context = x.Relationship.OptionalCaveat.Context.ToStruct() } : null
@@ -87,12 +97,12 @@ public class SpiceDbClient : ISpiceDbClient
         {
             Filter = new Authzed.Api.V1.RelationshipFilter
             {
-                ResourceType = x.Filter.Type,
+                ResourceType = EnsurePrefix(x.Filter.Type),
                 OptionalResourceId = x.Filter.OptionalId,
                 OptionalRelation = x.Filter.OptionalRelation,
                 OptionalSubjectFilter = x.OptionalSubjectFilter == null ? null : new Authzed.Api.V1.SubjectFilter
                 {
-                    SubjectType = x.OptionalSubjectFilter.Type,
+                    SubjectType = EnsurePrefix(x.OptionalSubjectFilter.Type),
                     OptionalSubjectId = x.OptionalSubjectFilter.OptionalId,
                     OptionalRelation = new Authzed.Api.V1.SubjectFilter.Types.RelationFilter
                     {
@@ -134,12 +144,12 @@ public class SpiceDbClient : ISpiceDbClient
         {
             Filter = new Authzed.Api.V1.RelationshipFilter
             {
-                ResourceType = x.Filter.Type,
+                ResourceType = EnsurePrefix(x.Filter.Type),
                 OptionalResourceId = x.Filter.OptionalId,
                 OptionalRelation = x.Filter.OptionalRelation,
                 OptionalSubjectFilter = x.OptionalSubjectFilter == null ? null : new Authzed.Api.V1.SubjectFilter
                 {
-                    SubjectType = x.OptionalSubjectFilter.Type,
+                    SubjectType = EnsurePrefix(x.OptionalSubjectFilter.Type),
                     OptionalSubjectId = x.OptionalSubjectFilter.OptionalId,
                     OptionalRelation = new Authzed.Api.V1.SubjectFilter.Types.RelationFilter
                     {
@@ -157,8 +167,8 @@ public class SpiceDbClient : ISpiceDbClient
 
         preconditionCollection.AddRange(conditions);
 
-        return (await _core!.DeleteRelationshipsAsync(resourceFilter.Type, resourceFilter.OptionalId, resourceFilter.OptionalRelation,
-            optionalSubjectFilter?.Type ?? string.Empty, optionalSubjectFilter?.OptionalId ?? string.Empty,
+        return (await _core!.DeleteRelationshipsAsync(EnsurePrefix(resourceFilter.Type)!, resourceFilter.OptionalId, resourceFilter.OptionalRelation, 
+		        EnsurePrefix(optionalSubjectFilter?.Type) ?? string.Empty, optionalSubjectFilter?.OptionalId ?? string.Empty,
             optionalSubjectFilter?.OptionalRelation ?? string.Empty, preconditionCollection, deadline, cancellationToken))
 	        .ToSpiceDbToken();
     }
@@ -173,7 +183,7 @@ public class SpiceDbClient : ISpiceDbClient
     /// <returns></returns>
     public async Task<PermissionResponse> CheckPermissionAsync(SpiceDb.Models.Permission permission, Dictionary<string, object>? context = null, ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
     {
-        return await _core!.CheckPermissionAsync(permission.Resource.Type, permission.Resource.Id, permission.Relation, permission.Subject.Type, permission.Subject.Id, context, zedToken.ToAuthzedToken(), cacheFreshness);
+        return await _core!.CheckPermissionAsync(EnsurePrefix(permission.Resource.Type)!, permission.Resource.Id, permission.Relation, EnsurePrefix(permission.Subject.Type)!, permission.Subject.Id, context, zedToken.ToAuthzedToken(), cacheFreshness);
     }
 
     public async Task<PermissionResponse> CheckPermissionAsync(string permission, Dictionary<string, object>? context = null, ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness) => await CheckPermissionAsync(new SpiceDb.Models.Permission(permission), context, zedToken, cacheFreshness);
@@ -191,7 +201,7 @@ public class SpiceDbClient : ISpiceDbClient
     /// <returns></returns>
     public async Task<ExpandPermissionTreeResponse?> ExpandPermissionAsync(ResourceReference resource, string permission, ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
     {
-        var response = await _core!.ExpandPermissionAsync(resource.Type, resource.Id, permission, zedToken.ToAuthzedToken(), cacheFreshness);
+        var response = await _core!.ExpandPermissionAsync(EnsurePrefix(resource.Type)!, resource.Id, permission, zedToken.ToAuthzedToken(), cacheFreshness);
 
         if (response == null)
 	        return null;
@@ -251,7 +261,9 @@ public class SpiceDbClient : ISpiceDbClient
     {
 	    var request = relationships.Select(x => new SpiceDb.Models.RelationshipUpdate
 	    {
-		    Relationship = x,
+		    Relationship = new Relationship(
+                x.Resource.EnsurePrefix(_prefix), x.Relation, x.Resource.EnsurePrefix(_prefix), x.OptionalCaveat
+		    ),
 		    Operation = RelationshipUpdateOperation.Upsert
 	    }).ToList();
 
@@ -265,7 +277,7 @@ public class SpiceDbClient : ISpiceDbClient
     /// <returns></returns>
     public async Task<ZedToken> AddRelationshipAsync(SpiceDb.Models.Relationship relation)
     {
-        return (await _core!.UpdateRelationshipAsync(relation.Resource.Type, relation.Resource.Id, relation.Relation, relation.Subject.Type, relation.Subject.Id, relation.Subject.Relation))
+        return (await _core!.UpdateRelationshipAsync(EnsurePrefix(relation.Resource.Type)!, relation.Resource.Id, relation.Relation, EnsurePrefix(relation.Subject.Type)!, relation.Subject.Id, relation.Subject.Relation))
 	        .ToSpiceDbToken()!;
     }
 
@@ -280,7 +292,7 @@ public class SpiceDbClient : ISpiceDbClient
     /// <returns></returns>
     public async Task<ZedToken> DeleteRelationshipAsync(SpiceDb.Models.Relationship relation)
     {
-        return (await _core!.UpdateRelationshipAsync(relation.Resource.Type, relation.Resource.Id, relation.Relation, relation.Subject.Type, relation.Subject.Id, relation.Subject.Relation, Authzed.Api.V1.RelationshipUpdate.Types.Operation.Delete)).ToSpiceDbToken()!;
+        return (await _core!.UpdateRelationshipAsync(EnsurePrefix(relation.Resource.Type)!, relation.Resource.Id, relation.Relation, EnsurePrefix(relation.Subject.Type)!, relation.Subject.Id, relation.Subject.Relation, Authzed.Api.V1.RelationshipUpdate.Types.Operation.Delete)).ToSpiceDbToken()!;
     }
 
     /// <summary>
@@ -300,7 +312,7 @@ public class SpiceDbClient : ISpiceDbClient
         Dictionary<string, object>? context = null,
         ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
     {
-        await foreach (var response in _core!.LookupSubjects(resource.Type, resource.Id, permission, subjectType,
+        await foreach (var response in _core!.LookupSubjects(EnsurePrefix(resource.Type)!, resource.Id, permission, EnsurePrefix(subjectType)!,
                            optionalSubjectRelation,
                            context, zedToken.ToAuthzedToken(), cacheFreshness))
         {
@@ -325,8 +337,8 @@ public class SpiceDbClient : ISpiceDbClient
         Dictionary<string, object>? context = null,
         ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
     {
-        await foreach (var response in _core!.LookupResources(resourceType, permission, 
-                           subject.Type, subject.Id, subject.Relation,
+        await foreach (var response in _core!.LookupResources(EnsurePrefix(resourceType)!, permission,
+	                       EnsurePrefix(subject.Type)!, subject.Id, subject.Relation,
                            context, zedToken.ToAuthzedToken(), cacheFreshness))
         {
             yield return response;
@@ -337,7 +349,8 @@ public class SpiceDbClient : ISpiceDbClient
         ZedToken? zedToken = null,
         DateTime? deadline = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        await foreach (var response in _core!.Watch(optionalSubjectTypes, zedToken.ToAuthzedToken(), deadline, cancellationToken))
+        await foreach (var response in _core!.Watch(optionalSubjectTypes?.Select(x => EnsurePrefix(x)!).ToList(), 
+	                       zedToken.ToAuthzedToken(), deadline, cancellationToken))
         {
             yield return response;
         }
@@ -345,14 +358,14 @@ public class SpiceDbClient : ISpiceDbClient
 
     public async Task<List<string>> GetResourcePermissionsAsync(string resourceType, string permission, ResourceReference subject, ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
     {
-        return await _core!.GetResourcePermissionsAsync(resourceType, permission, subject.Type, subject.Id, zedToken.ToAuthzedToken());
+        return await _core!.GetResourcePermissionsAsync(EnsurePrefix(resourceType)!, permission, EnsurePrefix(subject.Type)!, subject.Id, zedToken.ToAuthzedToken());
     }
 
     public string ReadSchema() => _core!.ReadSchemaAsync().Result;
 
-    public async Task ImportSchemaFromFileAsync(string filePath, string prefix = "")
+    public async Task ImportSchemaFromFileAsync(string filePath)
     {
-        await ImportSchemaFromStringAsync(await File.ReadAllTextAsync(filePath), prefix);
+        await ImportSchemaFromStringAsync(await File.ReadAllTextAsync(filePath));
     }
 
     /// <summary>
@@ -361,8 +374,10 @@ public class SpiceDbClient : ISpiceDbClient
     /// <param name="schema"></param>
     /// <param name="prefix"></param>
     /// <returns></returns>
-    public async Task ImportSchemaFromStringAsync(string schema, string prefix = "")
+    public async Task ImportSchemaFromStringAsync(string schema)
     {
+	    var prefix = _prefix;
+
         if (prefix.Length > 0 && !prefix.EndsWith("/")) prefix += "/";
 
         var parsedSchema = string.Empty;
@@ -417,16 +432,23 @@ public class SpiceDbClient : ISpiceDbClient
             string[] cols = System.Text.RegularExpressions.Regex.Split(line.Trim(), ":|@|#");//refer to authzed docs for separator meanings
             if (cols.Length == 5)
             {
-                var updateItem = Core.GetRelationshipUpdate(cols[0], cols[1], cols[2], cols[3], cols[4], "", operation);
+                var updateItem = Core.GetRelationshipUpdate(EnsurePrefix(cols[0])!, cols[1], cols[2], EnsurePrefix(cols[3])!, cols[4], "", operation);
                 Core.UpdateRelationships(ref updateCollection, updateItem);
             }
             else if (cols.Length == 6)//contain an additional column of optional subject relation
             {
-                var updateItem = Core.GetRelationshipUpdate(cols[0], cols[1], cols[2], cols[3], cols[4], cols[5], operation);
+                var updateItem = Core.GetRelationshipUpdate(EnsurePrefix(cols[0])!, cols[1], cols[2], EnsurePrefix(cols[3])!, cols[4], cols[5], operation);
                 Core.UpdateRelationships(ref updateCollection, updateItem);
             }
         }
 
         return (await _core!.WriteRelationshipsAsync(updateCollection)).WrittenAt.ToSpiceDbToken();
+    }
+
+    private string? EnsurePrefix(string? type)
+    {
+	    if (string.IsNullOrEmpty(type)) return type;
+
+        return type.StartsWith(_prefix + "/") ? type : $"{_prefix}/{type}";
     }
 }

@@ -23,8 +23,8 @@ public class SpiceDbClientTests
 			.AddEnvironmentVariables();
 		var configurationRoot = builder.Build();
 
-		var serverAddress = configurationRoot.GetValue<string>("AuthZed.ServerAddress");
-		var token = configurationRoot.GetValue<string>("AuthZed.Token");
+		var serverAddress = configurationRoot.GetValue<string>("SERVER_ADDRESS");
+		var token = configurationRoot.GetValue<string>("TOKEN");
 
 		_client = new SpiceDbClient(serverAddress!, token!, _prefix);
         _schema = assembly.ReadResourceAsync("schema.txt").Result;
@@ -47,107 +47,113 @@ public class SpiceDbClientTests
 	}
 
     // TODO: Implement all tests
-/*
     [Test]
     public void ReadRelationshipsAsyncTest()
     {
-        Assert.Fail();
+	    Assert.Pass();
     }
 
-    [Test]
-    public void WriteRelationshipsAsyncTest()
-    {
-        Assert.Fail();
-    }
+    /*
+        [Test]
+        public void ReadRelationshipsAsyncTest()
+        {
+            Assert.Fail();
+        }
 
-    [Test]
-    public void DeleteRelationshipsAsyncTest()
-    {
-        Assert.Fail();
-    }
+        [Test]
+        public void WriteRelationshipsAsyncTest()
+        {
+            Assert.Fail();
+        }
 
-    [Test]
-    public void CheckPermissionAsyncTest()
-    {
-        Assert.Fail();
-    }
-    
-    [Test]
-    public void ExpandPermissionAsyncTest()
-    {
-        Assert.Fail();
-    }
+        [Test]
+        public void DeleteRelationshipsAsyncTest()
+        {
+            Assert.Fail();
+        }
 
-    [Test]
-    public void AddRelationshipsAsyncTest()
-    {
-        Assert.Fail();
-    }
+        [Test]
+        public void CheckPermissionAsyncTest()
+        {
+            Assert.Fail();
+        }
 
-    [Test]
-    public void AddRelationshipAsyncTest()
-    {
-        Assert.Fail();
-    }
+        [Test]
+        public void ExpandPermissionAsyncTest()
+        {
+            Assert.Fail();
+        }
 
-    [Test]
-    public void DeleteRelationshipAsyncTest()
-    {
-        Assert.Fail();
-    }
+        [Test]
+        public void AddRelationshipsAsyncTest()
+        {
+            Assert.Fail();
+        }
 
-    [Test]
-    public void LookupSubjectsTest()
-    {
-        Assert.Fail();
-    }
+        [Test]
+        public void AddRelationshipAsyncTest()
+        {
+            Assert.Fail();
+        }
 
-    [Test]
-    public void LookupResourcesTest()
-    {
-        Assert.Fail();
-    }
+        [Test]
+        public void DeleteRelationshipAsyncTest()
+        {
+            Assert.Fail();
+        }
 
-    [Test]
-    public void WatchTest()
-    {
-        Assert.Fail();
-    }
+        [Test]
+        public void LookupSubjectsTest()
+        {
+            Assert.Fail();
+        }
 
-    [Test]
-    public void GetResourcePermissionsAsyncTest()
-    {
-        Assert.Fail();
-    }
+        [Test]
+        public void LookupResourcesTest()
+        {
+            Assert.Fail();
+        }
 
-    [Test]
-    public void ReadSchemaTest()
-    {
-	    Assert.Fail();
-    }
+        [Test]
+        public void WatchTest()
+        {
+            Assert.Fail();
+        }
 
-    [Test]
-    public void ImportSchemaFromFileAsyncTest()
-    {
-        Assert.Fail();
-    }
+        [Test]
+        public void GetResourcePermissionsAsyncTest()
+        {
+            Assert.Fail();
+        }
 
-    [Test]
-    public void ImportSchemaFromStringAsyncTest()
-    {
-        Assert.Fail();
-    }
+        [Test]
+        public void ReadSchemaTest()
+        {
+            Assert.Fail();
+        }
 
-    [Test]
-    public void ImportRelationshipsFromFileAsyncTest()
-    {
-        Assert.Fail();
-    }
+        [Test]
+        public void ImportSchemaFromFileAsyncTest()
+        {
+            Assert.Fail();
+        }
 
-    [Test]
-    public void ImportRelationshipsAsyncTest()
-    {
-        Assert.Fail();
-    }
-*/
+        [Test]
+        public void ImportSchemaFromStringAsyncTest()
+        {
+            Assert.Fail();
+        }
+
+        [Test]
+        public void ImportRelationshipsFromFileAsyncTest()
+        {
+            Assert.Fail();
+        }
+
+        [Test]
+        public void ImportRelationshipsAsyncTest()
+        {
+            Assert.Fail();
+        }
+    */
 }

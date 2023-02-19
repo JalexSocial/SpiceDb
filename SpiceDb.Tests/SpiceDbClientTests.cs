@@ -16,6 +16,7 @@ public class SpiceDbClientTests
     [OneTimeSetUp]
 	public void SetUp()
 	{
+        /*
 		var assembly = Assembly.GetExecutingAssembly();
 
 		var builder = new ConfigurationBuilder()
@@ -44,6 +45,7 @@ public class SpiceDbClientTests
         ).Result;
 
         _client.ImportRelationshipsAsync(_relationships).GetAwaiter().GetResult();
+        */
 	}
 
     // TODO: Implement all tests

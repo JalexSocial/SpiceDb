@@ -6,11 +6,6 @@ on:
   pull_request:
     branches: [ main ]
 
-env:
-  # Setting an environment variable with the value of a configuration variable
-  SERVER_ADDRESS: ${{ vars.SERVER_ADDRESS }}
-  TOKEN: ${{ vars.TOKEN }}
-
 jobs:
   build:
 
@@ -27,6 +22,9 @@ jobs:
     - name: Build
       run: dotnet build --configuration Release --no-restore 
     - name: Test
+      env: 
+        SERVER_ADDRESS: ${{ secrets.SERVER_ADDRESS }}
+        TOKEN: ${{ secrets.TOKEN }}
       run: dotnet test --verbosity detailed
     - name: Publish  
       uses: brandedoutcast/publish-nuget@v2.5.2  

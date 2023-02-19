@@ -23,7 +23,7 @@ public class SpiceDbClientTests
 			.AddEnvironmentVariables();
 		var configurationRoot = builder.Build();
 
-		var serverAddress = configurationRoot.GetValue<string>("SERVER_ADDRESS");
+        var serverAddress = configurationRoot.GetValue<string>("SERVER_ADDRESS");
 		var token = configurationRoot.GetValue<string>("TOKEN");
 
 		if (string.IsNullOrEmpty(serverAddress) || string.IsNullOrEmpty(token))

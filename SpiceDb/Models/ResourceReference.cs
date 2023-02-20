@@ -37,8 +37,6 @@ public class ResourceReference
         }
     }
 
-    public string AsStringReference() => $"{Type}:{Id}";
-
     /// <summary>
     /// Sets up a resource reference that can reference a specific relation/permission inside an object
     /// For example: organization:easd may be an original reference, but to reference members of easd
@@ -59,5 +57,19 @@ public class ResourceReference
         return new ResourceReference(type, this.Id, this.Relation);
     }
 
-    public override string ToString() => $"{this.Type}:{this.Id}" + (!String.IsNullOrEmpty(Relation) ? "" : $"#{Relation}");
+    public ResourceReference ExcludePrefix(string prefix)
+    {
+	    var type = this.Type;
+
+        if (!prefix.EndsWith("/")) prefix += "/";
+
+	    type = type.StartsWith(prefix) ? type.Substring(prefix.Length) : type;
+
+	    if (type == this.Type)
+		    return this;
+
+	    return new ResourceReference(type, this.Id, this.Relation);
+    }
+
+    public override string ToString() => $"{this.Type}:{this.Id}" + (String.IsNullOrEmpty(Relation) ? "" : $"#{Relation}");
 }

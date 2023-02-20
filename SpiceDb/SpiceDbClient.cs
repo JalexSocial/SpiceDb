@@ -43,6 +43,7 @@ public class SpiceDbClient : ISpiceDbClient
     /// <param name="cacheFreshness"></param>
     /// <returns></returns>
     public async IAsyncEnumerable<SpiceDb.Models.ReadRelationshipsResponse> ReadRelationshipsAsync(Models.RelationshipFilter resource, Models.RelationshipFilter? subject = null,
+        bool excludePrefix = false,
         ZedToken? zedToken = null,
         CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
     {
@@ -51,6 +52,11 @@ public class SpiceDbClient : ISpiceDbClient
                            EnsurePrefix(subject?.Type) ?? string.Empty, subject?.OptionalId ?? string.Empty,
                            subject?.OptionalRelation ?? string.Empty, zedToken.ToAuthzedToken(), cacheFreshness))
         {
+            if (excludePrefix)
+            {
+                rs.Relationship.Resource = rs.Relationship.Resource.ExcludePrefix(_prefix);
+                rs.Relationship.Subject = rs.Relationship.Subject.ExcludePrefix(_prefix);
+            }
             yield return rs;
         }
     }
@@ -294,6 +300,13 @@ public class SpiceDbClient : ISpiceDbClient
     {
         return (await _core!.UpdateRelationshipAsync(EnsurePrefix(relation.Resource.Type)!, relation.Resource.Id, relation.Relation, EnsurePrefix(relation.Subject.Type)!, relation.Subject.Id, relation.Subject.Relation, Authzed.Api.V1.RelationshipUpdate.Types.Operation.Delete)).ToSpiceDbToken()!;
     }
+
+    /// <summary>
+    /// Removes an existing relationship (if it exists)
+    /// </summary>
+    /// <param name="relation"></param>
+    /// <returns></returns>
+    public async Task<ZedToken> DeleteRelationshipAsync(string relation) => await DeleteRelationshipAsync(new Relationship(relation));
 
     /// <summary>
     /// LookupSubjects returns all the subjects of a given type that have access whether via a computed permission or relation membership.

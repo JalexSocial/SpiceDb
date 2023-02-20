@@ -325,6 +325,11 @@ internal class Core
      ZedToken? zedToken = null,
      CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
     {
+	    if (string.IsNullOrEmpty(optionalSubjectType) && !string.IsNullOrEmpty(optionalSubjectId))
+	    {
+		    throw new ArgumentException("Optional subject Id cannot be set without required optional subject type");
+	    }
+
         ReadRelationshipsRequest req = new ReadRelationshipsRequest()
         {
             Consistency = new Consistency { MinimizeLatency = true, AtExactSnapshot = zedToken },
@@ -337,11 +342,8 @@ internal class Core
         };
         if (!String.IsNullOrEmpty(optionalSubjectType))
         {
-            req.RelationshipFilter.OptionalSubjectFilter = new SubjectFilter() { SubjectType = optionalSubjectType, OptionalSubjectId = optionalSubjectId };
-            if (!String.IsNullOrEmpty(optionalSubjectRelation))
-            {
-                req.RelationshipFilter.OptionalSubjectFilter.OptionalRelation = new SubjectFilter.Types.RelationFilter() { Relation = optionalSubjectRelation };
-            }
+            req.RelationshipFilter.OptionalSubjectFilter = new SubjectFilter() { SubjectType = optionalSubjectType, OptionalSubjectId = optionalSubjectId};
+            req.RelationshipFilter.OptionalSubjectFilter.OptionalRelation = new SubjectFilter.Types.RelationFilter() { Relation = optionalSubjectRelation };
         }
         if (cacheFreshness == CacheFreshness.AtLeastAsFreshAs)
         {

@@ -11,10 +11,12 @@ public interface ISpiceDbClient
 	/// </summary>
 	/// <param name="resource"></param>
 	/// <param name="subject"></param>
+	/// <param name="excludePrefix">If true the schema prefix will be removed from all returned relationships</param>
 	/// <param name="zedToken"></param>
 	/// <param name="cacheFreshness"></param>
 	/// <returns></returns>
 	IAsyncEnumerable<SpiceDb.Models.ReadRelationshipsResponse> ReadRelationshipsAsync(Models.RelationshipFilter resource, Models.RelationshipFilter? subject = null,
+		bool excludePrefix = false,
 		ZedToken? zedToken = null,
 		CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness);
 

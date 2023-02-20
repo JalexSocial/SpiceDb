@@ -8,9 +8,9 @@ on:
 
 jobs:
   build:
-      env: 
-        SERVER_ADDRESS: ${{ secrets.SERVER_ADDRESS }}
-        TOKEN: ${{ secrets.TOKEN }}
+    env: 
+      SERVER_ADDRESS: ${{ secrets.SERVER_ADDRESS }}
+      TOKEN: ${{ secrets.TOKEN }}
         
     runs-on: ubuntu-latest
 

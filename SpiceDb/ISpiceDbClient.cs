@@ -92,18 +92,26 @@ public interface ISpiceDbClient
 	/// <returns></returns>
 	Task<ZedToken> DeleteRelationshipAsync(SpiceDb.Models.Relationship relation);
 
+
 	/// <summary>
-	/// LookupSubjects returns all the subjects of a given type that have access whether via a computed permission or relation membership.
+	/// Removes an existing relationship (if it exists)
 	/// </summary>
-	/// <param name="resource">Resource is the resource for which all matching subjects for the permission or relation will be returned.</param>
-	/// <param name="permission">permission is the name of the permission (or relation) for which to find the subjects</param>
-	/// <param name="subjectType">subjecttype is the type of subject object for which the IDs will be returned</param>
-	/// <param name="optionalSubjectRelation">optionalSubjectRelation is the optional relation for the subject.</param>
-	/// <param name="context">context consists of named values that are injected into the caveat evaluation context *</param>
-	/// <param name="zedToken"></param>
-	/// <param name="cacheFreshness"></param>
+	/// <param name="relation"></param>
 	/// <returns></returns>
-	IAsyncEnumerable<SpiceDb.Models.LookupSubjectsResponse> LookupSubjects(ResourceReference resource,
+	Task<ZedToken> DeleteRelationshipAsync(string relation);
+
+    /// <summary>
+    /// LookupSubjects returns all the subjects of a given type that have access whether via a computed permission or relation membership.
+    /// </summary>
+    /// <param name="resource">Resource is the resource for which all matching subjects for the permission or relation will be returned.</param>
+    /// <param name="permission">permission is the name of the permission (or relation) for which to find the subjects</param>
+    /// <param name="subjectType">subjecttype is the type of subject object for which the IDs will be returned</param>
+    /// <param name="optionalSubjectRelation">optionalSubjectRelation is the optional relation for the subject.</param>
+    /// <param name="context">context consists of named values that are injected into the caveat evaluation context *</param>
+    /// <param name="zedToken"></param>
+    /// <param name="cacheFreshness"></param>
+    /// <returns></returns>
+    IAsyncEnumerable<SpiceDb.Models.LookupSubjectsResponse> LookupSubjects(ResourceReference resource,
 		string permission,
 		string subjectType, string optionalSubjectRelation = "",
 		Dictionary<string, object>? context = null,

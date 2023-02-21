@@ -14,11 +14,17 @@ public class ResourceReference
         ProcessId();
     }
 
-    public ResourceReference(string type, string id, string relation = "")
+    /// <summary>
+    /// Resource or subject reference
+    /// </summary>
+    /// <param name="type"></param>
+    /// <param name="id"></param>
+    /// <param name="optionalSubjectRelation">Note: Only subjects can have a relation</param>
+    public ResourceReference(string type, string id, string optionalSubjectRelation = "")
     {
         this.Type = type;
         this.Id = id;
-        this.Relation = relation;
+        this.Relation = optionalSubjectRelation;
 
         ProcessId();
     }

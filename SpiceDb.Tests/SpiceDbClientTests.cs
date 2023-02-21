@@ -163,55 +163,57 @@ public class SpiceDbClientTests
 
         Assert.IsTrue(p1.HasPermission && p2.HasPermission && p3.HasPermission && p4.HasPermission && !p5.HasPermission && !p6.HasPermission);
     }
-    /*
-            [Test]
-            public void ExpandPermissionAsyncTest()
-            {
-                Assert.Fail();
-            }
-    
-            [Test]
-            public void AddRelationshipsAsyncTest()
-            {
-                Assert.Fail();
-            }
-    
-            [Test]
-            public void AddRelationshipAsyncTest()
-            {
-                Assert.Fail();
-            }
-    
-            [Test]
-            public void DeleteRelationshipAsyncTest()
-            {
-                Assert.Fail();
-            }
-    
-            [Test]
-            public void LookupSubjectsTest()
-            {
-                Assert.Fail();
-            }
-    
-            [Test]
-            public void LookupResourcesTest()
-            {
-                Assert.Fail();
-            }
-    
-            [Test]
-            public void WatchTest()
-            {
-                Assert.Fail();
-            }
-    
-            [Test]
-            public void GetResourcePermissionsAsyncTest()
-            {
-                Assert.Fail();
-            }
-        */
+
+    [Test]
+    public async Task ExpandPermissionAsyncTest()
+    {
+	    var response = await _client!.ExpandPermissionAsync(new ResourceReference("group", "test"), "post");
+
+        Assert.IsNotNull(response);
+    }
+            /*    
+   [Test]
+   public void AddRelationshipsAsyncTest()
+   {
+       Assert.Fail();
+   }
+
+   [Test]
+   public void AddRelationshipAsyncTest()
+   {
+       Assert.Fail();
+   }
+
+   [Test]
+   public void DeleteRelationshipAsyncTest()
+   {
+       Assert.Fail();
+   }
+
+   [Test]
+   public void LookupSubjectsTest()
+   {
+       Assert.Fail();
+   }
+
+   [Test]
+   public void LookupResourcesTest()
+   {
+       Assert.Fail();
+   }
+
+   [Test]
+   public void WatchTest()
+   {
+       Assert.Fail();
+   }
+
+   [Test]
+   public void GetResourcePermissionsAsyncTest()
+   {
+       Assert.Fail();
+   }
+*/
     [Test]
     public void ReadSchemaTest()
     {

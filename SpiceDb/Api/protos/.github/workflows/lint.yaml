@@ -1,0 +1,33 @@
+---
+name: "Lint"
+on:
+  push:
+    branches:
+      - "!dependabot/*"
+      - "*"
+  pull_request:
+    branches:
+      - "*"
+jobs:
+  lint:
+    name: "Lint"
+    runs-on: "ubuntu-latest"
+    steps:
+      - uses: "actions/checkout@v3"
+      - uses: "authzed/actions/yaml-lint@main"
+      - uses: "bufbuild/buf-setup-action@v1"
+        with:
+          version: "1.4.0"
+      - uses: "bufbuild/buf-lint-action@v1"
+      - uses: "bufbuild/buf-breaking-action@v1"
+        if: "github.event_name == 'pull_request'"
+        env:
+          BUF_INPUT_HTTPS_USERNAME: "${{ github.actor }}"
+          BUF_INPUT_HTTPS_PASSWORD: "${{ github.token }}"
+        with:
+          against: "https://github.com/authzed/api.git#branch=main"
+          buf_token: "${{ secrets.BUF_REGISTRY_TOKEN }}"
+      - uses: "bufbuild/buf-push-action@v1"
+        if: "github.event_name == 'push' && github.ref == 'refs/heads/main'"
+        with:
+          buf_token: "${{ secrets.BUF_REGISTRY_TOKEN }}"

@@ -16,6 +16,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - name: Pull submodules
+      run: git submodule update --init --recursive --depth 1    
     - name: Setup .NET
       uses: actions/setup-dotnet@v1
       with:

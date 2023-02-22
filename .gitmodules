@@ -1,0 +1,3 @@
+[submodule "SpiceDb/Api/protos/api"]
+	path = SpiceDb/Api/protos
+	url = https://github.com/authzed/api.git

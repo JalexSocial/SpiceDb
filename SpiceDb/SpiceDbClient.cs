@@ -268,7 +268,7 @@ public class SpiceDbClient : ISpiceDbClient
 	    var request = relationships.Select(x => new SpiceDb.Models.RelationshipUpdate
 	    {
 		    Relationship = new Relationship(
-                x.Resource.EnsurePrefix(_prefix), x.Relation, x.Resource.EnsurePrefix(_prefix), x.OptionalCaveat
+                x.Resource.EnsurePrefix(_prefix), x.Relation, x.Subject.EnsurePrefix(_prefix), x.OptionalCaveat
 		    ),
 		    Operation = RelationshipUpdateOperation.Upsert
 	    }).ToList();

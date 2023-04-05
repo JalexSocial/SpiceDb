@@ -214,6 +214,15 @@ internal class Core
             Context = context?.ToStruct()
         };
 
+        if (cacheFreshness == CacheFreshness.AtLeastAsFreshAs)
+        {
+            req.Consistency.AtLeastAsFresh = zedToken;
+        }
+        else if (cacheFreshness == CacheFreshness.MustRefresh || zedToken == null)
+        {
+            req.Consistency.FullyConsistent = true;
+        }
+
         var call = _acl!.LookupResources(req, _callOptions);
 
 

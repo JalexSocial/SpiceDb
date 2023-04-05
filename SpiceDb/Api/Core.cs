@@ -239,22 +239,22 @@ internal class Core
                     Authzed.Api.V1.LookupPermissionship.ConditionalPermission => Permissionship.ConditionalPermission,
                     _ => Permissionship.Unspecified
                 },
-
-                MissingRequiredContext = resp.PartialCaveatInfo.MissingRequiredContext
-                    .Where(x => !String.IsNullOrEmpty(x)).Select(x => x).ToList()
+                ResourceId = resp.ResourceObjectId,
+                MissingRequiredContext = resp.PartialCaveatInfo?.MissingRequiredContext
+                    .Where(x => !String.IsNullOrEmpty(x)).Select(x => x).ToList() ?? new()
             };
 
             yield return response;
         }
     }
 
-    public async IAsyncEnumerable<SpiceDb.Models.WatchResponse> Watch(List<string>? optionalSubjectTypes = null, 
+    public async IAsyncEnumerable<SpiceDb.Models.WatchResponse> Watch(List<string>? optionalSubjectTypes = null,
         ZedToken? zedToken = null,
         DateTime? deadline = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         var request = new WatchRequest
         {
-            OptionalStartCursor   = zedToken
+            OptionalStartCursor = zedToken
         };
 
         request.OptionalObjectTypes.AddRange(optionalSubjectTypes ?? new List<string>());
@@ -288,7 +288,7 @@ internal class Core
                         })
                 }).ToList()
             };
-                
+
         }
     }
 
@@ -334,10 +334,10 @@ internal class Core
      ZedToken? zedToken = null,
      CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
     {
-	    if (string.IsNullOrEmpty(optionalSubjectType) && !string.IsNullOrEmpty(optionalSubjectId))
-	    {
-		    throw new ArgumentException("Optional subject Id cannot be set without required optional subject type");
-	    }
+        if (string.IsNullOrEmpty(optionalSubjectType) && !string.IsNullOrEmpty(optionalSubjectId))
+        {
+            throw new ArgumentException("Optional subject Id cannot be set without required optional subject type");
+        }
 
         ReadRelationshipsRequest req = new ReadRelationshipsRequest()
         {
@@ -351,7 +351,7 @@ internal class Core
         };
         if (!String.IsNullOrEmpty(optionalSubjectType))
         {
-            req.RelationshipFilter.OptionalSubjectFilter = new SubjectFilter() { SubjectType = optionalSubjectType, OptionalSubjectId = optionalSubjectId};
+            req.RelationshipFilter.OptionalSubjectFilter = new SubjectFilter() { SubjectType = optionalSubjectType, OptionalSubjectId = optionalSubjectId };
             req.RelationshipFilter.OptionalSubjectFilter.OptionalRelation = new SubjectFilter.Types.RelationFilter() { Relation = optionalSubjectRelation };
         }
         if (cacheFreshness == CacheFreshness.AtLeastAsFreshAs)
@@ -480,7 +480,7 @@ internal class Core
             }
         }
 
-        var response = await _acl!.DeleteRelationshipsAsync(req, deadline: deadline, cancellationToken:cancellationToken);
+        var response = await _acl!.DeleteRelationshipsAsync(req, deadline: deadline, cancellationToken: cancellationToken);
 
         return response?.DeletedAt;
     }

@@ -418,7 +418,8 @@ internal class Core
             }
             return Task.CompletedTask;
         });
-
+        //Support proxy by setting webproxy on httpClient
+        HttpClient.DefaultProxy = new WebProxy();
         // SslCredentials is used here because this channel is using TLS.
         // CallCredentials can't be used with ChannelCredentials.Insecure on non-TLS channels.
         ChannelBase channel;

@@ -177,7 +177,7 @@ internal class Core
                         Authzed.Api.V1.LookupPermissionship.ConditionalPermission => Permissionship.ConditionalPermission,
                         _ => Permissionship.Unspecified
                     },
-                    MissingRequiredContext = resp.Subject.PartialCaveatInfo.MissingRequiredContext.Where(x => !String.IsNullOrEmpty(x)).Select(x => x).ToList()
+                    MissingRequiredContext = resp.Subject.PartialCaveatInfo?.MissingRequiredContext?.Where(x => !String.IsNullOrEmpty(x)).Select(x => x).ToList() ?? new()
                 },
                 ExcludedSubjects = resp.ExcludedSubjects.Select(rs => new SpiceDb.Models.ResolvedSubject
                 {
@@ -188,7 +188,7 @@ internal class Core
                         Authzed.Api.V1.LookupPermissionship.ConditionalPermission => Permissionship.ConditionalPermission,
                         _ => Permissionship.Unspecified
                     },
-                    MissingRequiredContext = rs.PartialCaveatInfo.MissingRequiredContext.Where(x => !string.IsNullOrEmpty(x)).Select(x => x).ToList()
+                    MissingRequiredContext = rs.PartialCaveatInfo?.MissingRequiredContext?.Where(x => !string.IsNullOrEmpty(x)).Select(x => x).ToList() ?? new()
                 }).ToList()
             };
 

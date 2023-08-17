@@ -50,4 +50,12 @@ var carmellaCanRead = client.CheckPermission(ZedUser.WithId("carmella").CanRead(
 Console.WriteLine($"Can user carmella read document:firstdoc? {carmellaCanRead.HasPermission}");
 // true
 
+var subjectPageable = client.LookupSubjects(
+	new ResourceReference("document", "firstdoc"),
+	"reader",
+	"user");
 
+await foreach (var subject in subjectPageable)
+{
+	// do anything or nothing
+}

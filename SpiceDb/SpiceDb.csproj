@@ -8,7 +8,7 @@
 	<Authors>Michael Tanczos</Authors>
 	<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 	<Description>SpiceDb/Authzed grpc compatible permissions library</Description>
-	<Copyright>2023</Copyright>
+	<Copyright>2024</Copyright>
 	<Product>JalexSocial.SpiceDb</Product>
 	<PackageProjectUrl>https://github.com/JalexSocial/SpiceDb</PackageProjectUrl>
 	<RepositoryType>git</RepositoryType>

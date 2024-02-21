@@ -49,13 +49,13 @@ internal class Core
         _schema = new SchemaService.SchemaServiceClient(channel.Result);
         _watch = new WatchService.WatchServiceClient(channel.Result);
 
-        _headers = new()
-        {
-            { "Authorization", $"Bearer {_preSharedKey}" }
-        };
-
         if (_serverAddress.StartsWith("http:"))
         {
+	        _headers = new()
+	        {
+		        { "Authorization", $"Bearer {_preSharedKey}" }
+	        };
+
             _callOptions = new CallOptions(_headers);
         }
         else if (_serverAddress.StartsWith("https:"))

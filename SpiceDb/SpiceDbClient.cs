@@ -27,7 +27,7 @@ public class SpiceDbClient : ISpiceDbClient
         if (string.IsNullOrEmpty(serverAddress) || string.IsNullOrEmpty(token))
             throw new Exception("Missing server address or token");
 
-        if (!Regex.IsMatch(schemaPrefix, @"[a-z0-9]{4,64}$"))
+        if (!Regex.IsMatch(schemaPrefix, @"^[a-zA-Z0-9_]{3,63}[a-zA-Z0-9]$"))
 	        throw new Exception("Schema prefixes must be alphanumeric, lowercase, between 4-64 characters and not end in an underscore");
 
         _core = new Core(serverAddress, token);

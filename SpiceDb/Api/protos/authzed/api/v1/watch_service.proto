@@ -8,6 +8,7 @@ import "google/api/annotations.proto";
 import "validate/validate.proto";
 
 import "authzed/api/v1/core.proto";
+import "authzed/api/v1/permission_service.proto";
 
 service WatchService {
   rpc Watch(WatchRequest) returns (stream WatchResponse) {
@@ -22,16 +23,33 @@ service WatchService {
 // watching mutations, and an optional start snapshot for when to start
 // watching.
 message WatchRequest {
+  // optional_object_types is a filter of resource object types to watch for changes.
+  // If specified, only changes to the specified object types will be returned and
+  // optional_relationship_filters cannot be used.
   repeated string optional_object_types = 1 [
     (validate.rules).repeated .min_items = 0,
     (validate.rules).repeated .items.string = {
       pattern : "^([a-z][a-z0-9_]{1,62}[a-z0-9]/"
-                ")?[a-z][a-z0-9_]{1,62}[a-z0-9]$",
+                ")*[a-z][a-z0-9_]{1,62}[a-z0-9]$",
       max_bytes : 128,
     }
   ];
 
+  // optional_start_cursor is the ZedToken holding the point-in-time at
+  // which to start watching for changes.
+  // If not specified, the watch will begin at the current head revision
+  // of the datastore, returning any updates that occur after the caller
+  // makes the request.
+  // Note that if this cursor references a point-in-time containing data
+  // that has been garbage collected, an error will be returned.
   ZedToken optional_start_cursor = 2;
+
+  // optional_relationship_filters, if specified, indicates the
+  // filter(s) to apply to each relationship to be returned by watch.
+  // The relationship will be returned as long as at least one filter matches,
+  // this allows clients to match relationships on multiple filters on a single watch call.
+  // If specified, optional_object_types cannot be used.
+  repeated RelationshipFilter optional_relationship_filters = 3;
 }
 
 // WatchResponse contains all tuple modification events in ascending

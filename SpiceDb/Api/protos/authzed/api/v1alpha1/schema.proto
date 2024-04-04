@@ -29,7 +29,7 @@ message ReadSchemaRequest {
   // These names must be fully qualified with their namespace (e.g.
   // myblog/post).
   repeated string object_definitions_names = 1 [ (validate.rules).repeated .items.string = {
-    pattern: "^([a-z][a-z0-9_]{1,62}[a-z0-9]/)?[a-z][a-z0-9_]{1,62}[a-z0-9]$",
+    pattern: "^([a-z][a-z0-9_]{1,62}[a-z0-9]/)*[a-z][a-z0-9_]{1,62}[a-z0-9]$",
     max_bytes: 128,
   } ];
 }

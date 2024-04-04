@@ -38,7 +38,7 @@
 		<PackageReference Include="YamlDotNet" Version="13.0.0" />
 	</ItemGroup>
 	<ItemGroup>
-		<Protobuf Include="**/*.proto" ProtoRoot="Api/protos" Access="Internal" />
+		<Protobuf Include="**/*.proto" ProtoRoot="Api/protos" Access="Internal"/>
 	</ItemGroup>
 
 	<ItemGroup>

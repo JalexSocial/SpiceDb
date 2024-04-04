@@ -542,6 +542,16 @@ internal class Core
         WriteRelationshipsResponse resp = await WriteRelationshipsAsync(updateCollection);
         return resp.WrittenAt;
     }
+
+    public async Task CheckBulkPermissions()
+    {
+        /*
+        var req = new CheckBulkPermissionsRequest
+        {
+            Consistency = Consistency.
+        }
+        */
+    }
 }
 
 

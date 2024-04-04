@@ -7,6 +7,8 @@ option java_package = "com.authzed.api.v1";
 import "google/api/annotations.proto";
 import "validate/validate.proto";
 
+import "authzed/api/v1/core.proto";
+
 // SchemaService implements operations on a Permissions System's Schema.
 service SchemaService {
   // Read returns the current Object Definitions for a Permissions System.
@@ -38,6 +40,9 @@ message ReadSchemaRequest {}
 message ReadSchemaResponse {
   // schema_text is the textual form of the current schema in the system
   string schema_text = 1;
+
+  // read_at is the ZedToken at which the schema was read.
+  ZedToken read_at = 2 [ (validate.rules).message.required = true ];
 }
 
 // WriteSchemaRequest is the required data used to "upsert" the Schema of a
@@ -45,9 +50,12 @@ message ReadSchemaResponse {
 message WriteSchemaRequest {
   // The Schema containing one or more Object Definitions that will be written
   // to the Permissions System.
-  string schema = 1 [ (validate.rules).string.max_bytes = 262144 ]; // 256KiB
+  string schema = 1 [ (validate.rules).string.max_bytes = 4194304 ]; // 4MiB
 }
 
 // WriteSchemaResponse is the resulting data after having written a Schema to
 // a Permissions System.
-message WriteSchemaResponse {}
+message WriteSchemaResponse {
+    // written_at is the ZedToken at which the schema was written.
+    ZedToken written_at = 1 [ (validate.rules).message.required = true ];
+}

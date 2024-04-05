@@ -7,9 +7,6 @@ using SpiceDb.Enum;
 using System.Text.RegularExpressions;
 using System.Threading.Channels;
 using Authzed.Api.V1;
-using BulkCheckPermissionResponse = SpiceDb.Models.BulkCheckPermissionResponse;
-using BulkCheckPermissionResponseItem = SpiceDb.Models.BulkCheckPermissionResponseItem;
-using PartialCaveatInfo = SpiceDb.Models.PartialCaveatInfo;
 
 namespace SpiceDb.Api;
 
@@ -49,15 +46,15 @@ internal class SpiceDbExperimental
         if (call == null)
             return null;
 
-        SpiceDb.Models.BulkCheckPermissionResponse response = new BulkCheckPermissionResponse
+        SpiceDb.Models.BulkCheckPermissionResponse response = new SpiceDb.Models.BulkCheckPermissionResponse
         {
             CheckedAt = call.CheckedAt.ToSpiceDbToken(),
             Pairs = call.Pairs.Select(x => new Models.BulkCheckPermissionPair
             {
                 Error = x.Error is null ? null : new Models.Status { Code = x.Error.Code, Message = x.Error.Message, Details = x.Error.Details.Select(any => (object)any).ToList() },
-                Item = x.Item is null ? null : new BulkCheckPermissionResponseItem
+                Item = x.Item is null ? null : new SpiceDb.Models.BulkCheckPermissionResponseItem
                 {
-                    PartialCaveatInfo = x.Item.PartialCaveatInfo is null ? null : new PartialCaveatInfo { MissingRequiredContext = x.Item.PartialCaveatInfo.MissingRequiredContext.ToList() },
+                    PartialCaveatInfo = x.Item.PartialCaveatInfo is null ? null : new SpiceDb.Models.PartialCaveatInfo { MissingRequiredContext = x.Item.PartialCaveatInfo.MissingRequiredContext.ToList() },
                     Permissionship = (Permissionship)x.Item.Permissionship
                 },
                 Request = x.Request is null ? null : new Models.BulkCheckPermissionRequestItem

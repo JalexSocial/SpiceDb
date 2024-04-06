@@ -165,6 +165,25 @@ public class SpiceDbClientTests
     }
 
     [Test]
+    public async Task BulkCheckPermissionAsyncTest()
+    {
+	    var permissions = new[]
+	    {
+		    "organization:authzed#member@user:jake",
+		    "group:test#viewers@user:jake",
+		    "organization:authzed#admin@user:michael",
+		    "group:test#posters@user:somenewguy",
+		    "group:test#joiners@user:somenewguy",
+		    "group:test#add_manager@user:blackhat"
+		};
+
+	    var p = await _client!.BulkCheckPermissionAsync(permissions);
+
+        Assert.IsNotNull(p);
+	    Assert.IsTrue(p!.Pairs[0].HasPermission && p!.Pairs[1].HasPermission && p!.Pairs[2].HasPermission && p!.Pairs[3].HasPermission && !p!.Pairs[4].HasPermission && !p!.Pairs[5].HasPermission);
+    }
+
+	[Test]
     public async Task ExpandPermissionAsyncTest()
     {
 	    var response = await _client!.ExpandPermissionAsync(new ResourceReference("group", "test"), "post");

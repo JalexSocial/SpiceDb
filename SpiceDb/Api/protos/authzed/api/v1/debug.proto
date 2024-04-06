@@ -4,6 +4,7 @@ package authzed.api.v1;
 import "authzed/api/v1/core.proto";
 import "validate/validate.proto";
 import "google/protobuf/struct.proto";
+import "google/protobuf/duration.proto";
 
 option go_package = "github.com/authzed/authzed-go/proto/authzed/api/v1";
 option java_package = "com.authzed.api.v1";
@@ -60,6 +61,9 @@ message CheckDebugTrace {
  
   // caveat_evaluation_info holds information about the caveat evaluated for this step of the trace.
   CaveatEvalInfo caveat_evaluation_info = 8;
+
+  // duration holds the time spent executing this Check operation.
+  google.protobuf.Duration duration = 9;
 
   // resolution holds information about how the problem was resolved.
   oneof resolution {

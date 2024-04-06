@@ -27,19 +27,17 @@ message Relationship {
   ContextualizedCaveat optional_caveat = 4 [ (validate.rules).message.required = false ];
 }
 
-/**
- * ContextualizedCaveat represents a reference to a caveat to be used by caveated relationships.
- * The context consists of key-value pairs that will be injected at evaluation time.
- * The keys must match the arguments defined on the caveat in the schema.
- */
+// ContextualizedCaveat represents a reference to a caveat to be used by caveated relationships.
+// The context consists of key-value pairs that will be injected at evaluation time.
+// The keys must match the arguments defined on the caveat in the schema.
 message ContextualizedCaveat {
-  /** caveat_name is the name of the caveat expression to use, as defined in the schema **/
+  // caveat_name is the name of the caveat expression to use, as defined in the schema
   string caveat_name = 1 [ (validate.rules).string = {
     pattern : "^([a-zA-Z0-9_][a-zA-Z0-9/_|-]{0,127})$",
     max_bytes : 128,
   } ];
 
-  /** context consists of any named values that are defined at write time for the caveat expression **/
+  // context consists of any named values that are defined at write time for the caveat expression
   google.protobuf.Struct context = 2 [ (validate.rules).message.required = false ];
 }
 
@@ -57,12 +55,12 @@ message SubjectReference {
 // ObjectReference is used to refer to a specific object in the system.
 message ObjectReference {
   string object_type = 1 [ (validate.rules).string = {
-    pattern : "^([a-z][a-z0-9_]{1,61}[a-z0-9]/)?[a-z][a-z0-9_]{1,62}[a-z0-9]$",
+    pattern : "^([a-z][a-z0-9_]{1,61}[a-z0-9]/)*[a-z][a-z0-9_]{1,62}[a-z0-9]$",
     max_bytes : 128,
   } ];
   string object_id = 2 [ (validate.rules).string = {
-    pattern : "^(([a-zA-Z0-9_][a-zA-Z0-9/_|-]{0,127})|\\*)$",
-    max_bytes : 128,
+    pattern : "^(([a-zA-Z0-9/_|\\-=+]{1,})|\\*)$",
+    max_bytes : 1024,
   } ];
 }
 
@@ -75,6 +73,16 @@ message ZedToken {
     min_bytes : 1,
   } ];
 }
+
+// Cursor is used to provide resumption of listing between calls to APIs
+// such as LookupResources.
+message Cursor {
+  string token = 1 [ (validate.rules).string = {
+    min_bytes : 1,
+    max_bytes : 102400,
+  } ];
+}
+
 
 // RelationshipUpdate is used for mutating a single relationship within the
 // service.

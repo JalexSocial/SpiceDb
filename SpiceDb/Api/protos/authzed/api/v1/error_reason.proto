@@ -207,4 +207,110 @@ enum ErrorReason {
   //       }
   //     }
   ERROR_REASON_CAVEAT_EVALUATION_ERROR = 14;
+
+  // The request failed because the provided cursor was invalid in some way.
+  //
+  // Example of an ErrorInfo:
+  //
+  //     {  
+  //       "reason": "ERROR_REASON_INVALID_CURSOR",
+  //       "domain": "authzed.com",
+  //       "metadata": {
+  //          ... additional keys based on the kind of cursor error ...
+  //       }
+  //     }
+  ERROR_REASON_INVALID_CURSOR = 15;
+
+  // The request failed because there are too many matching relationships to be
+  // deleted within a single transactional deletion call. To avoid, set
+  // `optional_allow_partial_deletions` to true on the DeleteRelationships call.
+  //
+  // Example of an ErrorInfo:
+  //
+  //     {  
+  //       "reason": "ERROR_REASON_TOO_MANY_RELATIONSHIPS_FOR_TRANSACTIONAL_DELETE",
+  //       "domain": "authzed.com",
+  //       "metadata": {
+  //          ... fields for the filter ...
+  //       }
+  //     }
+  ERROR_REASON_TOO_MANY_RELATIONSHIPS_FOR_TRANSACTIONAL_DELETE = 16;
+
+  // The request failed because the client attempted to write a relationship
+  // with a context that exceeded the configured server limit.
+  //
+  // Example of an ErrorInfo:
+  //
+  //     {
+  //       "reason": "ERROR_REASON_MAX_RELATIONSHIP_CONTEXT_SIZE",
+  //       "domain": "authzed.com",
+  //       "metadata": {
+  //         "relationship":     "relationship_exceeding_the_limit",
+  //         "max_allowed_size": "server_max_allowed_context_size",
+  //         "context_size":     "actual_relationship_context_size" ,
+  //       }
+  //     }
+  ERROR_REASON_MAX_RELATIONSHIP_CONTEXT_SIZE = 17;
+
+  // The request failed because a relationship marked to be CREATEd
+  // was already present within the datastore.
+  //
+  // Example of an ErrorInfo:
+  //
+  //     {
+  //       "reason": "ERROR_REASON_ATTEMPT_TO_RECREATE_RELATIONSHIP",
+  //       "domain": "authzed.com",
+  //       "metadata": {
+  //         "relationship":          "relationship_that_already_existed",
+  //         "resource_type":         "resource type",
+  //         "resource_object_id":    "resource object id",
+  //         ... additional decomposed relationship fields ...
+  //       }
+  //     }
+  ERROR_REASON_ATTEMPT_TO_RECREATE_RELATIONSHIP = 18;
+
+  // The request failed because it caused the maximum depth allowed to be
+  // exceeded. This typically indicates that there is a circular data traversal
+  // somewhere in the schema, but can also be raised if the data traversal is simply
+  // too deep.
+  //
+  // Example of an ErrorInfo:
+  //
+  //     {
+  //       "reason": "ERROR_REASON_MAXIMUM_DEPTH_EXCEEDED",
+  //       "domain": "authzed.com",
+  //       "metadata": {
+  //         "maximum_depth_allowed": "50",
+  //         ... additional fields based on request type ...
+  //       }
+  //     }
+  ERROR_REASON_MAXIMUM_DEPTH_EXCEEDED = 19;
+
+  // The request failed due to a serialization error in the backend database.
+  // This typically indicates that various in flight transactions conflicted with each other
+  // and the database had to abort one or more of them. SpiceDB will retry a few times before returning
+  // the error to the client.
+  //
+  // Example of an ErrorInfo:
+  //
+  //     {
+  //       "reason": "ERROR_REASON_SERIALIZATION_FAILURE",
+  //       "domain": "authzed.com",
+  //       "metadata": {}
+  //     }
+  ERROR_REASON_SERIALIZATION_FAILURE = 20;
+
+  // The request contained more check items than the maximum configured.
+  //
+  // Example of an ErrorInfo:
+  //
+  //     {  
+  //       "reason": "ERROR_REASON_TOO_MANY_CHECKS_IN_REQUEST",
+  //       "domain": "authzed.com",
+  //       "metadata": {
+  //         "check_count": "525",
+  //         "maximum_checks_allowed": "500",
+  //       }
+  //     }
+  ERROR_REASON_TOO_MANY_CHECKS_IN_REQUEST = 21;
 }

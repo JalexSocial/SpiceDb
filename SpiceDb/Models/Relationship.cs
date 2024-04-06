@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-
-namespace SpiceDb.Models;
+﻿namespace SpiceDb.Models;
 
 public class Relationship
 {
@@ -12,7 +10,7 @@ public class Relationship
 
         if (!string.IsNullOrEmpty(Resource.Relation))
         {
-	        throw new ArgumentException("Error: Resource cannot have a relation");
+            throw new ArgumentException("Error: Resource cannot have a relation");
         }
     }
 
@@ -25,7 +23,7 @@ public class Relationship
 
         if (!string.IsNullOrEmpty(Resource.Relation))
         {
-	        throw new ArgumentException("Error: Resource cannot have a relation");
+            throw new ArgumentException("Error: Resource cannot have a relation");
         }
     }
 
@@ -69,7 +67,7 @@ public class Relationship
     /// </summary>
     public Caveat? OptionalCaveat { get; set; }
 
-	public override string ToString()
+    public override string ToString()
     {
         return $"{Resource.ToString()}#{this.Relation}@{Subject.ToString()}";
     }

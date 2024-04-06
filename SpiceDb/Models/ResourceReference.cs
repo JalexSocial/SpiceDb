@@ -58,23 +58,23 @@ public class ResourceReference
         type = string.IsNullOrEmpty(type) ? type : type.StartsWith(prefix + "/") ? type : $"{prefix}/{type}";
 
         if (type == this.Type)
-	        return this;
+            return this;
 
         return new ResourceReference(type, this.Id, this.Relation);
     }
 
     public ResourceReference ExcludePrefix(string prefix)
     {
-	    var type = this.Type;
+        var type = this.Type;
 
         if (!prefix.EndsWith("/")) prefix += "/";
 
-	    type = type.StartsWith(prefix) ? type.Substring(prefix.Length) : type;
+        type = type.StartsWith(prefix) ? type.Substring(prefix.Length) : type;
 
-	    if (type == this.Type)
-		    return this;
+        if (type == this.Type)
+            return this;
 
-	    return new ResourceReference(type, this.Id, this.Relation);
+        return new ResourceReference(type, this.Id, this.Relation);
     }
 
     public override string ToString() => $"{this.Type}:{this.Id}" + (String.IsNullOrEmpty(Relation) ? "" : $"#{Relation}");

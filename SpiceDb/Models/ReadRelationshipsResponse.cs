@@ -1,6 +1,4 @@
-﻿using Authzed.Api.V1;
-
-namespace SpiceDb.Models;
+﻿namespace SpiceDb.Models;
 
 public class ReadRelationshipsResponse
 {

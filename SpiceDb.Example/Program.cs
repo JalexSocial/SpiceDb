@@ -51,11 +51,11 @@ Console.WriteLine($"Can user carmella read document:firstdoc? {carmellaCanRead.H
 // true
 
 var subjectPageable = client.LookupSubjects(
-	new ResourceReference("document", "firstdoc"),
-	"reader",
-	"user");
+    new ResourceReference("document", "firstdoc"),
+    "reader",
+    "user");
 
 await foreach (var subject in subjectPageable)
 {
-	// do anything or nothing
+    // do anything or nothing
 }

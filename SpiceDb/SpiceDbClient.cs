@@ -28,7 +28,7 @@ public class SpiceDbClient : ISpiceDbClient
             throw new Exception("Missing server address or token");
 
         if (!Regex.IsMatch(schemaPrefix, @"^[a-zA-Z0-9_]{3,63}[a-zA-Z0-9]$"))
-	        throw new Exception("Schema prefixes must be alphanumeric, lowercase, between 4-64 characters and not end in an underscore");
+            throw new Exception("Schema prefixes must be alphanumeric, lowercase, between 4-64 characters and not end in an underscore");
 
         _core = new Core(serverAddress, token);
         _prefix = schemaPrefix;
@@ -173,10 +173,10 @@ public class SpiceDbClient : ISpiceDbClient
 
         preconditionCollection.AddRange(conditions);
 
-        return (await _core.Permissions.DeleteRelationshipsAsync(EnsurePrefix(resourceFilter.Type)!, resourceFilter.OptionalId, resourceFilter.OptionalRelation, 
-		        EnsurePrefix(optionalSubjectFilter?.Type) ?? string.Empty, optionalSubjectFilter?.OptionalId ?? string.Empty,
+        return (await _core.Permissions.DeleteRelationshipsAsync(EnsurePrefix(resourceFilter.Type)!, resourceFilter.OptionalId, resourceFilter.OptionalRelation,
+                EnsurePrefix(optionalSubjectFilter?.Type) ?? string.Empty, optionalSubjectFilter?.OptionalId ?? string.Empty,
             optionalSubjectFilter?.OptionalRelation ?? string.Empty, preconditionCollection, deadline, cancellationToken))
-	        .ToSpiceDbToken();
+            .ToSpiceDbToken();
     }
 
     /// <summary>
@@ -210,49 +210,49 @@ public class SpiceDbClient : ISpiceDbClient
         var response = await _core.Permissions.ExpandPermissionAsync(EnsurePrefix(resource.Type)!, resource.Id, permission, zedToken.ToAuthzedToken(), cacheFreshness);
 
         if (response == null)
-	        return null;
+            return null;
 
         return new ExpandPermissionTreeResponse
         {
-	        ExpandedAt = response.ExpandedAt.ToSpiceDbToken()!,
-	        TreeRoot = BuildTree(response.TreeRoot, new PermissionRelationshipTree())
+            ExpandedAt = response.ExpandedAt.ToSpiceDbToken()!,
+            TreeRoot = BuildTree(response.TreeRoot, new PermissionRelationshipTree())
         };
     }
 
     private PermissionRelationshipTree BuildTree(Authzed.Api.V1.PermissionRelationshipTree original, PermissionRelationshipTree node)
     {
-	    node.ExpandedObject = new ResourceReference(original.ExpandedObject.ObjectType, original.ExpandedObject.ObjectId);
-	    node.ExpandedRelation = original.ExpandedRelation;
-        
+        node.ExpandedObject = new ResourceReference(original.ExpandedObject.ObjectType, original.ExpandedObject.ObjectId);
+        node.ExpandedRelation = original.ExpandedRelation;
+
         switch (original.TreeTypeCase)
         {
             case Authzed.Api.V1.PermissionRelationshipTree.TreeTypeOneofCase.Intermediate:
-	            node.TreeType = TreeType.Intermediate;
-	            node.Intermediate = new AlgebraicSubjectSet
-	            {
-		            Operation = original.Intermediate.Operation switch
-		            {
-			            Authzed.Api.V1.AlgebraicSubjectSet.Types.Operation.Exclusion => AlgebraicSubjectSetOperation
-				            .Exclusion,
-			            Authzed.Api.V1.AlgebraicSubjectSet.Types.Operation.Intersection => AlgebraicSubjectSetOperation
-				            .Intersection,
-			            Authzed.Api.V1.AlgebraicSubjectSet.Types.Operation.Union => AlgebraicSubjectSetOperation.Union,
-			            _ => AlgebraicSubjectSetOperation.Unspecified
-		            },
-		            Children = original.Intermediate.Children
-			            .Select(x => BuildTree(x, new PermissionRelationshipTree())).ToList()
-	            };
+                node.TreeType = TreeType.Intermediate;
+                node.Intermediate = new AlgebraicSubjectSet
+                {
+                    Operation = original.Intermediate.Operation switch
+                    {
+                        Authzed.Api.V1.AlgebraicSubjectSet.Types.Operation.Exclusion => AlgebraicSubjectSetOperation
+                            .Exclusion,
+                        Authzed.Api.V1.AlgebraicSubjectSet.Types.Operation.Intersection => AlgebraicSubjectSetOperation
+                            .Intersection,
+                        Authzed.Api.V1.AlgebraicSubjectSet.Types.Operation.Union => AlgebraicSubjectSetOperation.Union,
+                        _ => AlgebraicSubjectSetOperation.Unspecified
+                    },
+                    Children = original.Intermediate.Children
+                        .Select(x => BuildTree(x, new PermissionRelationshipTree())).ToList()
+                };
                 break;
             case Authzed.Api.V1.PermissionRelationshipTree.TreeTypeOneofCase.Leaf:
-	            node.TreeType = TreeType.Leaf;
-	            node.Leaf = new DirectSubjectSet();
+                node.TreeType = TreeType.Leaf;
+                node.Leaf = new DirectSubjectSet();
 
                 foreach (var subject in original.Leaf.Subjects)
                 {
-	                node.Leaf.Subjects.Add(new ResourceReference(subject.Object.ObjectType, subject.Object.ObjectId, subject.OptionalRelation));
+                    node.Leaf.Subjects.Add(new ResourceReference(subject.Object.ObjectType, subject.Object.ObjectId, subject.OptionalRelation));
                 };
 
-	            break;
+                break;
         }
 
         return node;
@@ -265,15 +265,15 @@ public class SpiceDbClient : ISpiceDbClient
     /// <returns></returns>
     public async Task<ZedToken?> AddRelationshipsAsync(List<SpiceDb.Models.Relationship> relationships)
     {
-	    var request = relationships.Select(x => new SpiceDb.Models.RelationshipUpdate
-	    {
-		    Relationship = new Relationship(
+        var request = relationships.Select(x => new SpiceDb.Models.RelationshipUpdate
+        {
+            Relationship = new Relationship(
                 x.Resource.EnsurePrefix(_prefix), x.Relation, x.Subject.EnsurePrefix(_prefix), x.OptionalCaveat
-		    ),
-		    Operation = RelationshipUpdateOperation.Upsert
-	    }).ToList();
+            ),
+            Operation = RelationshipUpdateOperation.Upsert
+        }).ToList();
 
-	    return await WriteRelationshipsAsync(request);
+        return await WriteRelationshipsAsync(request);
     }
 
     /// <summary>
@@ -284,7 +284,7 @@ public class SpiceDbClient : ISpiceDbClient
     public async Task<ZedToken> AddRelationshipAsync(SpiceDb.Models.Relationship relation)
     {
         return (await _core.Permissions.UpdateRelationshipAsync(EnsurePrefix(relation.Resource.Type)!, relation.Resource.Id, relation.Relation, EnsurePrefix(relation.Subject.Type)!, relation.Subject.Id, relation.Subject.Relation))
-	        .ToSpiceDbToken()!;
+            .ToSpiceDbToken()!;
     }
 
     public ZedToken AddRelationship(SpiceDb.Models.Relationship relation) => AddRelationshipAsync(relation).Result;
@@ -351,7 +351,7 @@ public class SpiceDbClient : ISpiceDbClient
         ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
     {
         await foreach (var response in _core.Permissions.LookupResources(EnsurePrefix(resourceType)!, permission,
-	                       EnsurePrefix(subject.Type)!, subject.Id, subject.Relation,
+                           EnsurePrefix(subject.Type)!, subject.Id, subject.Relation,
                            context, zedToken.ToAuthzedToken(), cacheFreshness))
         {
             yield return response;
@@ -362,8 +362,8 @@ public class SpiceDbClient : ISpiceDbClient
         ZedToken? zedToken = null,
         DateTime? deadline = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        await foreach (var response in _core.Watch.Watch(optionalSubjectTypes?.Select(x => EnsurePrefix(x)!).ToList(), 
-	                       zedToken.ToAuthzedToken(), deadline, cancellationToken))
+        await foreach (var response in _core.Watch.Watch(optionalSubjectTypes?.Select(x => EnsurePrefix(x)!).ToList(),
+                           zedToken.ToAuthzedToken(), deadline, cancellationToken))
         {
             yield return response;
         }
@@ -389,7 +389,7 @@ public class SpiceDbClient : ISpiceDbClient
     /// <returns></returns>
     public async Task ImportSchemaFromStringAsync(string schema)
     {
-	    var prefix = _prefix;
+        var prefix = _prefix;
 
         if (prefix.Length > 0 && !prefix.EndsWith("/")) prefix += "/";
 
@@ -459,44 +459,44 @@ public class SpiceDbClient : ISpiceDbClient
     }
 
     public async Task<BulkCheckPermissionResponse?> BulkCheckPermissionAsync(IEnumerable<string> permissions,
-	    ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
+        ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
     {
-	    var items = permissions.Select(perm => new BulkCheckPermissionRequestItem() { Permission = new Models.Permission(perm) });
+        var items = permissions.Select(perm => new BulkCheckPermissionRequestItem() { Permission = new Models.Permission(perm) });
 
-	    return await BulkCheckPermissionAsync(items, zedToken, cacheFreshness);
-	}
+        return await BulkCheckPermissionAsync(items, zedToken, cacheFreshness);
+    }
 
-	public async Task<BulkCheckPermissionResponse?> BulkCheckPermissionAsync(IEnumerable<Models.Permission> permissions,
-	    ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
+    public async Task<BulkCheckPermissionResponse?> BulkCheckPermissionAsync(IEnumerable<Models.Permission> permissions,
+        ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
     {
-	    var items = permissions.Select(perm => new BulkCheckPermissionRequestItem() { Permission = perm });
+        var items = permissions.Select(perm => new BulkCheckPermissionRequestItem() { Permission = perm });
 
-	    return await BulkCheckPermissionAsync(items, zedToken, cacheFreshness);
+        return await BulkCheckPermissionAsync(items, zedToken, cacheFreshness);
     }
 
     public async Task<BulkCheckPermissionResponse?> BulkCheckPermissionAsync(IEnumerable<BulkCheckPermissionRequestItem> items,
-	    ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
+        ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
     {
-	    var converted = items.Select(x => new Authzed.Api.V1.BulkCheckPermissionRequestItem()
-	    {
-		    Context = x.Context.ToStruct(),
-		    Permission = x.Permission?.Relation,
-		    Resource = new Authzed.Api.V1.ObjectReference
-			    { ObjectId = x.Permission?.Resource.Id, ObjectType = EnsurePrefix(x.Permission?.Resource.Type) },
-		    Subject = new Authzed.Api.V1.SubjectReference()
-		    {
-			    Object = new Authzed.Api.V1.ObjectReference()
-				    { ObjectId = x.Permission?.Subject.Id, ObjectType = EnsurePrefix(x.Permission?.Subject.Type) },
-			    OptionalRelation = x.Permission?.Relation
-		    }
-	    });
+        var converted = items.Select(x => new Authzed.Api.V1.BulkCheckPermissionRequestItem()
+        {
+            Context = x.Context.ToStruct(),
+            Permission = x.Permission?.Relation,
+            Resource = new Authzed.Api.V1.ObjectReference
+            { ObjectId = x.Permission?.Resource.Id, ObjectType = EnsurePrefix(x.Permission?.Resource.Type) },
+            Subject = new Authzed.Api.V1.SubjectReference()
+            {
+                Object = new Authzed.Api.V1.ObjectReference()
+                { ObjectId = x.Permission?.Subject.Id, ObjectType = EnsurePrefix(x.Permission?.Subject.Type) },
+                OptionalRelation = x.Permission?.Relation
+            }
+        });
 
-	    return await _core.Experimental.BulkCheckPermissionAsync(converted, zedToken.ToAuthzedToken(), cacheFreshness);
+        return await _core.Experimental.BulkCheckPermissionAsync(converted, zedToken.ToAuthzedToken(), cacheFreshness);
     }
 
-	private string? EnsurePrefix(string? type)
+    private string? EnsurePrefix(string? type)
     {
-	    if (string.IsNullOrEmpty(type)) return type;
+        if (string.IsNullOrEmpty(type)) return type;
 
         return type.StartsWith(_prefix + "/") ? type : $"{_prefix}/{type}";
     }

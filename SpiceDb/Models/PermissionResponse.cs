@@ -1,5 +1,4 @@
-﻿using Authzed.Api.V1;
-using SpiceDb.Enum;
+﻿using SpiceDb.Enum;
 
 namespace SpiceDb.Models;
 

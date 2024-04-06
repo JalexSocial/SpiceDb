@@ -1,22 +1,16 @@
-﻿using System.Net;
-using System.Runtime.CompilerServices;
-using Authzed.Api.V1;
+﻿using Authzed.Api.V1;
 using Google.Protobuf.Collections;
 using Grpc.Core;
-using Grpc.Net.Client;
 using SpiceDb.Enum;
 using SpiceDb.Models;
-using System.Text.RegularExpressions;
-using LookupResourcesResponse = Authzed.Api.V1.LookupResourcesResponse;
 using Precondition = Authzed.Api.V1.Precondition;
 using Relationship = Authzed.Api.V1.Relationship;
 using RelationshipUpdate = Authzed.Api.V1.RelationshipUpdate;
 using ZedToken = Authzed.Api.V1.ZedToken;
-using System.Threading.Channels;
 
 namespace SpiceDb.Api;
 
-internal class SpiceDbPermissions 
+internal class SpiceDbPermissions
 {
     private readonly PermissionsService.PermissionsServiceClient? _acl;
     private readonly CallOptions _callOptions;

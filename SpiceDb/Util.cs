@@ -1,12 +1,10 @@
-﻿using System.Reflection.Metadata.Ecma335;
-using Authzed.Api.V1;
-using Google.Protobuf.WellKnownTypes;
+﻿using Google.Protobuf.WellKnownTypes;
 
 namespace SpiceDb;
 internal static class Util
 {
-	public static Authzed.Api.V1.ZedToken? ToAuthzedToken(this SpiceDb.Models.ZedToken? token) => token is null ? null : new Authzed.Api.V1.ZedToken { Token = token.Token };
-	public static SpiceDb.Models.ZedToken? ToSpiceDbToken(this Authzed.Api.V1.ZedToken? token) => token is null ? null : new SpiceDb.Models.ZedToken(token.Token);
+    public static Authzed.Api.V1.ZedToken? ToAuthzedToken(this SpiceDb.Models.ZedToken? token) => token is null ? null : new Authzed.Api.V1.ZedToken { Token = token.Token };
+    public static SpiceDb.Models.ZedToken? ToSpiceDbToken(this Authzed.Api.V1.ZedToken? token) => token is null ? null : new SpiceDb.Models.ZedToken(token.Token);
 
     public static Dictionary<string, object> FromStruct(this Struct s)
     {

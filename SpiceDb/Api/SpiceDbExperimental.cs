@@ -21,7 +21,7 @@ internal class SpiceDbExperimental
         _callOptions = callOptions;
     }
 
-    public SpiceDb.Models.BulkCheckPermissionResponse? BulkCheckPermission(IEnumerable<BulkCheckPermissionRequestItem> items, ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
+    public async Task<SpiceDb.Models.BulkCheckPermissionResponse?> BulkCheckPermissionAsync(IEnumerable<BulkCheckPermissionRequestItem> items, ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
     {
         var req = new BulkCheckPermissionRequest()
         {
@@ -41,7 +41,7 @@ internal class SpiceDbExperimental
         }
 
         //Server streaming call, reads messages streamed from the service
-        var call = _exp.BulkCheckPermission(req, options: _callOptions);
+        var call = await _exp.BulkCheckPermissionAsync(req, options: _callOptions);
 
         if (call == null)
             return null;
@@ -49,20 +49,14 @@ internal class SpiceDbExperimental
         SpiceDb.Models.BulkCheckPermissionResponse response = new SpiceDb.Models.BulkCheckPermissionResponse
         {
             CheckedAt = call.CheckedAt.ToSpiceDbToken(),
-            Pairs = call.Pairs.Select(x => new Models.BulkCheckPermissionPair
+            Pairs = call.Pairs.Select(x => new Models.BulkCheckPermission
             {
                 Error = x.Error is null ? null : new Models.Status { Code = x.Error.Code, Message = x.Error.Message, Details = x.Error.Details.Select(any => (object)any).ToList() },
-                Item = x.Item is null ? null : new SpiceDb.Models.BulkCheckPermissionResponseItem
-                {
-                    PartialCaveatInfo = x.Item.PartialCaveatInfo is null ? null : new SpiceDb.Models.PartialCaveatInfo { MissingRequiredContext = x.Item.PartialCaveatInfo.MissingRequiredContext.ToList() },
-                    Permissionship = (Permissionship)x.Item.Permissionship
-                },
-                Request = x.Request is null ? null : new Models.BulkCheckPermissionRequestItem
-                {
-                    Permission = new Models.Permission (x.Request.Permission),
-                    Context = x.Request.Context.FromStruct()
-                }
-            }).ToList()
+				PartialCaveatInfo = x.Item.PartialCaveatInfo is null ? null : new SpiceDb.Models.PartialCaveatInfo { MissingRequiredContext = x.Item.PartialCaveatInfo.MissingRequiredContext.ToList() },
+				Permissionship = (Permissionship)x.Item.Permissionship,
+				Permission = new Models.Permission(x.Request.Permission),
+				Context = x.Request.Context.FromStruct()
+			}).ToList()
         };
 
         return response;

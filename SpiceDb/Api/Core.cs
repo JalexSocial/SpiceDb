@@ -64,7 +64,7 @@ internal class Core
         Experimental = new SpiceDbExperimental(channel, callOptions);
     }
 
-    protected async Task<ChannelBase> CreateAuthenticatedChannelAsync(string address)
+    private async Task<ChannelBase> CreateAuthenticatedChannelAsync(string address)
     {
         var token = await GetTokenAsync();
         var credentials = CallCredentials.FromInterceptor((context, metadata) =>

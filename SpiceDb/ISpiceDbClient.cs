@@ -152,4 +152,11 @@ public interface ISpiceDbClient
 
 	Task<ZedToken?> ImportRelationshipsFromFileAsync(string filePath);
 	Task<ZedToken?> ImportRelationshipsAsync(string content);
+
+	// Experimental API Methods
+	Task<BulkCheckPermissionResponse?> BulkCheckPermissionAsync(IEnumerable<BulkCheckPermissionRequestItem> items, ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness);
+
+	Task<BulkCheckPermissionResponse?> BulkCheckPermissionAsync(IEnumerable<string> permissions, ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness);
+
+	Task<BulkCheckPermissionResponse?> BulkCheckPermissionAsync(IEnumerable<Models.Permission> permissions, ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness);
 }

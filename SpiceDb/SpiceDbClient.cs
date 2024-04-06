@@ -369,26 +369,6 @@ public class SpiceDbClient : ISpiceDbClient
         }
     }
 
-    public BulkCheckPermissionResponse? BulkCheckPermission(IEnumerable<BulkCheckPermissionRequestItem> items,
-        ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
-    {
-        var converted = items.Select(x => new Authzed.Api.V1.BulkCheckPermissionRequestItem()
-        {
-            Context = x.Context.ToStruct(),
-            Permission = x.Permission?.Relation,
-            Resource = new Authzed.Api.V1.ObjectReference
-                { ObjectId = x.Permission?.Resource.Id, ObjectType = x.Permission?.Resource.Type },
-            Subject = new Authzed.Api.V1.SubjectReference()
-            {
-                Object = new Authzed.Api.V1.ObjectReference()
-                    { ObjectId = x.Permission?.Subject.Id, ObjectType = x.Permission?.Subject.Type },
-                OptionalRelation = x.Permission?.Relation
-            }
-        });
-
-        return _core.Experimental.BulkCheckPermission(converted, zedToken.ToAuthzedToken(), cacheFreshness);
-    }
-
     public async Task<List<string>> GetResourcePermissionsAsync(string resourceType, string permission, ResourceReference subject, ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
     {
         return await _core.Permissions.GetResourcePermissionsAsync(EnsurePrefix(resourceType)!, permission, EnsurePrefix(subject.Type)!, subject.Id, zedToken.ToAuthzedToken());
@@ -478,7 +458,43 @@ public class SpiceDbClient : ISpiceDbClient
         return (await _core.Permissions.WriteRelationshipsAsync(updateCollection)).WrittenAt.ToSpiceDbToken();
     }
 
-    private string? EnsurePrefix(string? type)
+    public async Task<BulkCheckPermissionResponse?> BulkCheckPermissionAsync(IEnumerable<string> permissions,
+	    ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
+    {
+	    var items = permissions.Select(perm => new BulkCheckPermissionRequestItem() { Permission = new Models.Permission(perm) });
+
+	    return await BulkCheckPermissionAsync(items, zedToken, cacheFreshness);
+	}
+
+	public async Task<BulkCheckPermissionResponse?> BulkCheckPermissionAsync(IEnumerable<Models.Permission> permissions,
+	    ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
+    {
+	    var items = permissions.Select(perm => new BulkCheckPermissionRequestItem() { Permission = perm });
+
+	    return await BulkCheckPermissionAsync(items, zedToken, cacheFreshness);
+    }
+
+    public async Task<BulkCheckPermissionResponse?> BulkCheckPermissionAsync(IEnumerable<BulkCheckPermissionRequestItem> items,
+	    ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
+    {
+	    var converted = items.Select(x => new Authzed.Api.V1.BulkCheckPermissionRequestItem()
+	    {
+		    Context = x.Context.ToStruct(),
+		    Permission = x.Permission?.Relation,
+		    Resource = new Authzed.Api.V1.ObjectReference
+			    { ObjectId = x.Permission?.Resource.Id, ObjectType = EnsurePrefix(x.Permission?.Resource.Type) },
+		    Subject = new Authzed.Api.V1.SubjectReference()
+		    {
+			    Object = new Authzed.Api.V1.ObjectReference()
+				    { ObjectId = x.Permission?.Subject.Id, ObjectType = EnsurePrefix(x.Permission?.Subject.Type) },
+			    OptionalRelation = x.Permission?.Relation
+		    }
+	    });
+
+	    return await _core.Experimental.BulkCheckPermissionAsync(converted, zedToken.ToAuthzedToken(), cacheFreshness);
+    }
+
+	private string? EnsurePrefix(string? type)
     {
 	    if (string.IsNullOrEmpty(type)) return type;
 

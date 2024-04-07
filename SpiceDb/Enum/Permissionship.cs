@@ -3,7 +3,7 @@
 public enum Permissionship
 {
     Unspecified = 0,
-    HasPermission = 1,
-    NoPermission,
+    NoPermission = 1,
+    HasPermission = 2,
     ConditionalPermission = 3
 }

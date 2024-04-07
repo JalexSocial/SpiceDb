@@ -55,8 +55,14 @@ internal class SpiceDbExperimental
                     ? null
                     : new SpiceDb.Models.PartialCaveatInfo
                     { MissingRequiredContext = x.Item.PartialCaveatInfo.MissingRequiredContext.ToList() },
-                Permissionship = (Permissionship)x.Item.Permissionship,
-                Permission = new Models.Permission(x.Request.Permission),
+				Permissionship = x.Item.Permissionship switch
+				{
+					CheckPermissionResponse.Types.Permissionship.NoPermission => Permissionship.NoPermission,
+					CheckPermissionResponse.Types.Permissionship.HasPermission => Permissionship.HasPermission,
+					CheckPermissionResponse.Types.Permissionship.ConditionalPermission => Permissionship.ConditionalPermission,
+					_ => Permissionship.Unspecified
+				},
+				Permission = new Models.Permission(x.Request.Permission),
                 Context = x.Request.Context.FromStruct()
             }).ToList()
         };

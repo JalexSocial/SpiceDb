@@ -530,25 +530,25 @@ public class SpiceDbClient : ISpiceDbClient
 		return (await _core.Permissions.WriteRelationshipsAsync(updateCollection)).WrittenAt.ToSpiceDbToken();
 	}
 
-	public async Task<CheckBulkPermissionsResponse?> CheckBulkPermissionAsync(IEnumerable<string> permissions,
+	public async Task<CheckBulkPermissionsResponse?> CheckBulkPermissionsAsync(IEnumerable<string> permissions,
 		ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
 	{
 		var items = permissions.Select(perm => new CheckBulkPermissionsRequestItem()
 			{ Permission = new Models.Permission(perm) });
 
-		return await CheckBulkPermissionAsync(items, zedToken, cacheFreshness);
+		return await CheckBulkPermissionsAsync(items, zedToken, cacheFreshness);
 	}
 
-	public async Task<CheckBulkPermissionsResponse?> CheckBulkPermissionAsync(
+	public async Task<CheckBulkPermissionsResponse?> CheckBulkPermissionsAsync(
 		IEnumerable<Models.Permission> permissions,
 		ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
 	{
 		var items = permissions.Select(perm => new CheckBulkPermissionsRequestItem() { Permission = perm });
 
-		return await CheckBulkPermissionAsync(items, zedToken, cacheFreshness);
+		return await CheckBulkPermissionsAsync(items, zedToken, cacheFreshness);
 	}
 
-	public async Task<CheckBulkPermissionsResponse?> CheckBulkPermissionAsync(
+	public async Task<CheckBulkPermissionsResponse?> CheckBulkPermissionsAsync(
 		IEnumerable<CheckBulkPermissionsRequestItem> items,
 		ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
 	{

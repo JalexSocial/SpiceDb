@@ -93,144 +93,210 @@ Console.WriteLine($"Can user carmella read document:firstdoc? {carmellaCanRead.H
 
 ### API Methods
 
-```csharp
+# SpiceDbClient Class
 
-	/// <summary>
-	/// ReadRelationships reads a set of the relationships matching one or more filters.
-	/// </summary>
-	/// <param name="resource"></param>
-	/// <param name="subject"></param>
-	/// <param name="zedToken"></param>
-	/// <param name="cacheFreshness"></param>
-	/// <returns></returns>
-	IAsyncEnumerable<SpiceDb.Models.ReadRelationshipsResponse> ReadRelationshipsAsync(Models.RelationshipFilter resource, Models.RelationshipFilter? subject = null,
-		ZedToken? zedToken = null,
-		CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness);
+The `SpiceDbClient` class provides a client for interacting with Authzed's SpiceDb, offering methods to manipulate permission systems efficiently.
 
-	/// <summary>
-	/// WriteRelationships atomically writes and/or deletes a set of specified relationships. An optional set of
-	/// preconditions can be provided that must be satisfied for the operation to commit.
-	/// </summary>
-	/// <param name="relationships"></param>
-	/// <param name="optionalPreconditions"></param>
-	/// <returns></returns>
-	Task<ZedToken?> WriteRelationshipsAsync(List<SpiceDb.Models.RelationshipUpdate>? relationships, List<SpiceDb.Models.Precondition>? optionalPreconditions = null);
+## Constructors
 
-	/// <summary>
-	/// DeleteRelationships atomically bulk deletes all relationships matching the provided filter. If no relationships
-	/// match, none will be deleted and the operation will succeed. An optional set of preconditions can be provided
-	/// that must be satisfied for the operation to commit.
-	/// </summary>
-	/// <param name="resourceFilter">resourceFilter.Type is required, all other fields are optional</param>
-	/// <param name="optionalSubjectFilter">An optional additional subject filter</param>
-	/// <param name="optionalPreconditions">An optional set of preconditions can be provided that must be satisfied for the operation to commit.</param>
-	/// <param name="deadline">An optional deadline for the call. The call will be cancelled if deadline is hit.</param>
-	/// <param name="cancellationToken">An optional token for canceling the call.</param>
-	/// <returns></returns>
-	Task<ZedToken?> DeleteRelationshipsAsync(SpiceDb.Models.RelationshipFilter resourceFilter, Models.RelationshipFilter? optionalSubjectFilter = null, List<SpiceDb.Models.Precondition>? optionalPreconditions = null, DateTime? deadline = null, CancellationToken cancellationToken = default(CancellationToken));
+### SpiceDbClient(string token, string schemaPrefix)
 
-	/// <summary>
-	/// CheckPermission determines for a given resource whether a subject computes to having a permission or is a direct member of
-	/// a particular relation. Contains support for context as well where context objects can be string, bool, double, int, uint, or long.
-	/// </summary>
-	/// <param name="permission">Permission relationship to evaluate</param>
-	/// <param name="context">Additional context information that may be needed for evaluating caveats</param>
-	/// <param name="zedToken"></param>
-	/// <returns></returns>
-	Task<PermissionResponse> CheckPermissionAsync(SpiceDb.Models.Permission permission, Dictionary<string, object>? context = null, ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness);
+Initializes a new instance of the `SpiceDbClient` class using the default Authzed server address.
 
-	Task<PermissionResponse> CheckPermissionAsync(string permission, Dictionary<string, object>? context = null, ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness);
-	PermissionResponse CheckPermission(SpiceDb.Models.Permission permission, Dictionary<string, object>? context = null, ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness);
-	PermissionResponse CheckPermission(string permission, Dictionary<string, object>? context = null, ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness);
+**Parameters**
 
-	/// <summary>
-	/// ExpandPermissionTree reveals the graph structure for a resource's permission or relation. This RPC does not recurse infinitely
-	/// deep and may require multiple calls to fully unnest a deeply nested graph.
-	/// </summary>
-	/// <param name="resource"></param>
-	/// <param name="permission"></param>
-	/// <param name="zedToken"></param>
-	/// <param name="cacheFreshness"></param>
-	/// <returns></returns>
-	Task<ExpandPermissionTreeResponse?> ExpandPermissionAsync(ResourceReference resource, string permission, ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness);
+- `token` - Token with admin privileges for manipulating the desired permission system.
+- `schemaPrefix` - Schema prefix used for the permission system.
 
-	/// <summary>
-	/// Add or update multiple relationships as a single atomic update
-	/// </summary>
-	/// <param name="relationships">List of relationships to add</param>
-	/// <returns></returns>
-	Task<ZedToken?> AddRelationshipsAsync(List<SpiceDb.Models.Relationship> relationships);
+### SpiceDbClient(string serverAddress, string token, string schemaPrefix)
 
-	/// <summary>
-	/// Add or update a relationship
-	/// </summary>
-	/// <param name="relation"></param>
-	/// <returns></returns>
-	Task<ZedToken> AddRelationshipAsync(SpiceDb.Models.Relationship relation);
+Initializes a new instance of the `SpiceDbClient` class with the specified server address, token, and schema prefix.
 
-	Task<ZedToken> AddRelationshipAsync(string relation);
-	ZedToken AddRelationship(SpiceDb.Models.Relationship relation);
-	ZedToken AddRelationship(string relation);
+**Parameters**
 
-	/// <summary>
-	/// Removes an existing relationship (if it exists)
-	/// </summary>
-	/// <param name="relation"></param>
-	/// <returns></returns>
-	Task<ZedToken> DeleteRelationshipAsync(SpiceDb.Models.Relationship relation);
+- `serverAddress` - The server address of the Authzed server.
+- `token` - The token with admin privileges for manipulating the desired permission system.
+- `schemaPrefix` - The schema prefix used for the permission system.
 
-	/// <summary>
-	/// LookupSubjects returns all the subjects of a given type that have access whether via a computed permission or relation membership.
-	/// </summary>
-	/// <param name="resource">Resource is the resource for which all matching subjects for the permission or relation will be returned.</param>
-	/// <param name="permission">permission is the name of the permission (or relation) for which to find the subjects</param>
-	/// <param name="subjectType">subjecttype is the type of subject object for which the IDs will be returned</param>
-	/// <param name="optionalSubjectRelation">optionalSubjectRelation is the optional relation for the subject.</param>
-	/// <param name="context">context consists of named values that are injected into the caveat evaluation context *</param>
-	/// <param name="zedToken"></param>
-	/// <param name="cacheFreshness"></param>
-	/// <returns></returns>
-	IAsyncEnumerable<SpiceDb.Models.LookupSubjectsResponse> LookupSubjects(ResourceReference resource,
-		string permission,
-		string subjectType, string optionalSubjectRelation = "",
-		Dictionary<string, object>? context = null,
-		ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness);
+**Exceptions**
 
-	/// <summary>
-	/// LookupResources returns all the resources of a given type that a subject can access whether via
-	/// a computed permission or relation membership.
-	/// </summary>
-	/// <param name="resourceType">The type of resource object for which the IDs will be returned.</param>
-	/// <param name="permission">The name of the permission or relation for which the subject must check</param>
-	/// <param name="subject">The subject with access to the resources</param>
-	/// <param name="context">Dictionary of values that are injected into the caveat evaluation context</param>
-	/// <param name="zedToken"></param>
-	/// <param name="cacheFreshness"></param>
-	/// <returns></returns>
-	IAsyncEnumerable<SpiceDb.Models.LookupResourcesResponse> LookupResources(string resourceType,
-		string permission,
-		ResourceReference subject,
-		Dictionary<string, object>? context = null,
-		ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness);
+- `Exception` - Thrown when the server address or token is null or empty, or if the schema prefix does not meet the required format.
 
-	IAsyncEnumerable<SpiceDb.Models.WatchResponse> Watch(List<string>? optionalSubjectTypes = null,
-		ZedToken? zedToken = null,
-		DateTime? deadline = null, CancellationToken cancellationToken = default);
+## Methods
 
-	Task<List<string>> GetResourcePermissionsAsync(string resourceType, string permission, ResourceReference subject, ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness);
-	string ReadSchema();
-	Task ImportSchemaFromFileAsync(string filePath);
+### ReadRelationshipsAsync
 
-	/// <summary>
-	/// Imports an Authzed Playground compatible schema (not a yaml file, just the commented schema)
-	/// </summary>
-	/// <param name="schema"></param>
-	/// <param name="prefix"></param>
-	/// <returns></returns>
-	Task ImportSchemaFromStringAsync(string schema);
+Asynchronously reads a set of relationships matching one or more filters.
 
-	Task<ZedToken?> ImportRelationshipsFromFileAsync(string filePath);
-	Task<ZedToken?> ImportRelationshipsAsync(string content);
+**Parameters**
 
+- `resource` - The filter to apply to the resource part of the relationships.
+- `subject` (optional) - An optional filter to apply to the subject part of the relationships.
+- `excludePrefix` (optional) - Indicates whether the prefix should be excluded from the response.
+- `zedToken` (optional) - An optional ZedToken for specifying a version of the data to read.
+- `cacheFreshness` (optional) - Specifies the acceptable freshness of the data to be read from the cache.
 
-```
+**Returns**
+
+- An async enumerable of `ReadRelationshipsResponse` objects matching the specified filters.
+
+### WriteRelationshipsAsync
+
+Atomically writes and/or deletes a set of specified relationships, with optional preconditions.
+
+**Parameters**
+
+- `relationships` - A list of relationship updates to apply.
+- `optionalPreconditions` (optional) - An optional list of preconditions that must be satisfied for the operation to commit.
+
+**Returns**
+
+- A task representing the asynchronous operation, with a `ZedToken?` indicating the version of the data after the write operation.
+
+### DeleteRelationshipsAsync
+
+Atomically bulk deletes all relationships matching the provided filters, with optional preconditions.
+
+**Parameters**
+
+- `resourceFilter` - The filter to apply to the resource part of the relationships. The resourceFilter.Type is required; all other fields are optional.
+- `optionalSubjectFilter` (optional) - An optional additional filter for the subject part of the relationships.
+- `optionalPreconditions` (optional) - An optional list of preconditions that must be satisfied for the operation to commit.
+- `deadline` (optional) - An optional deadline for the call. The operation will be cancelled if the deadline is reached.
+- `cancellationToken` (optional) - An optional token for cancelling the call.
+
+**Returns**
+
+- A task representing the asynchronous operation, with a `ZedToken?` indicating the version of the data after the delete operation.
+
+### CheckPermissionAsync
+
+Checks permissions for a given resource and subject, optionally considering additional context.
+
+**Parameters**
+
+- `permission` - The permission relationship to evaluate.
+- `context` (optional) - An optional dictionary providing additional context information for evaluating caveats.
+- `zedToken` (optional) - An optional ZedToken for specifying a version of the data to consider.
+- `cacheFreshness` (optional) - Specifies the acceptable freshness of the data to be considered from the cache.
+
+**Returns**
+
+- A task representing the asynchronous operation, with a `PermissionResponse` indicating the result of the permission check.
+
+### ExpandPermissionAsync
+
+Expands the permission tree for a resource's permission or relation, revealing the graph structure. This method may require multiple calls to fully unnest a deeply nested graph.
+
+**Parameters**
+
+- `resource` - The resource reference for which to expand the permission tree.
+- `permission` - The name of the permission or relation to expand.
+- `zedToken` (optional) - An optional ZedToken for specifying a version of the data to consider.
+- `cacheFreshness` (optional) - Specifies the acceptable freshness of the data to be considered from the cache.
+
+**Returns**
+
+- A task representing the asynchronous operation, with an `ExpandPermissionTreeResponse?` indicating the result of the expansion operation.
+
+### AddRelationshipsAsync
+
+Adds or updates multiple relationships as a single atomic update.
+
+**Parameters**
+
+- `relationships` - List of relationships to add or update.
+
+**Returns**
+
+- A task representing the asynchronous operation, with a `ZedToken?` indicating the version of the data after the operation.
+
+### AddRelationshipAsync
+
+Adds or updates a single relationship.
+
+**Parameters**
+
+- `relation` - The relationship to add or update.
+
+**Returns**
+
+- A task representing the asynchronous operation, with a `ZedToken` indicating the version of the data after the operation.
+
+### DeleteRelationshipAsync
+
+Removes an existing relationship (if it exists).
+
+**Parameters**
+
+- `relation` - The relationship to remove.
+
+**Returns**
+
+- A task representing the asynchronous operation, with a `ZedToken` indicating the version of the data after the relationship is removed.
+
+### LookupSubjects
+
+Returns all the subjects of a given type that have access, whether via a computed permission or relation membership.
+
+**Parameters**
+
+- `resource` - Resource is the resource for which all matching subjects for the permission or relation will be returned.
+- `permission` - Permission is the name of the permission (or relation) for which to find the subjects.
+- `subjectType` - SubjectType is the type of subject object for which the IDs will be returned.
+- `optionalSubjectRelation` (optional) - OptionalSubjectRelation is the optional relation for the subject.
+- `context` (optional) - Context consists of named values that are injected into the caveat evaluation context.
+- `zedToken` (optional) - An optional ZedToken for specifying a version of the data to consider.
+- `cacheFreshness` (optional) - Specifies the acceptable freshness of the data to be considered from the cache.
+
+**Returns**
+
+- An async enumerable of `LookupSubjectsResponse` objects representing the subjects with access to the specified resource.
+
+### LookupResources
+
+Returns all the resources of a given type that a subject can access, whether via a computed permission or relation membership.
+
+**Parameters**
+
+- `resourceType` - The type of resource object for which the IDs will be returned.
+- `permission` - The name of the permission or relation for which the subject must check.
+- `subject` - The subject with access to the resources.
+- `context` (optional) - Dictionary of values that are injected into the caveat evaluation context.
+- `zedToken` (optional) - An optional ZedToken for specifying a version of the data to consider.
+- `cacheFreshness` (optional) - Specifies the acceptable freshness of the data to be considered from the cache.
+
+**Returns**
+
+- An async enumerable of `LookupResourcesResponse` objects representing the resources accessible to the specified subject.
+
+### Watch
+
+Listens for changes to specified subjects and returns updates as they occur.
+
+**Parameters**
+
+- `optionalSubjectTypes` (optional) - A list of subject types to watch for changes.
+- `zedToken` (optional) - An optional ZedToken for specifying a version of the data to watch.
+- `deadline` (optional) - An optional deadline for the call. The operation will be cancelled if the deadline is reached.
+- `cancellationToken` (optional) - An optional token for cancelling the call.
+
+**Returns**
+
+- An async enumerable of `WatchResponse` objects representing the updates to the watched subjects.
+
+### GetResourcePermissionsAsync
+
+Retrieves the list of permissions for a specified resource, permission, and subject.
+
+**Parameters**
+
+- `resourceType` - The type of the resource.
+- `permission` - The name of the permission.
+- `subject` - The subject for which permissions are being checked.
+- `zedToken` (optional) - An optional ZedToken for specifying a version of the data to consider.
+- `cacheFreshness` (optional) - Specifies the acceptable freshness of the data to be considered from the cache.
+
+**Returns**
+
+- A task representing the asynchronous operation, with a list of string indicating the permissions for the specified resource.

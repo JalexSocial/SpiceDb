@@ -458,26 +458,26 @@ public class SpiceDbClient : ISpiceDbClient
         return (await _core.Permissions.WriteRelationshipsAsync(updateCollection)).WrittenAt.ToSpiceDbToken();
     }
 
-    public async Task<BulkCheckPermissionResponse?> BulkCheckPermissionAsync(IEnumerable<string> permissions,
+    public async Task<CheckBulkPermissionsResponse?> CheckBulkPermissionAsync(IEnumerable<string> permissions,
         ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
     {
-        var items = permissions.Select(perm => new BulkCheckPermissionRequestItem() { Permission = new Models.Permission(perm) });
+        var items = permissions.Select(perm => new CheckBulkPermissionsRequestItem() { Permission = new Models.Permission(perm) });
 
-        return await BulkCheckPermissionAsync(items, zedToken, cacheFreshness);
+        return await CheckBulkPermissionAsync(items, zedToken, cacheFreshness);
     }
 
-    public async Task<BulkCheckPermissionResponse?> BulkCheckPermissionAsync(IEnumerable<Models.Permission> permissions,
+    public async Task<CheckBulkPermissionsResponse?> CheckBulkPermissionAsync(IEnumerable<Models.Permission> permissions,
         ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
     {
-        var items = permissions.Select(perm => new BulkCheckPermissionRequestItem() { Permission = perm });
+        var items = permissions.Select(perm => new CheckBulkPermissionsRequestItem() { Permission = perm });
 
-        return await BulkCheckPermissionAsync(items, zedToken, cacheFreshness);
+        return await CheckBulkPermissionAsync(items, zedToken, cacheFreshness);
     }
 
-    public async Task<BulkCheckPermissionResponse?> BulkCheckPermissionAsync(IEnumerable<BulkCheckPermissionRequestItem> items,
+    public async Task<CheckBulkPermissionsResponse?> CheckBulkPermissionAsync(IEnumerable<CheckBulkPermissionsRequestItem> items,
         ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
     {
-        var converted = items.Select(x => new Authzed.Api.V1.BulkCheckPermissionRequestItem()
+        var converted = items.Select(x => new Authzed.Api.V1.CheckBulkPermissionsRequestItem()
         {
             Context = x.Context.ToStruct(),
             Permission = x.Permission?.Relation,
@@ -491,7 +491,7 @@ public class SpiceDbClient : ISpiceDbClient
             }
         });
 
-        return await _core.Experimental.BulkCheckPermissionAsync(converted, zedToken.ToAuthzedToken(), cacheFreshness);
+        return await _core.Permissions.CheckBulkPermissionsAsync(converted, zedToken.ToAuthzedToken(), cacheFreshness);
     }
 
     private string? EnsurePrefix(string? type)

@@ -164,10 +164,10 @@ public class SpiceDbClientTests
         Assert.IsTrue(p1.HasPermission && p2.HasPermission && p3.HasPermission && p4.HasPermission && !p5.HasPermission && !p6.HasPermission);
     }
 
-    /*
+	/*
     /// This feature isn't currently available in Serverless
     [Test]
-    public async Task BulkCheckPermissionAsyncTest()
+    public async Task CheckBulkPermissionAsyncTest()
     {
 	    var permissions = new[]
 	    {
@@ -186,7 +186,7 @@ public class SpiceDbClientTests
     }
     */
 
-    [Test]
+	[Test]
     public async Task ExpandPermissionAsyncTest()
     {
         var response = await _client!.ExpandPermissionAsync(new ResourceReference("group", "test"), "post");

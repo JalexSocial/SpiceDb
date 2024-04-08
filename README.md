@@ -300,3 +300,97 @@ Retrieves the list of permissions for a specified resource, permission, and subj
 **Returns**
 
 - A task representing the asynchronous operation, with a list of string indicating the permissions for the specified resource.
+
+### ReadSchema
+
+Reads the current schema in use by the SpiceDB.
+
+**Returns**
+
+- A `string` representing the current schema as defined in the SpiceDB.
+
+### ImportSchemaFromFileAsync
+
+Imports a schema into SpiceDB from a specified file.
+
+**Parameters**
+
+- `filePath` - The path to the file containing the schema to import.
+
+**Returns**
+
+- A task representing the asynchronous operation of importing the schema.
+
+### ImportSchemaFromStringAsync
+
+Imports a schema into SpiceDB from a provided string.
+
+**Parameters**
+
+- `schema` - The schema to import, provided as a string.
+
+**Returns**
+
+- A task representing the asynchronous operation of importing the schema.
+
+### ImportRelationshipsFromFileAsync
+
+Imports relationships into SpiceDB from a specified file.
+
+**Parameters**
+
+- `filePath` - The path to the file containing the relationships to import.
+
+**Returns**
+
+- A task representing the asynchronous operation, with a `ZedToken?` indicating the version of the data after the import operation.
+
+### ImportRelationshipsAsync
+
+Imports relationships into SpiceDB from a provided string.
+
+**Parameters**
+
+- `content` - The relationships to import, provided as a string.
+
+**Returns**
+
+- A task representing the asynchronous operation, with a `ZedToken?` indicating the version of the data after the import operation.
+
+### CheckBulkPermissionAsync (IEnumerable<string> permissions)
+
+Checks multiple permissions in bulk for a specified list of permission identifiers.
+
+**Parameters**
+
+- `permissions` - An enumerable of permission identifiers to check.
+
+**Returns**
+
+- A task representing the asynchronous operation, with a `CheckBulkPermissionsResponse?` indicating the results of the bulk permission checks.
+
+### CheckBulkPermissionAsync (IEnumerable<Permission> permissions)
+
+Checks multiple permissions in bulk for a specified list of `Permission` objects.
+
+**Parameters**
+
+- `permissions` - An enumerable of `Permission` objects to check.
+
+**Returns**
+
+- A task representing the asynchronous operation, with a `CheckBulkPermissionsResponse?` indicating the results of the bulk permission checks.
+
+### CheckBulkPermissionAsync (IEnumerable<CheckBulkPermissionsRequestItem> items)
+
+Checks multiple permissions in bulk for a specified list of `CheckBulkPermissionsRequestItem` objects.
+
+**Parameters**
+
+- `items` - An enumerable of `CheckBulkPermissionsRequestItem` objects to check.
+
+**Returns**
+
+- A task representing the asynchronous operation, with a `CheckBulkPermissionsResponse?` indicating the results of the bulk permission checks.
+
+

@@ -24,6 +24,8 @@ public class SpiceDbClientTests
             .AddEnvironmentVariables();
         var configurationRoot = builder.Build();
 
+        // spicedb serve-testing
+        // default server address: 127.0.0.1:50051
         var serverAddress = configurationRoot.GetValue<string>("SERVER_ADDRESS");
         var token = configurationRoot.GetValue<string>("TOKEN");
 

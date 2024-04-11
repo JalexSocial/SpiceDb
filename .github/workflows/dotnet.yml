@@ -25,7 +25,10 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore
     - name: Build
-      run: dotnet build --configuration Release --no-restore 
+      run: dotnet build --configuration Release --no-restore
+    - uses: "authzed/action-spicedb@v1"
+      with:
+        version: "latest"       
     - name: Test
       run: dotnet test --verbosity normal
     - name: Publish  

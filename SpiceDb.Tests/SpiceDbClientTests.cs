@@ -27,9 +27,9 @@ public class SpiceDbClientTests
         // spicedb serve-testing
         // default server address: 127.0.0.1:50051
         var serverAddress = configurationRoot.GetValue<string>("SERVER_ADDRESS");
-        var token = configurationRoot.GetValue<string>("TOKEN");
+        var token = configurationRoot.GetValue<string>("TOKEN") ?? string.Empty;
 
-        if (string.IsNullOrEmpty(serverAddress) || string.IsNullOrEmpty(token))
+        if (string.IsNullOrEmpty(serverAddress))
         {
             Assert.Fail("Unable to load service configuration from environment variables");
         }

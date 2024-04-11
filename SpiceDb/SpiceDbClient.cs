@@ -561,8 +561,7 @@ public class SpiceDbClient : ISpiceDbClient
 			Subject = new Authzed.Api.V1.SubjectReference()
 			{
 				Object = new Authzed.Api.V1.ObjectReference()
-					{ ObjectId = x.Permission?.Subject.Id, ObjectType = EnsurePrefix(x.Permission?.Subject.Type) },
-				OptionalRelation = x.Permission?.Relation
+					{ ObjectId = x.Permission?.Subject.Id, ObjectType = EnsurePrefix(x.Permission?.Subject.Type) }
 			}
 		});
 

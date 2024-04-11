@@ -1,4 +1,5 @@
 ﻿using Authzed.Api.V1;
+using Google.Protobuf;
 using Google.Protobuf.Collections;
 using Grpc.Core;
 using SpiceDb.Enum;
@@ -174,8 +175,9 @@ internal class SpiceDbPermissions
 					CheckPermissionResponse.Types.Permissionship.ConditionalPermission => Permissionship.ConditionalPermission,
 					_ => Permissionship.Unspecified
 				},
-				Permission = new Models.Permission(x.Request.Permission),
-				Context = x.Request.Context.FromStruct()
+				Permission = new Models.Permission(new ResourceReference (x.Request.Resource.ObjectType, x.Request.Resource.ObjectId),
+					x.Request.Permission, new ResourceReference(x.Request.Subject.Object.ObjectType, x.Request.Subject.Object.ObjectId, x.Request.Subject.OptionalRelation ?? string.Empty)),
+				Context = x.Request.Context?.FromStruct() ?? new()
 			}).ToList()
 		};
 

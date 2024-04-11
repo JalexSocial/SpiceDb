@@ -3,6 +3,7 @@ using NUnit.Framework;
 using SpiceDb.Enum;
 using SpiceDb.Models;
 using System.Reflection;
+using NUnit.Framework.Legacy;
 
 namespace SpiceDb.Tests;
 
@@ -31,7 +32,7 @@ public class SpiceDbClientTests
 
         if (string.IsNullOrEmpty(serverAddress))
         {
-            Assert.Fail("Unable to load service configuration from environment variables");
+            ClassicAssert.Fail("Unable to load service configuration from environment variables");
         }
 
         _client = new SpiceDbClient(serverAddress!, token!, _prefix);
@@ -74,7 +75,7 @@ public class SpiceDbClientTests
 
         foreach (var relationship in expected)
         {
-            Assert.IsTrue(relationships.Contains(relationship));
+            ClassicAssert.IsTrue(relationships.Contains(relationship));
         }
     }
 
@@ -91,7 +92,7 @@ public class SpiceDbClientTests
 
         foreach (var relationship in expected)
         {
-            Assert.IsTrue(relationships.Contains(relationship));
+            ClassicAssert.IsTrue(relationships.Contains(relationship));
         }
     }
 
@@ -113,7 +114,7 @@ public class SpiceDbClientTests
 
         var stillHasRelationship = _client!.CheckPermission("group:security#owner@user:bart");
 
-        Assert.IsTrue(hasRelationship.HasPermission && !stillHasRelationship.HasPermission);
+        ClassicAssert.IsTrue(hasRelationship.HasPermission && !stillHasRelationship.HasPermission);
     }
 
     [Test]
@@ -149,7 +150,7 @@ public class SpiceDbClientTests
             relationships2.Add(response.Relationship.ToString()!);
         }
 
-        Assert.IsTrue(relationships.Count == 4 && relationships2.Count == 0);
+        ClassicAssert.IsTrue(relationships.Count == 4 && relationships2.Count == 0);
     }
 
 
@@ -163,7 +164,7 @@ public class SpiceDbClientTests
         var p5 = _client!.CheckPermission("group:test#joiners@user:somenewguy");
         var p6 = _client!.CheckPermission("group:test#add_manager@user:blackhat");
 
-        Assert.IsTrue(p1.HasPermission && p2.HasPermission && p3.HasPermission && p4.HasPermission && !p5.HasPermission && !p6.HasPermission);
+        ClassicAssert.IsTrue(p1.HasPermission && p2.HasPermission && p3.HasPermission && p4.HasPermission && !p5.HasPermission && !p6.HasPermission);
     }
 
     /// This feature isn't currently available in Serverless
@@ -182,8 +183,8 @@ public class SpiceDbClientTests
 
 	    var p = await _client!.CheckBulkPermissionsAsync(permissions);
 
-        Assert.IsNotNull(p);
-	    Assert.IsTrue(p!.Pairs[0].HasPermission && p!.Pairs[1].HasPermission && p!.Pairs[2].HasPermission && p!.Pairs[3].HasPermission && !p!.Pairs[4].HasPermission && !p!.Pairs[5].HasPermission);
+        ClassicAssert.IsNotNull(p);
+	    ClassicAssert.IsTrue(p!.Pairs[0].HasPermission && p!.Pairs[1].HasPermission && p!.Pairs[2].HasPermission && p!.Pairs[3].HasPermission && !p!.Pairs[4].HasPermission && !p!.Pairs[5].HasPermission);
     }
 
 	[Test]
@@ -191,49 +192,49 @@ public class SpiceDbClientTests
     {
         var response = await _client!.ExpandPermissionAsync(new ResourceReference("group", "test"), "post");
 
-        Assert.IsNotNull(response);
+        ClassicAssert.IsNotNull(response);
     }
     /*    
 [Test]
 public void AddRelationshipsAsyncTest()
 {
-Assert.Fail();
+ClassicAssert.Fail();
 }
 
 [Test]
 public void AddRelationshipAsyncTest()
 {
-Assert.Fail();
+ClassicAssert.Fail();
 }
 
 [Test]
 public void DeleteRelationshipAsyncTest()
 {
-Assert.Fail();
+ClassicAssert.Fail();
 }
 
 [Test]
 public void LookupSubjectsTest()
 {
-Assert.Fail();
+ClassicAssert.Fail();
 }
 
 [Test]
 public void LookupResourcesTest()
 {
-Assert.Fail();
+ClassicAssert.Fail();
 }
 
 [Test]
 public void WatchTest()
 {
-Assert.Fail();
+ClassicAssert.Fail();
 }
 
 [Test]
 public void GetResourcePermissionsAsyncTest()
 {
-Assert.Fail();
+ClassicAssert.Fail();
 }
 */
     [Test]
@@ -241,7 +242,7 @@ Assert.Fail();
     {
         var schema = _client!.ReadSchema();
 
-        Assert.IsFalse(string.IsNullOrEmpty(schema));
+        ClassicAssert.IsFalse(string.IsNullOrEmpty(schema));
     }
 
 

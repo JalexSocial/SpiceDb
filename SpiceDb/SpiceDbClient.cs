@@ -31,8 +31,8 @@ public class SpiceDbClient : ISpiceDbClient
 	/// <exception cref="Exception">Thrown when the server address or token is null or empty, or if the schema prefix does not meet the required format.</exception>
 	public SpiceDbClient(string serverAddress, string token, string schemaPrefix)
 	{
-		if (string.IsNullOrEmpty(serverAddress) || string.IsNullOrEmpty(token))
-			throw new Exception("Missing server address or token");
+		if (string.IsNullOrEmpty(serverAddress))
+			throw new Exception("Missing server address");
 
 		if (!Regex.IsMatch(schemaPrefix, @"^[a-zA-Z0-9_]{3,63}[a-zA-Z0-9]$"))
 			throw new Exception(

@@ -7,18 +7,16 @@ namespace SpiceDb.Api;
 internal class SpiceDbSchema
 {
     private SchemaService.SchemaServiceClient? _schema;
-    private readonly CallOptions _callOptions;
 
-    public SpiceDbSchema(ChannelBase channel, CallOptions callOptions)
+    public SpiceDbSchema(ChannelBase channel)
     {
         _schema = new SchemaService.SchemaServiceClient(channel);
-        _callOptions = callOptions;
     }
 
     public async Task<string> ReadSchemaAsync()
     {
         ReadSchemaRequest req = new ReadSchemaRequest();
-        ReadSchemaResponse resp = await _schema!.ReadSchemaAsync(req, _callOptions);
+        ReadSchemaResponse resp = await _schema!.ReadSchemaAsync(req);
         return resp.SchemaText;
     }
 
@@ -32,6 +30,6 @@ internal class SpiceDbSchema
         {
             Schema = schema
         };
-        return await _schema!.WriteSchemaAsync(req, _callOptions);
+        return await _schema!.WriteSchemaAsync(req);
     }
 }

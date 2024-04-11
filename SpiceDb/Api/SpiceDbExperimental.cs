@@ -7,11 +7,9 @@ namespace SpiceDb.Api;
 internal class SpiceDbExperimental
 {
     private readonly ExperimentalService.ExperimentalServiceClient _exp;
-    private readonly CallOptions _callOptions;
 
-    public SpiceDbExperimental(ChannelBase channel, CallOptions callOptions)
+    public SpiceDbExperimental(ChannelBase channel)
     {
         _exp = new ExperimentalService.ExperimentalServiceClient(channel);
-        _callOptions = callOptions;
     }
 }

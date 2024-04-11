@@ -11,12 +11,10 @@ namespace SpiceDb.Api;
 internal class SpiceDbWatch
 {
     private readonly WatchService.WatchServiceClient? _watch;
-    private readonly Metadata? _headers;
 
-    public SpiceDbWatch(ChannelBase channel, Metadata? headers)
+    public SpiceDbWatch(ChannelBase channel)
     {
         _watch = new WatchService.WatchServiceClient(channel);
-        _headers = headers;
     }
 
     public async IAsyncEnumerable<SpiceDb.Models.WatchResponse> Watch(List<string>? optionalSubjectTypes = null,
@@ -30,7 +28,7 @@ internal class SpiceDbWatch
 
         request.OptionalObjectTypes.AddRange(optionalSubjectTypes ?? new List<string>());
 
-        var call = _watch!.Watch(request, _headers, deadline, cancellationToken);
+        var call = _watch!.Watch(request, null, deadline, cancellationToken);
 
         await foreach (var resp in call.ResponseStream.ReadAllAsync(cancellationToken))
         {

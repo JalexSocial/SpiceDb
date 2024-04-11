@@ -14,14 +14,10 @@ namespace SpiceDb.Api;
 internal class SpiceDbPermissions
 {
     private readonly PermissionsService.PermissionsServiceClient? _acl;
-    private readonly CallOptions _callOptions;
-    private readonly Metadata? _headers;
 
-    public SpiceDbPermissions(ChannelBase channel, CallOptions callOptions, Metadata? headers)
+    public SpiceDbPermissions(ChannelBase channel)
     {
         _acl = new PermissionsService.PermissionsServiceClient(channel);
-        _callOptions = callOptions;
-        _headers = headers;
     }
 
     public async Task<List<string>> GetResourcePermissionsAsync(string resourceType,
@@ -49,7 +45,7 @@ internal class SpiceDbPermissions
         }
 
         //Server streaming call, reads messages streamed from the service
-        var call = _acl!.LookupResources(req, _callOptions);
+        var call = _acl!.LookupResources(req);
 
         var list = new List<string>();
 
@@ -83,7 +79,7 @@ internal class SpiceDbPermissions
             req.Consistency.FullyConsistent = true;
         }
 
-        return await _acl!.ExpandPermissionTreeAsync(req, _callOptions);
+        return await _acl!.ExpandPermissionTreeAsync(req);
     }
 
     public async Task<PermissionResponse> CheckPermissionAsync(string resourceType,
@@ -113,7 +109,7 @@ internal class SpiceDbPermissions
             req.Consistency.FullyConsistent = true;
         }
 
-        var call = await _acl!.CheckPermissionAsync(req, _callOptions);
+        var call = await _acl!.CheckPermissionAsync(req);
 
         return new PermissionResponse
         {
@@ -146,7 +142,7 @@ internal class SpiceDbPermissions
 			req.Consistency.FullyConsistent = true;
 		}
 
-		var call = await _acl!.CheckBulkPermissionsAsync(req, options: _callOptions);
+		var call = await _acl!.CheckBulkPermissionsAsync(req);
 
 		if (call == null)
 			return null;
@@ -207,7 +203,7 @@ internal class SpiceDbPermissions
             req.Consistency.FullyConsistent = true;
         }
 
-        var call = _acl!.LookupSubjects(req, _callOptions);
+        var call = _acl!.LookupSubjects(req);
 
         await foreach (var resp in call.ResponseStream.ReadAllAsync())
         {
@@ -272,7 +268,7 @@ internal class SpiceDbPermissions
             req.Consistency.FullyConsistent = true;
         }
 
-        var call = _acl!.LookupResources(req, _callOptions);
+        var call = _acl!.LookupResources(req);
 
 
         await foreach (var resp in call.ResponseStream.ReadAllAsync())
@@ -330,7 +326,7 @@ internal class SpiceDbPermissions
         {
             req.Consistency.FullyConsistent = true;
         }
-        var call = _acl!.ReadRelationships(req, _callOptions);
+        var call = _acl!.ReadRelationships(req);
 
         await foreach (var resp in call.ResponseStream.ReadAllAsync())
         {
@@ -393,7 +389,7 @@ internal class SpiceDbPermissions
             }
         }
 
-        var response = await _acl!.DeleteRelationshipsAsync(req, _headers, deadline: deadline, cancellationToken: cancellationToken);
+        var response = await _acl!.DeleteRelationshipsAsync(req, deadline: deadline, cancellationToken: cancellationToken);
 
         return response?.DeletedAt;
     }
@@ -423,7 +419,7 @@ internal class SpiceDbPermissions
             OptionalPreconditions = { optionalPreconditions ?? new() }
         };
 
-        return await _acl!.WriteRelationshipsAsync(req, _callOptions);
+        return await _acl!.WriteRelationshipsAsync(req);
     }
 
 

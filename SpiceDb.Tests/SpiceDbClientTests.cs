@@ -153,6 +153,43 @@ public class SpiceDbClientTests
         ClassicAssert.IsTrue(relationships.Count == 4 && relationships2.Count == 0);
     }
 
+    [Test]
+    public async Task DeleteRelationshipsAsyncWithSubjectIdTest()
+    {
+        _client!.AddRelationship("group:delete#manager@user:test1");
+        _client!.AddRelationship("group:delete#manager@user:test2");
+        _client!.AddRelationship("group:delete#manager@user:test3");
+        _client!.AddRelationship("group:delete#manager@user:test4");
+
+        List<string> relationships = new();
+
+        await foreach (var response in _client!.ReadRelationshipsAsync(new RelationshipFilter { Type = "group", OptionalId = "delete" }, new RelationshipFilter { Type = "user" }, excludePrefix: true))
+        {
+            relationships.Add(response.Relationship.ToString()!);
+        }
+
+        await _client.DeleteRelationshipsAsync(new RelationshipFilter
+        {
+            Type = "group",
+            OptionalId = "delete",
+            OptionalRelation = "manager"
+        },
+            new RelationshipFilter
+            {
+                Type = "user",
+                OptionalId = "test1"
+            });
+
+        List<string> relationships2 = new();
+
+        await foreach (var response in _client!.ReadRelationshipsAsync(new RelationshipFilter { Type = "group", OptionalId = "delete" }, new RelationshipFilter { Type = "user" }, excludePrefix: true))
+        {
+            relationships2.Add(response.Relationship.ToString()!);
+        }
+
+        ClassicAssert.IsTrue(relationships.Count == 4 && relationships2.Count == 3);
+    }
+
 
     [Test]
     public void CheckPermissionAsyncTest()

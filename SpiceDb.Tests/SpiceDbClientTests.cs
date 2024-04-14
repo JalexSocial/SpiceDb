@@ -190,8 +190,25 @@ public class SpiceDbClientTests
         ClassicAssert.IsTrue(relationships.Count == 4 && relationships2.Count == 3);
     }
 
-
     [Test]
+    public async Task AddRelationshipsAsync_AddBatchRelationships_ReturnsValidToken()
+    {
+	    // Arrange: Create a batch of new relationships to add
+	    var relationships = new List<Relationship>
+	    {
+		    new Relationship("group:devGroup", "direct_member", "user:charlie"),
+		    new Relationship("group:devGroup", "owner", "user:dave")
+	    };
+
+	    // Act: Add these relationships using AddRelationshipsAsync
+	    var resultToken = await _client!.AddRelationshipsAsync(relationships);
+
+	    // Assert: Check that a valid ZedToken is returned, indicating success
+	    ClassicAssert.IsNotNull(resultToken);
+	    ClassicAssert.IsNotEmpty(resultToken.Token);
+    }
+
+	[Test]
     public void CheckPermissionAsyncTest()
     {
         var p1 = _client!.CheckPermission("organization:authzed#member@user:jake");
@@ -231,13 +248,46 @@ public class SpiceDbClientTests
 
         ClassicAssert.IsNotNull(response);
     }
-    /*    
-[Test]
-public void AddRelationshipsAsyncTest()
-{
-ClassicAssert.Fail();
-}
 
+	[Test]
+	public async Task LookupResources_UserCanViewPosts_ReturnsAllGroups()
+	{
+		// Arrange: Define a subject with permission to view posts
+		var subject = new ResourceReference("user", "jake");
+		string permission = "view_posts";
+
+		// Act: Lookup all resources (groups) where 'user:jake' can view posts
+		var accessibleResources = new List<string>();
+		await foreach (var resource in _client!.LookupResources("group", permission, subject))
+		{
+			accessibleResources.Add($"group:{resource.ResourceId}");
+		}
+
+		// Assert: Check that 'user:jake' can view posts in the 'test' group and potentially others
+		var expectedResources = new List<string> { "group:test" }; // Adjust as needed based on detailed schema analysis
+		CollectionAssert.AreEquivalent(expectedResources, accessibleResources);
+	}
+
+	[Test]
+	public async Task LookupSubjects_GroupTestMembers_ReturnsExpectedMembers()
+	{
+		// Arrange: Specify the resource and the permission to check for membership
+		var resource = new ResourceReference("group", "test");
+		string permission = "member";
+
+		// Act: Lookup subjects who are members of 'group:test'
+		var members = new List<string>();
+		await foreach (var subjectResponse in _client!.LookupSubjects(resource, permission, "user"))
+		{
+			members.Add($"user:{subjectResponse.Subject.Id}");
+		}
+
+		// Assert: Verify that the expected subjects are returned
+		var expectedSubjects = new List<string> { "user:jake", "user:jimmy", "user:joey" }; // Include users who have 'member' or higher access
+		CollectionAssert.AreEquivalent(expectedSubjects, members);
+	}
+
+	/*    
 [Test]
 public void AddRelationshipAsyncTest()
 {
@@ -274,7 +324,7 @@ public void GetResourcePermissionsAsyncTest()
 ClassicAssert.Fail();
 }
 */
-    [Test]
+	[Test]
     public void ReadSchemaTest()
     {
         var schema = _client!.ReadSchema();

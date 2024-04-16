@@ -1,16 +1,18 @@
-# SpiceDb
+<img src="https://jalexsocial.github.io/spicedb.docs/images/spicedb-logo.png">
 
-Simple SpiceDb client originally based on code from SpiceDB.Hierarchical.UI - Works with AuthZed
-https://github.com/MaheshBailwal/SpiceDB.Hierarchical.UI
+SpiceDb is an open-source, Zanzibar-inspired authorization system that provides a robust and scalable solution for managing fine-grained permissions across distributed systems. Its implementation closely follows the principles set out in Google’s Zanzibar paper, adapting them into a practical and deployable system.
 
-This API does not directly expose the SpiceDb grpc client but instead wraps it and exposes a few additional helper methods to
-make development easier.
+SpiceDb was created by [AuthZed](https://authzed.com/) and [documentation](https://authzed.com/docs/spicedb/getting-started/discovering-spicedb) specifically for SpiceDb can be found on their site.
 
-Available on Nuget at https://www.nuget.org/packages/SpiceDb
+## SpiceDb.net Documentation 
+SpiceDb.net was created by Michael Tanczos and has contributions from Pavel Akimov, Mahesh Bailwal, Vinícius Gajo, and others.  Documentation for SpiceDb.net is in progress and can be found here:
+[https://jalexsocial.github.io/spicedb.docs/](https://jalexsocial.github.io/spicedb.docs/)
 
 ## Usage
 
 ### Install
+
+Available on Nuget at https://www.nuget.org/packages/SpiceDb
 
 Install the package using NuGet  
 `Install-Package SpiceDb`

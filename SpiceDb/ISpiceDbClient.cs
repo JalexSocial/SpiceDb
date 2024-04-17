@@ -139,6 +139,8 @@ public interface ISpiceDbClient
 
     Task<List<string>> GetResourcePermissionsAsync(string resourceType, string permission, ResourceReference subject, ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness);
     string ReadSchema();
+    Task WriteSchemaAsync(string schema);
+
     Task ImportSchemaFromFileAsync(string filePath);
 
     /// <summary>

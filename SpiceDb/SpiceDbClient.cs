@@ -497,6 +497,11 @@ public class SpiceDbClient : ISpiceDbClient
 		return _spiceDbCore.Schema.ReadSchemaAsync().Result;
 	}
 
+	public async Task WriteSchemaAsync(string schema)
+	{
+		await _spiceDbCore.Schema.WriteSchemaAsync(schema);
+	}
+
 	public async Task ImportSchemaFromFileAsync(string filePath)
 	{
 		await ImportSchemaFromStringAsync(await File.ReadAllTextAsync(filePath));

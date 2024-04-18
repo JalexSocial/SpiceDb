@@ -1,0 +1,1683 @@
+{
+  "definitions": [
+    {
+      "name": "user",
+      "comment": "user represents a user that can be granted role(s)"
+    },
+    {
+      "name": "anonymous_user",
+      "comment": "anonymous_user represents any user who has not been authenticated"
+    },
+    {
+      "name": "platform",
+      "relations": [
+        {
+          "name": "member",
+          "types": [
+            {
+              "type": "user"
+            }
+          ]
+        },
+        {
+          "name": "administrator",
+          "types": [
+            {
+              "type": "user"
+            }
+          ]
+        }
+      ],
+      "permissions": [
+        {
+          "name": "super_admin",
+          "userSet": {
+            "operation": "union",
+            "children": [
+              {
+                "relation": "administrator"
+              }
+            ]
+          }
+        },
+        {
+          "name": "absence_creator",
+          "userSet": {
+            "operation": "union",
+            "children": [
+              {
+                "relation": "member"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "organization",
+      "relations": [
+        {
+          "name": "member",
+          "types": [
+            {
+              "type": "user"
+            }
+          ]
+        },
+        {
+          "name": "platform",
+          "types": [
+            {
+              "type": "platform"
+            }
+          ]
+        },
+        {
+          "name": "global_moderator",
+          "types": [
+            {
+              "type": "user"
+            }
+          ],
+          "comment": "Allow select members to be post moderators"
+        },
+        {
+          "name": "student",
+          "types": [
+            {
+              "type": "user"
+            }
+          ]
+        },
+        {
+          "name": "global_attendance_manager",
+          "types": [
+            {
+              "type": "user"
+            }
+          ],
+          "comment": "Organization level attendance manager"
+        }
+      ],
+      "permissions": [
+        {
+          "name": "admin",
+          "userSet": {
+            "operation": "union",
+            "children": [
+              {
+                "relation": "platform",
+                "permission": "super_admin"
+              }
+            ]
+          },
+          "comment": "Almost certainly an oversimplification"
+        },
+        {
+          "name": "create_group",
+          "userSet": {
+            "operation": "union",
+            "children": [
+              {
+                "relation": "member"
+              }
+            ]
+          }
+        },
+        {
+          "name": "moderate",
+          "userSet": {
+            "operation": "union",
+            "children": [
+              {
+                "relation": "global_moderator"
+              }
+            ]
+          }
+        },
+        {
+          "name": "create_building",
+          "userSet": {
+            "operation": "union",
+            "children": [
+              {
+                "relation": "platform",
+                "permission": "super_admin"
+              }
+            ]
+          }
+        },
+        {
+          "name": "delete_building",
+          "userSet": {
+            "operation": "union",
+            "children": [
+              {
+                "relation": "create_building"
+              }
+            ]
+          }
+        },
+        {
+          "name": "manage_absences",
+          "userSet": {
+            "operation": "union",
+            "children": [
+              {
+                "relation": "platform",
+                "permission": "super_admin"
+              },
+              {
+                "relation": "global_attendance_manager"
+              }
+            ]
+          }
+        },
+        {
+          "name": "create_absences",
+          "userSet": {
+            "operation": "exclusion",
+            "children": [
+              {
+                "relation": "platform",
+                "permission": "absence_creator"
+              },
+              {
+                "relation": "student"
+              }
+            ]
+          }
+        },
+        {
+          "name": "view_own_absences",
+          "userSet": {
+            "operation": "union",
+            "children": [
+              {
+                "relation": "create_absences"
+              }
+            ]
+          }
+        },
+        {
+          "name": "update_own_absences",
+          "userSet": {
+            "operation": "union",
+            "children": [
+              {
+                "relation": "create_absences"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "building",
+      "relations": [
+        {
+          "name": "organization",
+          "types": [
+            {
+              "type": "organization"
+            }
+          ]
+        },
+        {
+          "name": "administrator",
+          "types": [
+            {
+              "type": "user"
+            }
+          ]
+        },
+        {
+          "name": "attendance_manager",
+          "types": [
+            {
+              "type": "user"
+            }
+          ]
+        },
+        {
+          "name": "building_manager",
+          "types": [
+            {
+              "type": "user"
+            }
+          ]
+        }
+      ],
+      "permissions": [
+        {
+          "name": "view_absences",
+          "userSet": {
+            "operation": "union",
+            "children": [
+              {
+                "relation": "organization",
+                "permission": "manage_absences"
+              },
+              {
+                "relation": "administrator"
+              },
+              {
+                "relation": "attendance_manager"
+              }
+            ]
+          },
+          "comment": "Absence management"
+        },
+        {
+          "name": "create_absence",
+          "userSet": {
+            "operation": "union",
+            "children": [
+              {
+                "relation": "organization",
+                "permission": "manage_absences"
+              },
+              {
+                "relation": "administrator"
+              },
+              {
+                "relation": "attendance_manager"
+              },
+              {
+                "relation": "organization",
+                "permission": "create_absences"
+              }
+            ]
+          }
+        },
+        {
+          "name": "update_absence",
+          "userSet": {
+            "operation": "union",
+            "children": [
+              {
+                "relation": "view_absences"
+              }
+            ]
+          }
+        },
+        {
+          "name": "delete_absence",
+          "userSet": {
+            "operation": "union",
+            "children": [
+              {
+                "relation": "view_absences"
+              }
+            ]
+          }
+        },
+        {
+          "name": "update_building",
+          "userSet": {
+            "operation": "union",
+            "children": [
+              {
+                "relation": "organization",
+                "permission": "admin"
+              },
+              {
+                "relation": "administrator"
+              },
+              {
+                "relation": "building_manager"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "group",
+      "relations": [
+        {
+          "name": "platform",
+          "types": [
+            {
+              "type": "platform"
+            }
+          ]
+        },
+        {
+          "name": "organization",
+          "types": [
+            {
+              "type": "organization"
+            }
+          ]
+        },
+        {
+          "name": "owner",
+          "types": [
+            {
+              "type": "user"
+            },
+            {
+              "type": "group",
+              "relation": "member"
+            }
+          ],
+          "comment": "Direct roles on the group"
+        },
+        {
+          "name": "manager",
+          "types": [
+            {
+              "type": "user"
+            },
+            {
+              "type": "group",
+              "relation": "member"
+            }
+          ]
+        },
+        {
+          "name": "direct_member",
+          "types": [
+            {
+              "type": "user"
+            },
+            {
+              "type": "group",
+              "relation": "member"
+            }
+          ]
+        },
+        {
+          "name": "banned",
+          "types": [
+            {
+              "type": "user"
+            }
+          ],
+          "comment": "Users can be banned from the group"
+        },
+        {
+          "name": "searchers",
+          "types": [
+            {
+              "type": "organization",
+              "relation": "member"
+            },
+            {
+              "type": "user",
+              "relation": "*"
+            },
+            {
+              "type": "anonymous_user",
+              "relation": "*"
+            }
+          ],
+          "comment": "Dynamically determine who is allowed to search for the group"
+        },
+        {
+          "name": "joiners",
+          "types": [
+            {
+              "type": "organization",
+              "relation": "member"
+            },
+            {
+              "type": "platform",
+              "relation": "member"
+            }
+          ],
+          "comment": "Dynamically determine who is allowed to join or ask to join the group"
+        },
+        {
+          "name": "askers",
+          "types": [
+            {
+              "type": "organization",
+              "relation": "member"
+            },
+            {
+              "type": "platform",
+              "relation": "member"
+            }
+          ]
+        },
+        {
+          "name": "invited",
+          "types": [
+            {
+              "type": "user"
+            }
+          ]
+        },
+        {
+          "name": "pending",
+          "types": [
+            {
+              "type": "user"
+            }
+          ]
+        },
+        {
+          "name": "followers",
+          "types": [
+            {
+              "type": "organization",
+              "relation": "member"
+            },
+            {
+              "type": "platform",
+              "relation": "member"
+            },
+            {
+              "type": "group",
+              "relation": "member"
+            },
+            {
+              "type": "user",
+              "relation": "*"
+            }
+          ]
+        },
+        {
+          "name": "follower",
+          "types": [
+            {
+              "type": "user"
+            }
+          ]
+        },
+        {
+          "name": "viewers",
+          "types": [
+            {
+              "type": "group",
+              "relation": "manager"
+            },
+            {
+              "type": "group",
+              "relation": "member"
+            },
+            {
+              "type": "organization",
+              "relation": "member"
+            },
+            {
+              "type": "user",
+              "relation": "*"
+            },
+            {
+              "type": "anonymous_user",
+              "relation": "*"
+            }
+          ],
+          "comment": "Dynamically determine who is allowed to view posts"
+        },
+        {
+          "name": "post_without_moderation",
+          "types": [
+            {
+              "type": "user",
+              "relation": "*"
+            },
+            {
+              "type": "group",
+              "relation": "member"
+            }
+          ],
+          "comment": "Dynamically determine the group's moderation policy"
+        },
+        {
+          "name": "content_moderators",
+          "types": [
+            {
+              "type": "group",
+              "relation": "manager"
+            },
+            {
+              "type": "group",
+              "relation": "member"
+            },
+            {
+              "type": "custom_role",
+              "relation": "member"
+            }
+          ]
+        },
+        {
+          "name": "metadata_moderators",
+          "types": [
+            {
+              "type": "group",
+              "relation": "manager"
+            },
+            {
+              "type": "group",
+              "relation": "member"
+            },
+            {
+              "type": "custom_role",
+              "relation": "member"
+            }
+          ]
+        },
+        {
+          "name": "prevent_post",
+          "types": [
+            {
+              "type": "user",
+              "relation": "*"
+            }
+          ],
+          "comment": "Dynamically determine who is allowed to post in the group"
+        },
+        {
+          "name": "posters",
+          "types": [
+            {
+              "type": "group",
+              "relation": "manager"
+            },
+            {
+              "type": "group",
+              "relation": "member"
+            },
+            {
+              "type": "organization",
+              "relation": "member"
+            },
+            {
+              "type": "user",
+              "relation": "*"
+            }
+          ]
+        },
+        {
+          "name": "page_editors",
+          "types": [
+            {
+              "type": "group",
+              "relation": "manager"
+            },
+            {
+              "type": "group",
+              "relation": "member"
+            },
+            {
+              "type": "organization",
+              "relation": "member"
+            },
+            {
+              "type": "custom_role",
+              "relation": "member"
+            }
+          ],
+          "comment": "Dynamically determine who is allowed to edit pages for the group"
+        },
+        {
+          "name": "members_viewers",
+          "types": [
+            {
+              "type": "group",
+              "relation": "manager"
+            },
+            {
+              "type": "group",
+              "relation": "member"
+            },
+            {
+              "type": "organization",
+              "relation": "member"
+            },
+            {
+              "type": "custom_role",
+              "relation": "member"
+            },
+            {
+              "type": "platform",
+              "relation": "member"
+            },
+            {
+              "type": "anonymous_user",
+              "relation": "*"
+            }
+          ],
+          "comment": "Dynamically determine who is allowed to view the members of the group"
+        },
+        {
+          "name": "commenters",
+          "types": [
+            {
+              "type": "group",
+              "relation": "manager"
+            },
+            {
+              "type": "group",
+              "relation": "member"
+            },
+            {
+              "type": "organization",
+              "relation": "member"
+            },
+            {
+              "type": "custom_role",
+              "relation": "member"
+            },
+            {
+              "type": "user",
+              "relation": "*"
+            }
+          ]
+        },
+        {
+          "name": "custom_role_manager",
+          "types": [
+            {
+              "type": "group",
+              "relation": "manager"
+            },
+            {
+              "type": "custom_role",
+              "relation": "member"
+            }
+          ],
+          "comment": "Manage group custom roles"
+        }
+      ],
+      "permissions": [
+        {
+          "name": "can_be_banned",
+          "userSet": {
+            "operation": "exclusion",
+            "children": [
+              {
+                "operation": "union",
+                "children": [
+                  {
+                    "relation": "organization",
+                    "permission": "member"
+                  },
+                  {
+                    "relation": "platform",
+                    "permission": "member"
+                  }
+                ]
+              },
+              {
+                "relation": "owner"
+              }
+            ]
+          }
+        },
+        {
+          "name": "member",
+          "userSet": {
+            "operation": "union",
+            "children": [
+              {
+                "relation": "owner"
+              },
+              {
+                "operation": "exclusion",
+                "children": [
+                  {
+                    "operation": "union",
+                    "children": [
+                      {
+                        "relation": "manager"
+                      },
+                      {
+                        "relation": "direct_member"
+                      }
+                    ]
+                  },
+                  {
+                    "relation": "banned"
+                  }
+                ]
+              }
+            ]
+          },
+          "comment": "Synthetic relationship because we can't use the + operator in relations"
+        },
+        {
+          "name": "view_in_search",
+          "userSet": {
+            "operation": "union",
+            "children": [
+              {
+                "relation": "organization",
+                "permission": "admin"
+              },
+              {
+                "relation": "owner"
+              },
+              {
+                "operation": "exclusion",
+                "children": [
+                  {
+                    "operation": "union",
+                    "children": [
+                      {
+                        "relation": "member"
+                      },
+                      {
+                        "relation": "searchers"
+                      }
+                    ]
+                  },
+                  {
+                    "relation": "banned"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "ask_to_join",
+          "userSet": {
+            "operation": "exclusion",
+            "children": [
+              {
+                "operation": "exclusion",
+                "children": [
+                  {
+                    "operation": "exclusion",
+                    "children": [
+                      {
+                        "operation": "exclusion",
+                        "children": [
+                          {
+                            "relation": "askers"
+                          },
+                          {
+                            "relation": "join"
+                          }
+                        ]
+                      },
+                      {
+                        "relation": "member"
+                      }
+                    ]
+                  },
+                  {
+                    "relation": "pending"
+                  }
+                ]
+              },
+              {
+                "relation": "banned"
+              }
+            ]
+          }
+        },
+        {
+          "name": "join",
+          "userSet": {
+            "operation": "exclusion",
+            "children": [
+              {
+                "operation": "exclusion",
+                "children": [
+                  {
+                    "operation": "union",
+                    "children": [
+                      {
+                        "relation": "invited"
+                      },
+                      {
+                        "relation": "joiners"
+                      }
+                    ]
+                  },
+                  {
+                    "relation": "member"
+                  }
+                ]
+              },
+              {
+                "relation": "banned"
+              }
+            ]
+          }
+        },
+        {
+          "name": "follow",
+          "userSet": {
+            "operation": "union",
+            "children": [
+              {
+                "relation": "organization",
+                "permission": "admin"
+              },
+              {
+                "operation": "exclusion",
+                "children": [
+                  {
+                    "operation": "exclusion",
+                    "children": [
+                      {
+                        "relation": "followers"
+                      },
+                      {
+                        "relation": "follower"
+                      }
+                    ]
+                  },
+                  {
+                    "relation": "banned"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "view_posts",
+          "userSet": {
+            "operation": "union",
+            "children": [
+              {
+                "relation": "organization",
+                "permission": "admin"
+              },
+              {
+                "relation": "owner"
+              },
+              {
+                "relation": "organization",
+                "permission": "moderate"
+              },
+              {
+                "operation": "exclusion",
+                "children": [
+                  {
+                    "relation": "viewers"
+                  },
+                  {
+                    "relation": "banned"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "moderate_content",
+          "userSet": {
+            "operation": "union",
+            "children": [
+              {
+                "relation": "organization",
+                "permission": "admin"
+              },
+              {
+                "relation": "organization",
+                "permission": "moderate"
+              },
+              {
+                "relation": "owner"
+              },
+              {
+                "operation": "exclusion",
+                "children": [
+                  {
+                    "relation": "content_moderators"
+                  },
+                  {
+                    "relation": "banned"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "moderate_metadata",
+          "userSet": {
+            "operation": "union",
+            "children": [
+              {
+                "relation": "organization",
+                "permission": "admin"
+              },
+              {
+                "relation": "organization",
+                "permission": "moderate"
+              },
+              {
+                "relation": "owner"
+              },
+              {
+                "operation": "exclusion",
+                "children": [
+                  {
+                    "relation": "metadata_moderators"
+                  },
+                  {
+                    "relation": "banned"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "post",
+          "userSet": {
+            "operation": "union",
+            "children": [
+              {
+                "relation": "organization",
+                "permission": "admin"
+              },
+              {
+                "relation": "owner"
+              },
+              {
+                "operation": "exclusion",
+                "children": [
+                  {
+                    "operation": "exclusion",
+                    "children": [
+                      {
+                        "operation": "intersection",
+                        "children": [
+                          {
+                            "relation": "posters"
+                          },
+                          {
+                            "relation": "post_without_moderation"
+                          }
+                        ]
+                      },
+                      {
+                        "relation": "prevent_post"
+                      }
+                    ]
+                  },
+                  {
+                    "relation": "banned"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "post_for_moderation",
+          "userSet": {
+            "operation": "union",
+            "children": [
+              {
+                "relation": "organization",
+                "permission": "admin"
+              },
+              {
+                "relation": "owner"
+              },
+              {
+                "operation": "exclusion",
+                "children": [
+                  {
+                    "operation": "exclusion",
+                    "children": [
+                      {
+                        "relation": "posters"
+                      },
+                      {
+                        "relation": "prevent_post"
+                      }
+                    ]
+                  },
+                  {
+                    "relation": "banned"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "edit_pages",
+          "userSet": {
+            "operation": "union",
+            "children": [
+              {
+                "relation": "organization",
+                "permission": "admin"
+              },
+              {
+                "relation": "owner"
+              },
+              {
+                "operation": "exclusion",
+                "children": [
+                  {
+                    "relation": "page_editors"
+                  },
+                  {
+                    "relation": "banned"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "view_members",
+          "userSet": {
+            "operation": "union",
+            "children": [
+              {
+                "relation": "organization",
+                "permission": "admin"
+              },
+              {
+                "relation": "owner"
+              },
+              {
+                "operation": "exclusion",
+                "children": [
+                  {
+                    "relation": "members_viewers"
+                  },
+                  {
+                    "relation": "banned"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "add_member",
+          "userSet": {
+            "operation": "union",
+            "children": [
+              {
+                "relation": "organization",
+                "permission": "admin"
+              },
+              {
+                "relation": "owner"
+              },
+              {
+                "operation": "exclusion",
+                "children": [
+                  {
+                    "relation": "manager"
+                  },
+                  {
+                    "relation": "banned"
+                  }
+                ]
+              }
+            ]
+          },
+          "comment": "Manage group membership and ownership"
+        },
+        {
+          "name": "remove_member",
+          "userSet": {
+            "operation": "union",
+            "children": [
+              {
+                "relation": "add_member"
+              }
+            ]
+          }
+        },
+        {
+          "name": "add_announcement",
+          "userSet": {
+            "operation": "union",
+            "children": [
+              {
+                "relation": "organization",
+                "permission": "admin"
+              },
+              {
+                "relation": "owner"
+              },
+              {
+                "operation": "exclusion",
+                "children": [
+                  {
+                    "relation": "manager"
+                  },
+                  {
+                    "relation": "banned"
+                  }
+                ]
+              }
+            ]
+          },
+          "comment": "Manage announcements"
+        },
+        {
+          "name": "remove_announcement",
+          "userSet": {
+            "operation": "union",
+            "children": [
+              {
+                "relation": "add_announcement"
+              }
+            ]
+          }
+        },
+        {
+          "name": "add_comments",
+          "userSet": {
+            "operation": "union",
+            "children": [
+              {
+                "relation": "organization",
+                "permission": "admin"
+              },
+              {
+                "relation": "owner"
+              },
+              {
+                "operation": "exclusion",
+                "children": [
+                  {
+                    "relation": "commenters"
+                  },
+                  {
+                    "relation": "banned"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "remove_comments",
+          "userSet": {
+            "operation": "union",
+            "children": [
+              {
+                "relation": "moderate_content"
+              }
+            ]
+          }
+        },
+        {
+          "name": "add_manager",
+          "userSet": {
+            "operation": "union",
+            "children": [
+              {
+                "relation": "organization",
+                "permission": "admin"
+              },
+              {
+                "relation": "owner"
+              }
+            ]
+          },
+          "comment": "Manage group management"
+        },
+        {
+          "name": "remove_manager",
+          "userSet": {
+            "operation": "union",
+            "children": [
+              {
+                "relation": "add_manager"
+              }
+            ]
+          }
+        },
+        {
+          "name": "add_owner",
+          "userSet": {
+            "operation": "union",
+            "children": [
+              {
+                "relation": "organization",
+                "permission": "admin"
+              },
+              {
+                "relation": "owner"
+              }
+            ]
+          }
+        },
+        {
+          "name": "remove_owner",
+          "userSet": {
+            "operation": "union",
+            "children": [
+              {
+                "relation": "organization",
+                "permission": "admin"
+              },
+              {
+                "relation": "add_owner"
+              }
+            ]
+          }
+        },
+        {
+          "name": "ban_user",
+          "userSet": {
+            "operation": "union",
+            "children": [
+              {
+                "relation": "organization",
+                "permission": "admin"
+              },
+              {
+                "relation": "owner"
+              },
+              {
+                "operation": "exclusion",
+                "children": [
+                  {
+                    "relation": "manager"
+                  },
+                  {
+                    "relation": "banned"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "unban_user",
+          "userSet": {
+            "operation": "union",
+            "children": [
+              {
+                "relation": "ban_user"
+              }
+            ]
+          }
+        },
+        {
+          "name": "manage_custom_role",
+          "userSet": {
+            "operation": "union",
+            "children": [
+              {
+                "relation": "organization",
+                "permission": "admin"
+              },
+              {
+                "relation": "owner"
+              },
+              {
+                "operation": "exclusion",
+                "children": [
+                  {
+                    "relation": "custom_role_manager"
+                  },
+                  {
+                    "relation": "banned"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "custom_role",
+      "relations": [
+        {
+          "name": "parent",
+          "types": [
+            {
+              "type": "group"
+            }
+          ]
+        },
+        {
+          "name": "member",
+          "types": [
+            {
+              "type": "user"
+            },
+            {
+              "type": "group",
+              "relation": "member"
+            }
+          ]
+        }
+      ],
+      "permissions": [
+        {
+          "name": "add_member",
+          "userSet": {
+            "operation": "union",
+            "children": [
+              {
+                "relation": "parent",
+                "permission": "manage_custom_role"
+              }
+            ]
+          }
+        },
+        {
+          "name": "remove_member",
+          "userSet": {
+            "operation": "union",
+            "children": [
+              {
+                "relation": "parent",
+                "permission": "manage_custom_role"
+              }
+            ]
+          }
+        },
+        {
+          "name": "delete",
+          "userSet": {
+            "operation": "union",
+            "children": [
+              {
+                "relation": "parent",
+                "permission": "manage_custom_role"
+              }
+            ]
+          }
+        },
+        {
+          "name": "edit",
+          "userSet": {
+            "operation": "union",
+            "children": [
+              {
+                "relation": "parent",
+                "permission": "manage_custom_role"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "feed",
+      "relations": [
+        {
+          "name": "owner",
+          "types": [
+            {
+              "type": "user"
+            }
+          ]
+        },
+        {
+          "name": "friend",
+          "types": [
+            {
+              "type": "user"
+            }
+          ]
+        },
+        {
+          "name": "organization",
+          "types": [
+            {
+              "type": "organization"
+            }
+          ]
+        },
+        {
+          "name": "prevent_viewer",
+          "types": [
+            {
+              "type": "user",
+              "relation": "*"
+            },
+            {
+              "type": "anonymous_user",
+              "relation": "*"
+            }
+          ],
+          "comment": "Write this relationship to turn off public viewing of the feed"
+        },
+        {
+          "name": "commenters",
+          "types": [
+            {
+              "type": "feed",
+              "relation": "friend"
+            },
+            {
+              "type": "organization",
+              "relation": "member"
+            },
+            {
+              "type": "platform",
+              "relation": "member"
+            }
+          ]
+        },
+        {
+          "name": "followers",
+          "types": [
+            {
+              "type": "feed",
+              "relation": "friend"
+            },
+            {
+              "type": "organization",
+              "relation": "member"
+            },
+            {
+              "type": "platform",
+              "relation": "member"
+            }
+          ]
+        },
+        {
+          "name": "follower",
+          "types": [
+            {
+              "type": "user"
+            }
+          ]
+        },
+        {
+          "name": "org_viewer",
+          "types": [
+            {
+              "type": "organization",
+              "relation": "member"
+            }
+          ]
+        },
+        {
+          "name": "public_viewer",
+          "types": [
+            {
+              "type": "platform",
+              "relation": "member"
+            },
+            {
+              "type": "anonymous_user",
+              "relation": "*"
+            }
+          ]
+        },
+        {
+          "name": "banned",
+          "types": [
+            {
+              "type": "user"
+            }
+          ]
+        }
+      ],
+      "permissions": [
+        {
+          "name": "view_friend_feed",
+          "userSet": {
+            "operation": "union",
+            "children": [
+              {
+                "relation": "owner"
+              },
+              {
+                "relation": "organization",
+                "permission": "moderate"
+              },
+              {
+                "operation": "exclusion",
+                "children": [
+                  {
+                    "relation": "friend"
+                  },
+                  {
+                    "relation": "prevent_viewer"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "view_organization_feed",
+          "userSet": {
+            "operation": "union",
+            "children": [
+              {
+                "relation": "owner"
+              },
+              {
+                "operation": "exclusion",
+                "children": [
+                  {
+                    "operation": "union",
+                    "children": [
+                      {
+                        "relation": "friend"
+                      },
+                      {
+                        "relation": "org_viewer"
+                      }
+                    ]
+                  },
+                  {
+                    "relation": "prevent_viewer"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "view_public_feed",
+          "userSet": {
+            "operation": "union",
+            "children": [
+              {
+                "relation": "owner"
+              },
+              {
+                "operation": "exclusion",
+                "children": [
+                  {
+                    "operation": "union",
+                    "children": [
+                      {
+                        "relation": "friend"
+                      },
+                      {
+                        "relation": "org_viewer"
+                      },
+                      {
+                        "relation": "public_viewer"
+                      }
+                    ]
+                  },
+                  {
+                    "relation": "prevent_viewer"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "comment",
+          "userSet": {
+            "operation": "union",
+            "children": [
+              {
+                "relation": "owner"
+              },
+              {
+                "operation": "exclusion",
+                "children": [
+                  {
+                    "relation": "commenters"
+                  },
+                  {
+                    "relation": "banned"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "moderate_comment",
+          "userSet": {
+            "operation": "union",
+            "children": [
+              {
+                "relation": "organization",
+                "permission": "admin"
+              },
+              {
+                "relation": "organization",
+                "permission": "moderate"
+              },
+              {
+                "relation": "owner"
+              }
+            ]
+          }
+        },
+        {
+          "name": "follow",
+          "userSet": {
+            "operation": "union",
+            "children": [
+              {
+                "relation": "organization",
+                "permission": "admin"
+              },
+              {
+                "operation": "exclusion",
+                "children": [
+                  {
+                    "operation": "exclusion",
+                    "children": [
+                      {
+                        "relation": "followers"
+                      },
+                      {
+                        "relation": "follower"
+                      }
+                    ]
+                  },
+                  {
+                    "relation": "banned"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

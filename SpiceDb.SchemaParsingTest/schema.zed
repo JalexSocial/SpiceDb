@@ -12,15 +12,47 @@ definition platform {
     relation member: user
 	relation administrator: user
 	permission super_admin = administrator
+    permission absence_creator = member
 }
 
 definition organization {
     relation member: user
     relation platform: platform
 
+    // Allow select members to be post moderators
+    relation global_moderator: user
+    relation student: user
+
+    // Organization level attendance manager
+    relation global_attendance_manager: user
+
     // Almost certainly an oversimplification
     permission admin = platform->super_admin
     permission create_group = member
+    permission moderate = global_moderator
+
+    permission create_building = platform->super_admin
+    permission delete_building = create_building
+
+    permission manage_absences = platform->super_admin + global_attendance_manager
+    permission create_absences = platform->absence_creator - student
+    permission view_own_absences = create_absences
+    permission update_own_absences = create_absences
+}
+
+definition building {
+    relation organization: organization
+    relation administrator: user
+    relation attendance_manager: user
+    relation building_manager: user
+
+    // Absence management
+    permission view_absences = organization->manage_absences + administrator + attendance_manager
+    permission create_absence = organization->manage_absences + administrator + attendance_manager + organization->create_absences
+    permission update_absence = view_absences
+    permission delete_absence = view_absences
+
+    permission update_building = organization->admin + administrator + building_manager
 }
 
 definition group {
@@ -53,23 +85,23 @@ definition group {
 
     relation followers: organization#member | platform#member | group#member | user:*
     relation follower: user
-    permission follow = organization->admin + owner + (followers - follower - banned)
+    permission follow = organization->admin + (followers - follower - banned)
     
     // Dynamically determine who is allowed to view posts
     relation viewers: group#manager | group#member | organization#member | user:* | anonymous_user:*
-    permission view_posts = organization->admin + owner + (viewers - banned)
+    permission view_posts = organization->admin + owner + organization->moderate + (viewers - banned)
 
     // Dynamically determine the group's moderation policy
     relation post_without_moderation: user:* | group#member
     relation content_moderators: group#manager | group#member | custom_role#member
     relation metadata_moderators: group#manager | group#member | custom_role#member
-    permission moderate_content = organization->admin + owner + (content_moderators - banned)
-    permission moderate_metadata = organization->admin + owner + (metadata_moderators - banned)
+    permission moderate_content = organization->admin + organization->moderate + owner + (content_moderators - banned)
+    permission moderate_metadata = organization->admin + organization->moderate + owner + (metadata_moderators - banned)
 
     // Dynamically determine who is allowed to post in the group
     relation prevent_post: user:*
     relation posters: group#manager | group#member | organization#member | user:*
-    permission post = owner->admin + owner + ((posters & post_without_moderation) - prevent_post - banned)
+    permission post = organization->admin + owner + ((posters & post_without_moderation) - prevent_post - banned)
     permission post_for_moderation = organization->admin + owner + (posters - prevent_post - banned)
 
     // Dynamically determine who is allowed to edit pages for the group
@@ -77,7 +109,7 @@ definition group {
     permission edit_pages = organization->admin + owner + (page_editors - banned)
 
     // Dynamically determine who is allowed to view the members of the group
-    relation members_viewers: group#manager | group#member | organization#member | custom_role#member
+    relation members_viewers: group#manager | group#member | organization#member | custom_role#member | platform#member | anonymous_user:*
     permission view_members = organization->admin + owner + (members_viewers - banned)
 
     // Manage group membership and ownership
@@ -113,4 +145,27 @@ definition custom_role {
     permission remove_member = parent->manage_custom_role
     permission delete = parent->manage_custom_role
     permission edit = parent->manage_custom_role
+}
+
+definition feed {
+    relation owner: user
+    relation friend: user
+    relation organization: organization
+
+    // Write this relationship to turn off public viewing of the feed
+    relation prevent_viewer: user:* | anonymous_user:*
+    relation commenters: feed#friend | organization#member | platform#member
+    relation followers: feed#friend | organization#member | platform#member
+    relation follower: user
+    relation org_viewer: organization#member
+    relation public_viewer: platform#member | anonymous_user:*
+
+    relation banned: user
+
+    permission view_friend_feed = owner + organization->moderate + (friend - prevent_viewer)
+    permission view_organization_feed = owner + ((friend + org_viewer) - prevent_viewer)
+    permission view_public_feed = owner + ((friend + org_viewer + public_viewer) - prevent_viewer)
+    permission comment = owner + (commenters - banned)
+    permission moderate_comment = organization->admin + organization->moderate + owner
+    permission follow = organization->admin + (followers - follower - banned)
 }

@@ -10,6 +10,11 @@ Console.WriteLine("Hello, World!");
 var schemaText = File.ReadAllText("schema.zedj");
 var schema = JsonSerializer.Deserialize<Schema>(schemaText);
 
+var parser = new Parser(schema!);
+var terminals = parser.GetTerminalTypeNames();
+var types = parser.BuildRelationshipMap();
+
+/*
 var relmap = new Dictionary<string, string>();
 
 if (schema != null)
@@ -54,5 +59,5 @@ if (schema != null)
 		Console.WriteLine(output);
 	}
 }
-
+*/
 Console.WriteLine();

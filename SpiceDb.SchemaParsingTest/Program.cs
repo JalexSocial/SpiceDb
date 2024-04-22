@@ -11,8 +11,10 @@ var schemaText = File.ReadAllText("schema.zedj");
 var schema = JsonSerializer.Deserialize<Schema>(schemaText);
 
 var parser = new Parser(schema!);
-var terminals = parser.GetTerminalTypeNames();
-var types = parser.BuildRelationshipMap();
+var builder = new CodeBuilder(parser);
+
+var code = builder.BuildRelationshipCode();
+Console.WriteLine(code);
 
 /*
 var relmap = new Dictionary<string, string>();
@@ -23,21 +25,21 @@ if (schema != null)
 	{
 		var relationshipCode = new StringBuilder();
 
-		Console.WriteLine(definition.Name);
+		//Console.WriteLine(definition.Name);
 		relmap.TryAdd(definition.Name, string.Empty);
 
 		foreach (var relation in definition.Relations)
 		{
-			Console.WriteLine($" - " + relation.Name);
+			//Console.WriteLine($" - " + relation.Name);
 			foreach (var relType in relation.Types)
 			{
 				//relmap.TryAdd(typ.Type)
-				Console.Write($"   - {relType.Type}");
+				//Console.Write($"   - {relType.Type}");
 				
-				if (!string.IsNullOrEmpty(relType.Relation))
-					Console.Write($" (with subject relation {relType.Relation})");
+				//if (!string.IsNullOrEmpty(relType.Relation))
+				//	Console.Write($" (with subject relation {relType.Relation})");
 
-				Console.WriteLine();
+				//Console.WriteLine();
 
 				if (!string.IsNullOrEmpty(relType.Relation))
 				{
@@ -48,11 +50,6 @@ if (schema != null)
 					relationshipCode.AppendLine($"public Relationship Relate{relation.Name.Pascalize()}(Zed{relType.Type.Pascalize()} subject) => new Relationship(this, \"{relation.Name}\", subject);");
 				}
 			}
-		}
-
-		foreach (var permission in definition.Permissions)
-		{
-			Console.WriteLine($" @ {permission.Name}");
 		}
 
 		var output = relationshipCode.ToString();

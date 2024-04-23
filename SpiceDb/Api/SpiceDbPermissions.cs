@@ -1,6 +1,7 @@
 ﻿using Authzed.Api.V1;
 using Google.Protobuf;
 using Google.Protobuf.Collections;
+using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using SpiceDb.Enum;
 using SpiceDb.Models;
@@ -396,7 +397,7 @@ internal class SpiceDbPermissions
 
     public RelationshipUpdate GetRelationshipUpdate(string resourceType, string resourceId,
            string relation, string subjectType, string subjectId, string optionalSubjectRelation = "",
-           RelationshipUpdate.Types.Operation operation = RelationshipUpdate.Types.Operation.Touch)
+           RelationshipUpdate.Types.Operation operation = RelationshipUpdate.Types.Operation.Touch, Caveat? caveat = null)
     {
         return new RelationshipUpdate
         {
@@ -406,6 +407,7 @@ internal class SpiceDbPermissions
                 Resource = new ObjectReference { ObjectType = resourceType, ObjectId = resourceId },
                 Relation = relation,
                 Subject = new SubjectReference { Object = new ObjectReference { ObjectType = subjectType, ObjectId = subjectId }, OptionalRelation = optionalSubjectRelation },
+                OptionalCaveat = GetCaveat(caveat)
             }
         };
     }
@@ -426,21 +428,21 @@ internal class SpiceDbPermissions
 
     public async Task<ZedToken> UpdateRelationshipAsync(string resourceType, string resourceId, string relation,
            string subjectType, string subjectId, string optionalSubjectRelation = "",
-          RelationshipUpdate.Types.Operation operation = RelationshipUpdate.Types.Operation.Touch)
+          RelationshipUpdate.Types.Operation operation = RelationshipUpdate.Types.Operation.Touch, Caveat? caveat = null)
     {
 
-        return await UpdateRelationshipsAsync(resourceType, resourceId, new[] { relation }, subjectType, subjectId, optionalSubjectRelation, operation);
+        return await UpdateRelationshipsAsync(resourceType, resourceId, new[] { relation }, subjectType, subjectId, optionalSubjectRelation, operation, caveat);
     }
 
     public async Task<ZedToken> UpdateRelationshipsAsync(string resourceType, string resourceId, IEnumerable<string> relations,
             string subjectType, string subjectId, string optionalSubjectRelation = "",
-           RelationshipUpdate.Types.Operation operation = RelationshipUpdate.Types.Operation.Touch)
+           RelationshipUpdate.Types.Operation operation = RelationshipUpdate.Types.Operation.Touch, Caveat? caveat = null)
     {
         RepeatedField<RelationshipUpdate> updateCollection = new RepeatedField<RelationshipUpdate>();
 
         foreach (var relation in relations)
         {
-            var updateItem = GetRelationshipUpdate(resourceType, resourceId, relation.ToLowerInvariant(), subjectType, subjectId, optionalSubjectRelation, operation);
+            var updateItem = GetRelationshipUpdate(resourceType, resourceId, relation.ToLowerInvariant(), subjectType, subjectId, optionalSubjectRelation, operation, caveat);
             UpdateRelationships(ref updateCollection, updateItem);
         }
 
@@ -448,4 +450,17 @@ internal class SpiceDbPermissions
         return resp.WrittenAt;
     }
 
+    protected ContextualizedCaveat? GetCaveat(Caveat? caveat)
+    {
+        if (caveat is null)
+        {
+            return null;
+        }
+
+        return new ContextualizedCaveat
+        {
+            CaveatName = caveat.Name,
+            Context = caveat.Context?.ToStruct(),
+        };
+    }
 }

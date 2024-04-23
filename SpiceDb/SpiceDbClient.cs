@@ -161,7 +161,7 @@ public class SpiceDbClient : ISpiceDbClient
 				OptionalCaveat = x.Relationship.OptionalCaveat != null
 					? new Authzed.Api.V1.ContextualizedCaveat
 					{
-						CaveatName = x.Relationship.OptionalCaveat.Name,
+						CaveatName = EnsurePrefix(x.Relationship.OptionalCaveat.Name)!,
 						Context = x.Relationship.OptionalCaveat.Context.ToStruct()
 					}
 					: null
@@ -370,7 +370,7 @@ public class SpiceDbClient : ISpiceDbClient
 		var request = relationships.Select(x => new RelationshipUpdate
 		{
 			Relationship = new Relationship(
-				x.Resource.EnsurePrefix(_prefix), x.Relation, x.Subject.EnsurePrefix(_prefix), x.OptionalCaveat
+				x.Resource.EnsurePrefix(_prefix), x.Relation, x.Subject.EnsurePrefix(_prefix), EnsureCaveatIsPrefixed(x.OptionalCaveat)
 			),
 			Operation = RelationshipUpdateOperation.Upsert
 		}).ToList();
@@ -387,7 +387,7 @@ public class SpiceDbClient : ISpiceDbClient
 	{
 		return (await _spiceDbCore.Permissions.UpdateRelationshipAsync(EnsurePrefix(relation.Resource.Type)!,
 				relation.Resource.Id, relation.Relation, EnsurePrefix(relation.Subject.Type)!, relation.Subject.Id,
-				relation.Subject.Relation))
+				relation.Subject.Relation, caveat: EnsureCaveatIsPrefixed(relation.OptionalCaveat)))
 			.ToSpiceDbToken()!;
 	}
 
@@ -626,5 +626,16 @@ public class SpiceDbClient : ISpiceDbClient
 		if (string.IsNullOrEmpty(type)) return type;
 
 		return type.StartsWith(_prefix + "/") ? type : $"{_prefix}/{type}";
+	}
+
+	private Caveat? EnsureCaveatIsPrefixed(Caveat? caveat)
+	{
+		if (caveat is null)
+		{
+			return null;
+		}
+
+		caveat.Name = EnsurePrefix(caveat.Name)!;
+		return caveat;
 	}
 }

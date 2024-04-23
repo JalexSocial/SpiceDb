@@ -7,6 +7,7 @@ public class Relationship
         Resource = resource;
         Relation = relation;
         Subject = subject;
+        OptionalCaveat = optionalCaveat;
 
         if (!string.IsNullOrEmpty(Resource.Relation))
         {

@@ -1,6 +1,5 @@
 ﻿using Authzed.Api.V1;
 using Grpc.Core;
-using SpiceDb.Enum;
 
 namespace SpiceDb.Api;
 

@@ -1,7 +1,5 @@
 ﻿using Authzed.Api.V1;
-using Google.Protobuf;
 using Google.Protobuf.Collections;
-using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using SpiceDb.Enum;
 using SpiceDb.Models;
@@ -125,63 +123,63 @@ internal class SpiceDbPermissions
         };
     }
 
-	public async Task<SpiceDb.Models.CheckBulkPermissionsResponse?> CheckBulkPermissionsAsync(IEnumerable<Authzed.Api.V1.CheckBulkPermissionsRequestItem> items, ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
-	{
-		var req = new CheckBulkPermissionsRequest()
-		{
-			Consistency = new Consistency { MinimizeLatency = true, AtExactSnapshot = zedToken },
-		};
+    public async Task<SpiceDb.Models.CheckBulkPermissionsResponse?> CheckBulkPermissionsAsync(IEnumerable<Authzed.Api.V1.CheckBulkPermissionsRequestItem> items, ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
+    {
+        var req = new CheckBulkPermissionsRequest()
+        {
+            Consistency = new Consistency { MinimizeLatency = true, AtExactSnapshot = zedToken },
+        };
 
-		req.Items.AddRange(items);
+        req.Items.AddRange(items);
 
-		if (cacheFreshness == CacheFreshness.AtLeastAsFreshAs)
-		{
-			req.Consistency.AtLeastAsFresh = zedToken;
-		}
-		else if (cacheFreshness == CacheFreshness.MustRefresh || zedToken == null)
-		{
-			req.Consistency.FullyConsistent = true;
-		}
+        if (cacheFreshness == CacheFreshness.AtLeastAsFreshAs)
+        {
+            req.Consistency.AtLeastAsFresh = zedToken;
+        }
+        else if (cacheFreshness == CacheFreshness.MustRefresh || zedToken == null)
+        {
+            req.Consistency.FullyConsistent = true;
+        }
 
-		var call = await _acl!.CheckBulkPermissionsAsync(req);
+        var call = await _acl!.CheckBulkPermissionsAsync(req);
 
-		if (call == null)
-			return null;
+        if (call == null)
+            return null;
 
-		SpiceDb.Models.CheckBulkPermissionsResponse response = new SpiceDb.Models.CheckBulkPermissionsResponse
-		{
-			CheckedAt = call.CheckedAt.ToSpiceDbToken(),
-			Pairs = call.Pairs.Select(x => new Models.CheckBulkPermissions
-			{
-				Error = x.Error is null
-					? null
-					: new Models.Status
-					{
-						Code = x.Error.Code,
-						Message = x.Error.Message,
-						Details = x.Error.Details.Select(any => (object)any).ToList()
-					},
-				PartialCaveatInfo = x.Item.PartialCaveatInfo is null
-					? null
-					: new SpiceDb.Models.PartialCaveatInfo
-					{ MissingRequiredContext = x.Item.PartialCaveatInfo.MissingRequiredContext.ToList() },
-				Permissionship = x.Item.Permissionship switch
-				{
-					CheckPermissionResponse.Types.Permissionship.NoPermission => Permissionship.NoPermission,
-					CheckPermissionResponse.Types.Permissionship.HasPermission => Permissionship.HasPermission,
-					CheckPermissionResponse.Types.Permissionship.ConditionalPermission => Permissionship.ConditionalPermission,
-					_ => Permissionship.Unspecified
-				},
-				Permission = new Models.Permission(new ResourceReference (x.Request.Resource.ObjectType, x.Request.Resource.ObjectId),
-					x.Request.Permission, new ResourceReference(x.Request.Subject.Object.ObjectType, x.Request.Subject.Object.ObjectId, x.Request.Subject.OptionalRelation ?? string.Empty)),
-				Context = x.Request.Context?.FromStruct() ?? new()
-			}).ToList()
-		};
+        SpiceDb.Models.CheckBulkPermissionsResponse response = new SpiceDb.Models.CheckBulkPermissionsResponse
+        {
+            CheckedAt = call.CheckedAt.ToSpiceDbToken(),
+            Pairs = call.Pairs.Select(x => new Models.CheckBulkPermissions
+            {
+                Error = x.Error is null
+                    ? null
+                    : new Models.Status
+                    {
+                        Code = x.Error.Code,
+                        Message = x.Error.Message,
+                        Details = x.Error.Details.Select(any => (object)any).ToList()
+                    },
+                PartialCaveatInfo = x.Item.PartialCaveatInfo is null
+                    ? null
+                    : new SpiceDb.Models.PartialCaveatInfo
+                    { MissingRequiredContext = x.Item.PartialCaveatInfo.MissingRequiredContext.ToList() },
+                Permissionship = x.Item.Permissionship switch
+                {
+                    CheckPermissionResponse.Types.Permissionship.NoPermission => Permissionship.NoPermission,
+                    CheckPermissionResponse.Types.Permissionship.HasPermission => Permissionship.HasPermission,
+                    CheckPermissionResponse.Types.Permissionship.ConditionalPermission => Permissionship.ConditionalPermission,
+                    _ => Permissionship.Unspecified
+                },
+                Permission = new Models.Permission(new ResourceReference(x.Request.Resource.ObjectType, x.Request.Resource.ObjectId),
+                    x.Request.Permission, new ResourceReference(x.Request.Subject.Object.ObjectType, x.Request.Subject.Object.ObjectId, x.Request.Subject.OptionalRelation ?? string.Empty)),
+                Context = x.Request.Context?.FromStruct() ?? new()
+            }).ToList()
+        };
 
-		return response;
-	}
+        return response;
+    }
 
-	public async IAsyncEnumerable<Models.LookupSubjectsResponse> LookupSubjects(string resourceType, string resourceId, string permission,
+    public async IAsyncEnumerable<Models.LookupSubjectsResponse> LookupSubjects(string resourceType, string resourceId, string permission,
         string subjectType, string optionalSubjectRelation = "", Dictionary<string, object>? context = null,
         ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
     {

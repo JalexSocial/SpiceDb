@@ -8,6 +8,13 @@ SpiceDb was created by [AuthZed](https://authzed.com/) and [documentation](https
 SpiceDb.net was created by Michael Tanczos and has contributions from Pavel Akimov, Mahesh Bailwal, Vinícius Gajo, and others.  Documentation for SpiceDb.net is in progress and can be found here:
 [https://jalexsocial.github.io/spicedb.docs/](https://jalexsocial.github.io/spicedb.docs/)
 
+## What's New?
+
+1.5.1 
+- @nexthash added caveat handling for relationship creation
+- added WriteSchemaAsync method to client
+- added additional unit tests
+
 ## Usage
 
 ### Install

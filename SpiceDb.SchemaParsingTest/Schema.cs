@@ -6,6 +6,7 @@ using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace SpiceDb.SchemaParsingTest;
+
 public class Schema
 {
 	[JsonPropertyName("definitions")] 

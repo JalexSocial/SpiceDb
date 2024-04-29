@@ -99,8 +99,8 @@ public class SpiceDbClient : ISpiceDbClient
     /// <param name="zedToken">An optional ZedToken for specifying a version of the data to read.</param>
     /// <param name="cacheFreshness">Specifies the acceptable freshness of the data to be read from the cache.</param>
     /// <returns>An async enumerable of <see cref="ReadRelationshipsResponse"/> objects matching the specified filters.</returns>
-    public async IAsyncEnumerable<ReadRelationshipsResponse> ReadRelationshipsAsync(RelationshipFilter resource,
-        RelationshipFilter? subject = null,
+    public async IAsyncEnumerable<ReadRelationshipsResponse> ReadRelationshipsAsync(IRelationshipFilter resource,
+        IRelationshipFilter? subject = null,
         bool excludePrefix = false,
         ZedToken? zedToken = null,
         CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
@@ -128,8 +128,8 @@ public class SpiceDbClient : ISpiceDbClient
     /// <param name="relationships"></param>
     /// <param name="optionalPreconditions"></param>
     /// <returns></returns>
-    public async Task<ZedToken?> WriteRelationshipsAsync(List<RelationshipUpdate>? relationships,
-        List<Precondition>? optionalPreconditions = null)
+    public async Task<ZedToken?> WriteRelationshipsAsync(IEnumerable<RelationshipUpdate>? relationships,
+        IEnumerable<Precondition>? optionalPreconditions = null)
     {
         if (relationships is null) return null;
 
@@ -216,8 +216,8 @@ public class SpiceDbClient : ISpiceDbClient
     /// <param name="deadline">An optional deadline for the call. The call will be cancelled if deadline is hit.</param>
     /// <param name="cancellationToken">An optional token for canceling the call.</param>
     /// <returns></returns>
-    public async Task<ZedToken?> DeleteRelationshipsAsync(RelationshipFilter resourceFilter,
-        RelationshipFilter? optionalSubjectFilter = null, List<Precondition>? optionalPreconditions = null,
+    public async Task<ZedToken?> DeleteRelationshipsAsync(IRelationshipFilter resourceFilter,
+        IRelationshipFilter? optionalSubjectFilter = null, IEnumerable<Precondition>? optionalPreconditions = null,
         DateTime? deadline = null, CancellationToken cancellationToken = default)
     {
         RepeatedField<Authzed.Api.V1.Precondition> preconditionCollection = new();
@@ -304,7 +304,7 @@ public class SpiceDbClient : ISpiceDbClient
     /// <param name="zedToken">An optional ZedToken for specifying a version of the data to consider.</param>
     /// <param name="cacheFreshness">Specifies the acceptable freshness of the data to be considered from the cache.</param>
     /// <returns>A task representing the asynchronous operation, with an <see cref="ExpandPermissionTreeResponse?"/> indicating the result of the expansion operation.</returns>
-    public async Task<ExpandPermissionTreeResponse?> ExpandPermissionAsync(ResourceReference resource,
+    public async Task<ExpandPermissionTreeResponse?> ExpandPermissionAsync(IResourceReference resource,
         string permission, ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
     {
         var response = await _spiceDbCore.Permissions.ExpandPermissionAsync(EnsurePrefix(resource.Type)!, resource.Id,
@@ -366,7 +366,7 @@ public class SpiceDbClient : ISpiceDbClient
     /// </summary>
     /// <param name="relationships">List of relationships to add</param>
     /// <returns></returns>
-    public async Task<ZedToken?> AddRelationshipsAsync(List<Relationship> relationships)
+    public async Task<ZedToken?> AddRelationshipsAsync(IEnumerable<IRelationship> relationships)
     {
         var request = relationships.Select(x => new RelationshipUpdate
         {
@@ -380,11 +380,19 @@ public class SpiceDbClient : ISpiceDbClient
     }
 
     /// <summary>
+    /// Add or update multiple relationships as a single atomic update
+    /// </summary>
+    /// <param name="relationships">List of relationships to add</param>
+    /// <returns></returns>
+    public async Task<ZedToken?> AddRelationshipsAsync(IEnumerable<Relationship> relationships)
+        => await AddRelationshipsAsync(relationships.Select(x => (IRelationship)x));
+
+    /// <summary>
     /// Add or update a relationship
     /// </summary>
     /// <param name="relation"></param>
     /// <returns></returns>
-    public async Task<ZedToken> AddRelationshipAsync(Relationship relation)
+    public async Task<ZedToken> AddRelationshipAsync(IRelationship relation)
     {
         return (await _spiceDbCore.Permissions.UpdateRelationshipAsync(EnsurePrefix(relation.Resource.Type)!,
                 relation.Resource.Id, relation.Relation, EnsurePrefix(relation.Subject.Type)!, relation.Subject.Id,
@@ -392,7 +400,7 @@ public class SpiceDbClient : ISpiceDbClient
             .ToSpiceDbToken()!;
     }
 
-    public ZedToken AddRelationship(Relationship relation)
+    public ZedToken AddRelationship(IRelationship relation)
     {
         return AddRelationshipAsync(relation).Result;
     }
@@ -412,7 +420,7 @@ public class SpiceDbClient : ISpiceDbClient
     /// </summary>
     /// <param name="relation"></param>
     /// <returns></returns>
-    public async Task<ZedToken> DeleteRelationshipAsync(Relationship relation)
+    public async Task<ZedToken> DeleteRelationshipAsync(IRelationship relation)
     {
         return (await _spiceDbCore.Permissions.UpdateRelationshipAsync(EnsurePrefix(relation.Resource.Type)!,
             relation.Resource.Id, relation.Relation, EnsurePrefix(relation.Subject.Type)!, relation.Subject.Id,
@@ -440,7 +448,7 @@ public class SpiceDbClient : ISpiceDbClient
     /// <param name="zedToken"></param>
     /// <param name="cacheFreshness"></param>
     /// <returns></returns>
-    public async IAsyncEnumerable<LookupSubjectsResponse> LookupSubjects(ResourceReference resource,
+    public async IAsyncEnumerable<LookupSubjectsResponse> LookupSubjects(IResourceReference resource,
         string permission,
         string subjectType, string optionalSubjectRelation = "",
         Dictionary<string, object>? context = null,
@@ -466,7 +474,7 @@ public class SpiceDbClient : ISpiceDbClient
     /// <returns></returns>
     public async IAsyncEnumerable<LookupResourcesResponse> LookupResources(string resourceType,
         string permission,
-        ResourceReference subject,
+        IResourceReference subject,
         Dictionary<string, object>? context = null,
         ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
     {
@@ -476,7 +484,7 @@ public class SpiceDbClient : ISpiceDbClient
             yield return response;
     }
 
-    public async IAsyncEnumerable<WatchResponse> Watch(List<string>? optionalSubjectTypes = null,
+    public async IAsyncEnumerable<WatchResponse> Watch(IEnumerable<string>? optionalSubjectTypes = null,
         ZedToken? zedToken = null,
         DateTime? deadline = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
@@ -486,7 +494,7 @@ public class SpiceDbClient : ISpiceDbClient
     }
 
     public async Task<List<string>> GetResourcePermissionsAsync(string resourceType, string permission,
-        ResourceReference subject, ZedToken? zedToken = null,
+        IResourceReference subject, ZedToken? zedToken = null,
         CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
     {
         return await _spiceDbCore.Permissions.GetResourcePermissionsAsync(EnsurePrefix(resourceType)!, permission,

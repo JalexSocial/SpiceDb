@@ -1,4 +1,5 @@
-﻿using SpiceDb.Enum;
+﻿using SpiceDb.Abstractions;
+using SpiceDb.Enum;
 using SpiceDb.Models;
 
 namespace SpiceDb;
@@ -14,7 +15,7 @@ public interface ISpiceDbClient
     /// <param name="zedToken"></param>
     /// <param name="cacheFreshness"></param>
     /// <returns></returns>
-    IAsyncEnumerable<SpiceDb.Models.ReadRelationshipsResponse> ReadRelationshipsAsync(Models.RelationshipFilter resource, Models.RelationshipFilter? subject = null,
+    IAsyncEnumerable<SpiceDb.Models.ReadRelationshipsResponse> ReadRelationshipsAsync(IRelationshipFilter resource, IRelationshipFilter? subject = null,
         bool excludePrefix = false,
         ZedToken? zedToken = null,
         CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness);
@@ -26,7 +27,7 @@ public interface ISpiceDbClient
     /// <param name="relationships"></param>
     /// <param name="optionalPreconditions"></param>
     /// <returns></returns>
-    Task<ZedToken?> WriteRelationshipsAsync(List<SpiceDb.Models.RelationshipUpdate>? relationships, List<SpiceDb.Models.Precondition>? optionalPreconditions = null);
+    Task<ZedToken?> WriteRelationshipsAsync(IEnumerable<SpiceDb.Models.RelationshipUpdate>? relationships, IEnumerable<SpiceDb.Models.Precondition>? optionalPreconditions = null);
 
     /// <summary>
     /// DeleteRelationships atomically bulk deletes all relationships matching the provided filter. If no relationships
@@ -39,7 +40,7 @@ public interface ISpiceDbClient
     /// <param name="deadline">An optional deadline for the call. The call will be cancelled if deadline is hit.</param>
     /// <param name="cancellationToken">An optional token for canceling the call.</param>
     /// <returns></returns>
-    Task<ZedToken?> DeleteRelationshipsAsync(SpiceDb.Models.RelationshipFilter resourceFilter, Models.RelationshipFilter? optionalSubjectFilter = null, List<SpiceDb.Models.Precondition>? optionalPreconditions = null, DateTime? deadline = null, CancellationToken cancellationToken = default(CancellationToken));
+    Task<ZedToken?> DeleteRelationshipsAsync(IRelationshipFilter resourceFilter, IRelationshipFilter? optionalSubjectFilter = null, IEnumerable<SpiceDb.Models.Precondition>? optionalPreconditions = null, DateTime? deadline = null, CancellationToken cancellationToken = default(CancellationToken));
 
     /// <summary>
     /// CheckPermission determines for a given resource whether a subject computes to having a permission or is a direct member of
@@ -64,24 +65,31 @@ public interface ISpiceDbClient
     /// <param name="zedToken"></param>
     /// <param name="cacheFreshness"></param>
     /// <returns></returns>
-    Task<ExpandPermissionTreeResponse?> ExpandPermissionAsync(ResourceReference resource, string permission, ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness);
+    Task<ExpandPermissionTreeResponse?> ExpandPermissionAsync(IResourceReference resource, string permission, ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness);
 
     /// <summary>
     /// Add or update multiple relationships as a single atomic update
     /// </summary>
     /// <param name="relationships">List of relationships to add</param>
     /// <returns></returns>
-    Task<ZedToken?> AddRelationshipsAsync(List<SpiceDb.Models.Relationship> relationships);
+    Task<ZedToken?> AddRelationshipsAsync(IEnumerable<IRelationship> relationships);
+
+    /// <summary>
+    /// Add or update multiple relationships as a single atomic update
+    /// </summary>
+    /// <param name="relationships">List of relationships to add</param>
+    /// <returns></returns>
+    Task<ZedToken?> AddRelationshipsAsync(IEnumerable<Relationship> relationships);
 
     /// <summary>
     /// Add or update a relationship
     /// </summary>
     /// <param name="relation"></param>
     /// <returns></returns>
-    Task<ZedToken> AddRelationshipAsync(SpiceDb.Models.Relationship relation);
+    Task<ZedToken> AddRelationshipAsync(IRelationship relation);
 
     Task<ZedToken> AddRelationshipAsync(string relation);
-    ZedToken AddRelationship(SpiceDb.Models.Relationship relation);
+    ZedToken AddRelationship(IRelationship relation);
     ZedToken AddRelationship(string relation);
 
     /// <summary>
@@ -89,7 +97,7 @@ public interface ISpiceDbClient
     /// </summary>
     /// <param name="relation"></param>
     /// <returns></returns>
-    Task<ZedToken> DeleteRelationshipAsync(SpiceDb.Models.Relationship relation);
+    Task<ZedToken> DeleteRelationshipAsync(IRelationship relation);
 
 
     /// <summary>
@@ -110,7 +118,7 @@ public interface ISpiceDbClient
     /// <param name="zedToken"></param>
     /// <param name="cacheFreshness"></param>
     /// <returns></returns>
-    IAsyncEnumerable<SpiceDb.Models.LookupSubjectsResponse> LookupSubjects(ResourceReference resource,
+    IAsyncEnumerable<SpiceDb.Models.LookupSubjectsResponse> LookupSubjects(IResourceReference resource,
         string permission,
         string subjectType, string optionalSubjectRelation = "",
         Dictionary<string, object>? context = null,
@@ -129,15 +137,15 @@ public interface ISpiceDbClient
     /// <returns></returns>
     IAsyncEnumerable<SpiceDb.Models.LookupResourcesResponse> LookupResources(string resourceType,
         string permission,
-        ResourceReference subject,
+        IResourceReference subject,
         Dictionary<string, object>? context = null,
         ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness);
 
-    IAsyncEnumerable<SpiceDb.Models.WatchResponse> Watch(List<string>? optionalSubjectTypes = null,
+    IAsyncEnumerable<SpiceDb.Models.WatchResponse> Watch(IEnumerable<string>? optionalSubjectTypes = null,
         ZedToken? zedToken = null,
         DateTime? deadline = null, CancellationToken cancellationToken = default);
 
-    Task<List<string>> GetResourcePermissionsAsync(string resourceType, string permission, ResourceReference subject, ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness);
+    Task<List<string>> GetResourcePermissionsAsync(string resourceType, string permission, IResourceReference subject, ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness);
     string ReadSchema();
     Task WriteSchemaAsync(string schema);
 

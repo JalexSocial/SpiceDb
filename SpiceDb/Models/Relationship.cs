@@ -23,7 +23,7 @@ public class Relationship : IRelationship
         }
     }
 
-    public Relationship(string resource, string relation, string subject, Caveat? optionalCaveat = null)
+    public Relationship(string resource, string relation, string subject, ICaveat? optionalCaveat = null)
     {
         Resource = new ResourceReference(resource);
         Relation = relation;
@@ -43,7 +43,7 @@ public class Relationship : IRelationship
     /// <param name="relation"></param>
     /// <param name="optionalCaveat"></param>
     /// <exception cref="ArgumentException"></exception>
-    public Relationship(string relation, Caveat? optionalCaveat = null)
+    public Relationship(string relation, ICaveat? optionalCaveat = null)
     {
         var parts = relation.Split(new char[] { '#', '@' }, 3);
 

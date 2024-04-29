@@ -205,7 +205,7 @@ public class SpiceDbClientTests
 
         // Assert: Check that a valid ZedToken is returned, indicating success
         ClassicAssert.IsNotNull(resultToken);
-        ClassicAssert.IsNotEmpty(resultToken.Token);
+        ClassicAssert.IsNotEmpty(resultToken!.Token);
     }
 
     [Test]

@@ -9,10 +9,13 @@
 
   <ItemGroup>
     <PackageReference Include="Humanizer" Version="2.14.1" />
+    <PackageReference Include="SpiceWeaver" Version="0.1.0" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="schema.zedj">
+	  <AdditionalFiles Include="schema.zedj" SpiceWeaver_SchemaFile="true" SpiceWeaver_IsJson="true" SpiceWeaver_Namespace="Archimedes" />
+	  <ProjectReference Include="..\SpiceDb\SpiceDb.csproj" />
+	  <None Update="schema.zedj">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>

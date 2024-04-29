@@ -58,3 +58,5 @@ if (schema != null)
 }
 */
 Console.WriteLine();
+
+Schema.Definitions.Platform.Relations.Administrator

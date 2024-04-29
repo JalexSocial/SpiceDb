@@ -1,8 +1,16 @@
-﻿namespace SpiceDb.Models;
+﻿using SpiceDb.Abstractions;
 
-public class Relationship
+namespace SpiceDb.Models;
+
+public class Relationship : IRelationship
 {
-    public Relationship(ResourceReference resource, string relation, ResourceReference subject, Caveat? optionalCaveat = null)
+    public Relationship(ResourceReference resource, string relation, ResourceReference subject,
+        Caveat? optionalCaveat = null) : this((IResourceReference)resource, relation, subject, optionalCaveat )
+    {
+
+    }
+
+    public Relationship(IResourceReference resource, string relation, IResourceReference subject, ICaveat? optionalCaveat = null)
     {
         Resource = resource;
         Relation = relation;
@@ -51,7 +59,7 @@ public class Relationship
     /// <summary>
     /// Resource is the resource to which the subject is related, in some manner
     /// </summary>
-    public ResourceReference Resource { get; set; }
+    public IResourceReference Resource { get; set; }
 
     /// <summary>
     /// Relation is how the resource and subject are related.
@@ -61,12 +69,12 @@ public class Relationship
     /// <summary>
     /// Subject is the subject to which the resource is related, in some manner.
     /// </summary>
-    public ResourceReference Subject { get; set; }
+    public IResourceReference Subject { get; set; }
 
     /// <summary>
     /// OptionalCaveat is a reference to a the caveat that must be enforced over the relationship
     /// </summary>
-    public Caveat? OptionalCaveat { get; set; }
+    public ICaveat? OptionalCaveat { get; set; }
 
     public override string ToString()
     {

@@ -7,6 +7,7 @@ using SpiceDb.Models;
 using System.Net;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
+using SpiceDb.Abstractions;
 
 namespace SpiceDb;
 
@@ -628,7 +629,7 @@ public class SpiceDbClient : ISpiceDbClient
         return type.StartsWith(_prefix + "/") ? type : $"{_prefix}/{type}";
     }
 
-    private Caveat? EnsureCaveatIsPrefixed(Caveat? caveat)
+    private ICaveat? EnsureCaveatIsPrefixed(ICaveat? caveat)
     {
         if (caveat is null) return null;
 

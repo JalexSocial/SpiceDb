@@ -1,6 +1,7 @@
 ﻿using Authzed.Api.V1;
 using Google.Protobuf.Collections;
 using Grpc.Core;
+using SpiceDb.Abstractions;
 using SpiceDb.Enum;
 using SpiceDb.Models;
 using Precondition = Authzed.Api.V1.Precondition;
@@ -395,7 +396,7 @@ internal class SpiceDbPermissions
 
     public RelationshipUpdate GetRelationshipUpdate(string resourceType, string resourceId,
            string relation, string subjectType, string subjectId, string optionalSubjectRelation = "",
-           RelationshipUpdate.Types.Operation operation = RelationshipUpdate.Types.Operation.Touch, Caveat? caveat = null)
+           RelationshipUpdate.Types.Operation operation = RelationshipUpdate.Types.Operation.Touch, ICaveat? caveat = null)
     {
         return new RelationshipUpdate
         {
@@ -426,7 +427,7 @@ internal class SpiceDbPermissions
 
     public async Task<ZedToken> UpdateRelationshipAsync(string resourceType, string resourceId, string relation,
            string subjectType, string subjectId, string optionalSubjectRelation = "",
-          RelationshipUpdate.Types.Operation operation = RelationshipUpdate.Types.Operation.Touch, Caveat? caveat = null)
+          RelationshipUpdate.Types.Operation operation = RelationshipUpdate.Types.Operation.Touch, ICaveat? caveat = null)
     {
 
         return await UpdateRelationshipsAsync(resourceType, resourceId, new[] { relation }, subjectType, subjectId, optionalSubjectRelation, operation, caveat);
@@ -434,7 +435,7 @@ internal class SpiceDbPermissions
 
     public async Task<ZedToken> UpdateRelationshipsAsync(string resourceType, string resourceId, IEnumerable<string> relations,
             string subjectType, string subjectId, string optionalSubjectRelation = "",
-           RelationshipUpdate.Types.Operation operation = RelationshipUpdate.Types.Operation.Touch, Caveat? caveat = null)
+           RelationshipUpdate.Types.Operation operation = RelationshipUpdate.Types.Operation.Touch, ICaveat? caveat = null)
     {
         RepeatedField<RelationshipUpdate> updateCollection = new RepeatedField<RelationshipUpdate>();
 
@@ -448,7 +449,7 @@ internal class SpiceDbPermissions
         return resp.WrittenAt;
     }
 
-    protected ContextualizedCaveat? GetCaveat(Caveat? caveat)
+    protected ContextualizedCaveat? GetCaveat(ICaveat? caveat)
     {
         if (caveat is null)
         {

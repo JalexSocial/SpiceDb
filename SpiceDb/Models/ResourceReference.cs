@@ -1,5 +1,8 @@
-﻿namespace SpiceDb.Models;
-public class ResourceReference
+﻿using SpiceDb.Abstractions;
+
+namespace SpiceDb.Models;
+
+public class ResourceReference : IResourceReference
 {
     public ResourceReference(string type)
     {
@@ -50,9 +53,9 @@ public class ResourceReference
     /// </summary>
     /// <param name="relation"></param>
     /// <returns></returns>
-    public ResourceReference WithSubjectRelation(string relation) => new ResourceReference(this.Type, this.Id, relation);
+    public IResourceReference WithSubjectRelation(string relation) => new ResourceReference(this.Type, this.Id, relation);
 
-    public ResourceReference EnsurePrefix(string prefix)
+    public IResourceReference EnsurePrefix(string prefix)
     {
         var type = this.Type;
         type = string.IsNullOrEmpty(type) ? type : type.StartsWith(prefix + "/") ? type : $"{prefix}/{type}";
@@ -63,7 +66,7 @@ public class ResourceReference
         return new ResourceReference(type, this.Id, this.Relation);
     }
 
-    public ResourceReference ExcludePrefix(string prefix)
+    public IResourceReference ExcludePrefix(string prefix)
     {
         var type = this.Type;
 

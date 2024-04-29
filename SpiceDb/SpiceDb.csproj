@@ -51,4 +51,8 @@
 		</None>
 		<None Include="LICENSE.txt" Pack="true" PackagePath="LICENSE.txt" />
 	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\SpiceDb.Abstractions\SpiceDb.Abstractions.csproj" />
+	</ItemGroup>
 </Project>

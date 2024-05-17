@@ -99,7 +99,7 @@ public class SpiceDbClient : ISpiceDbClient
     /// <param name="cacheFreshness">Specifies the acceptable freshness of the data to be read from the cache.</param>
     /// <returns>An async enumerable of <see cref="ReadRelationshipsResponse"/> objects matching the specified filters.</returns>
     public async IAsyncEnumerable<ReadRelationshipsResponse> ReadRelationshipsAsync(RelationshipFilter resource,
-        RelationshipFilter? subject = null,
+        SubjectFilter? subject = null,
         bool excludePrefix = false,
         ZedToken? zedToken = null,
         CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
@@ -108,7 +108,7 @@ public class SpiceDbClient : ISpiceDbClient
                            resource.OptionalId,
                            resource.OptionalRelation,
                            EnsurePrefix(subject?.Type) ?? string.Empty, subject?.OptionalId ?? string.Empty,
-                           subject?.OptionalRelation ?? string.Empty, zedToken.ToAuthzedToken(), cacheFreshness))
+                           subject?.OptionalRelation, zedToken.ToAuthzedToken(), cacheFreshness))
         {
             if (excludePrefix)
             {
@@ -203,7 +203,7 @@ public class SpiceDbClient : ISpiceDbClient
 
         return response?.WrittenAt.ToSpiceDbToken();
     }
-
+    
     /// <summary>
     /// DeleteRelationships atomically bulk deletes all relationships matching the provided filter. If no relationships
     /// match, none will be deleted and the operation will succeed. An optional set of preconditions can be provided
@@ -216,7 +216,7 @@ public class SpiceDbClient : ISpiceDbClient
     /// <param name="cancellationToken">An optional token for canceling the call.</param>
     /// <returns></returns>
     public async Task<ZedToken?> DeleteRelationshipsAsync(RelationshipFilter resourceFilter,
-        RelationshipFilter? optionalSubjectFilter = null, List<Precondition>? optionalPreconditions = null,
+        SubjectFilter? optionalSubjectFilter = null, List<Precondition>? optionalPreconditions = null,
         DateTime? deadline = null, CancellationToken cancellationToken = default)
     {
         RepeatedField<Authzed.Api.V1.Precondition> preconditionCollection = new();
@@ -254,7 +254,7 @@ public class SpiceDbClient : ISpiceDbClient
                 resourceFilter.OptionalId, resourceFilter.OptionalRelation,
                 EnsurePrefix(optionalSubjectFilter?.Type) ?? string.Empty,
                 optionalSubjectFilter?.OptionalId ?? string.Empty,
-                optionalSubjectFilter?.OptionalRelation ?? string.Empty, preconditionCollection, deadline,
+                optionalSubjectFilter?.OptionalRelation, preconditionCollection, deadline,
                 cancellationToken))
             .ToSpiceDbToken();
     }

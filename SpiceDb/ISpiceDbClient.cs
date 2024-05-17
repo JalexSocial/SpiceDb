@@ -14,7 +14,7 @@ public interface ISpiceDbClient
     /// <param name="zedToken"></param>
     /// <param name="cacheFreshness"></param>
     /// <returns></returns>
-    IAsyncEnumerable<SpiceDb.Models.ReadRelationshipsResponse> ReadRelationshipsAsync(Models.RelationshipFilter resource, Models.RelationshipFilter? subject = null,
+    IAsyncEnumerable<SpiceDb.Models.ReadRelationshipsResponse> ReadRelationshipsAsync(Models.RelationshipFilter resource, Models.SubjectFilter? subject = null,
         bool excludePrefix = false,
         ZedToken? zedToken = null,
         CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness);
@@ -39,8 +39,8 @@ public interface ISpiceDbClient
     /// <param name="deadline">An optional deadline for the call. The call will be cancelled if deadline is hit.</param>
     /// <param name="cancellationToken">An optional token for canceling the call.</param>
     /// <returns></returns>
-    Task<ZedToken?> DeleteRelationshipsAsync(SpiceDb.Models.RelationshipFilter resourceFilter, Models.RelationshipFilter? optionalSubjectFilter = null, List<SpiceDb.Models.Precondition>? optionalPreconditions = null, DateTime? deadline = null, CancellationToken cancellationToken = default(CancellationToken));
-
+    Task<ZedToken?> DeleteRelationshipsAsync(SpiceDb.Models.RelationshipFilter resourceFilter, Models.SubjectFilter? optionalSubjectFilter = null, List<SpiceDb.Models.Precondition>? optionalPreconditions = null, DateTime? deadline = null, CancellationToken cancellationToken = default(CancellationToken));
+    
     /// <summary>
     /// CheckPermission determines for a given resource whether a subject computes to having a permission or is a direct member of
     /// a particular relation. Contains support for context as well where context objects can be string, bool, double, int, uint, or long.
@@ -90,7 +90,6 @@ public interface ISpiceDbClient
     /// <param name="relation"></param>
     /// <returns></returns>
     Task<ZedToken> DeleteRelationshipAsync(SpiceDb.Models.Relationship relation);
-
 
     /// <summary>
     /// Removes an existing relationship (if it exists)

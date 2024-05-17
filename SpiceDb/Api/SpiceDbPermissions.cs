@@ -293,7 +293,7 @@ internal class SpiceDbPermissions
     }
 
     public async IAsyncEnumerable<SpiceDb.Models.ReadRelationshipsResponse> ReadRelationshipsAsync(string resourceType, string optionalResourceId = "",
-     string optionalRelation = "", string optionalSubjectType = "", string optionalSubjectId = "", string optionalSubjectRelation = "",
+     string optionalRelation = "", string optionalSubjectType = "", string optionalSubjectId = "", string? optionalSubjectRelation = null,
      ZedToken? zedToken = null,
      CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
     {
@@ -305,18 +305,9 @@ internal class SpiceDbPermissions
         ReadRelationshipsRequest req = new ReadRelationshipsRequest()
         {
             Consistency = new Consistency { MinimizeLatency = true, AtExactSnapshot = zedToken },
-            RelationshipFilter = new Authzed.Api.V1.RelationshipFilter
-            {
-                ResourceType = resourceType,
-                OptionalRelation = optionalRelation,
-                OptionalResourceId = optionalResourceId
-            }
+            RelationshipFilter = CreateRelationshipFilter(resourceType, optionalResourceId, optionalRelation, optionalSubjectType, optionalSubjectId, optionalSubjectRelation)
         };
-        if (!String.IsNullOrEmpty(optionalSubjectType))
-        {
-            req.RelationshipFilter.OptionalSubjectFilter = new SubjectFilter() { SubjectType = optionalSubjectType, OptionalSubjectId = optionalSubjectId };
-            req.RelationshipFilter.OptionalSubjectFilter.OptionalRelation = new SubjectFilter.Types.RelationFilter() { Relation = optionalSubjectRelation };
-        }
+
         if (cacheFreshness == CacheFreshness.AtLeastAsFreshAs)
         {
             req.Consistency.AtLeastAsFresh = zedToken;
@@ -364,29 +355,13 @@ internal class SpiceDbPermissions
         }
     }
 
-    public async Task<ZedToken?> DeleteRelationshipsAsync(string resourceType, string optionalResourceId = "", string optionalRelation = "", string optionalSubjectType = "", string optionalSubjectId = "", string optionalSubjectRelation = "", RepeatedField<Precondition>? optionalPreconditions = null, DateTime? deadline = null, CancellationToken cancellationToken = default(CancellationToken))
+    public async Task<ZedToken?> DeleteRelationshipsAsync(string resourceType, string optionalResourceId = "", string optionalRelation = "", string optionalSubjectType ="", string optionalSubjectId = "", string? optionalSubjectRelation = null, RepeatedField<Precondition>? optionalPreconditions = null, DateTime? deadline = null, CancellationToken cancellationToken = default(CancellationToken))
     {
         var req = new DeleteRelationshipsRequest
         {
             OptionalPreconditions = { optionalPreconditions },
-            RelationshipFilter = new Authzed.Api.V1.RelationshipFilter
-            {
-                ResourceType = resourceType,
-                OptionalRelation = optionalRelation,
-                OptionalResourceId = optionalResourceId
-            }
+            RelationshipFilter = CreateRelationshipFilter(resourceType, optionalResourceId, optionalRelation, optionalSubjectType, optionalSubjectId, optionalSubjectRelation)
         };
-        if (!String.IsNullOrEmpty(optionalSubjectType))
-        {
-            req.RelationshipFilter.OptionalSubjectFilter = new SubjectFilter() { SubjectType = optionalSubjectType, OptionalSubjectId = optionalSubjectId };
-            if (!String.IsNullOrEmpty(optionalSubjectRelation))
-            {
-                req.RelationshipFilter.OptionalSubjectFilter.OptionalRelation = new SubjectFilter.Types.RelationFilter()
-                {
-                    Relation = optionalSubjectRelation
-                };
-            }
-        }
 
         var response = await _acl!.DeleteRelationshipsAsync(req, deadline: deadline, cancellationToken: cancellationToken);
 
@@ -460,5 +435,29 @@ internal class SpiceDbPermissions
             CaveatName = caveat.Name,
             Context = caveat.Context?.ToStruct(),
         };
+    }
+
+    private static Authzed.Api.V1.RelationshipFilter CreateRelationshipFilter(string resourceType, string optionalResourceId, string optionalRelation, string optionalSubjectType, string optionalSubjectId, string? optionalSubjectRelation)
+    {
+        var filter = new Authzed.Api.V1.RelationshipFilter
+        {
+            ResourceType = resourceType,
+            OptionalRelation = optionalRelation,
+            OptionalResourceId = optionalResourceId
+        };
+            
+        if (!String.IsNullOrEmpty(optionalSubjectType))
+        {
+            filter.OptionalSubjectFilter = new Authzed.Api.V1.SubjectFilter { SubjectType = optionalSubjectType, OptionalSubjectId = optionalSubjectId };
+            if (optionalSubjectRelation is not null)
+            {
+                filter.OptionalSubjectFilter.OptionalRelation = new Authzed.Api.V1.SubjectFilter.Types.RelationFilter()
+                {
+                    Relation = optionalSubjectRelation
+                };
+            }
+        }
+
+        return filter;
     }
 }

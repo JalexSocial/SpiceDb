@@ -10,6 +10,11 @@ SpiceDb.net was created by Michael Tanczos and has contributions from Pavel Akim
 
 ## What's New?
 
+1.5.2
+- BREAKING CHANGE: ReadRelationships now accepts a SubjectFilter (thanks to @epbensimpson)  for the second parameter along with an optional relationship limit and cursor
+- BREAKING CHANGE: DeleteRelationshipsAsync utilizes an optional SubjectFilter (thanks to @epbensimpson) instead of a RelationshipFilter
+- BREAKING CHANGE: DeleteRelationshipsAsync returns a DeleteRelationshipsResponse object with the ZedToken and deletion progress instead of just the ZedToken
+
 1.5.1 
 - @nexthash added caveat handling for relationship creation
 - added WriteSchemaAsync method to client

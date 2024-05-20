@@ -1,11 +1,14 @@
 ﻿using Google.Protobuf.Collections;
 using Grpc.Core;
+using Grpc.Gateway.ProtocGenOpenapiv2.Options;
 using Grpc.Net.Client;
+using Microsoft.Extensions.FileSystemGlobbing;
 using SpiceDb.Api;
 using SpiceDb.Enum;
 using SpiceDb.Models;
 using System.Net;
 using System.Runtime.CompilerServices;
+using System.Security;
 using System.Text.RegularExpressions;
 
 namespace SpiceDb;
@@ -95,20 +98,30 @@ public class SpiceDbClient : ISpiceDbClient
     /// <param name="resource">The filter to apply to the resource part of the relationships.</param>
     /// <param name="subject">An optional filter to apply to the subject part of the relationships.</param>
     /// <param name="excludePrefix">Indicates whether the prefix should be excluded from the response.</param>
+    /// <param name="limit">If non-zero, specifies the limit on the number of relationships to return
+    /// before the stream is closed on the server side. By default, the stream will continue
+    /// resolving relationships until exhausted or the stream is closed due to the client or a
+    /// network issue.</param>
+    /// <param name="cursor">If provided indicates the cursor after which results should resume being returned.
+    /// The cursor can be found on the ReadRelationshipsResponse object.</param>
     /// <param name="zedToken">An optional ZedToken for specifying a version of the data to read.</param>
     /// <param name="cacheFreshness">Specifies the acceptable freshness of the data to be read from the cache.</param>
     /// <returns>An async enumerable of <see cref="ReadRelationshipsResponse"/> objects matching the specified filters.</returns>
     public async IAsyncEnumerable<ReadRelationshipsResponse> ReadRelationshipsAsync(RelationshipFilter resource,
         SubjectFilter? subject = null,
         bool excludePrefix = false,
+        int limit = 0,
+        Cursor? cursor = null,
         ZedToken? zedToken = null,
         CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
     {
+        var token = zedToken.ToAuthzedToken();
+
         await foreach (var rs in _spiceDbCore.Permissions.ReadRelationshipsAsync(EnsurePrefix(resource.Type)!,
                            resource.OptionalId,
                            resource.OptionalRelation,
                            EnsurePrefix(subject?.Type) ?? string.Empty, subject?.OptionalId ?? string.Empty,
-                           subject?.OptionalRelation, zedToken.ToAuthzedToken(), cacheFreshness))
+                           subject?.OptionalRelation, limit, cursor, token, cacheFreshness))
         {
             if (excludePrefix)
             {
@@ -203,7 +216,7 @@ public class SpiceDbClient : ISpiceDbClient
 
         return response?.WrittenAt.ToSpiceDbToken();
     }
-    
+
     /// <summary>
     /// DeleteRelationships atomically bulk deletes all relationships matching the provided filter. If no relationships
     /// match, none will be deleted and the operation will succeed. An optional set of preconditions can be provided
@@ -212,11 +225,19 @@ public class SpiceDbClient : ISpiceDbClient
     /// <param name="resourceFilter">resourceFilter.Type is required, all other fields are optional</param>
     /// <param name="optionalSubjectFilter">An optional additional subject filter</param>
     /// <param name="optionalPreconditions">An optional set of preconditions can be provided that must be satisfied for the operation to commit.</param>
+    /// <param name="allowPartialDeletions">if true and a limit is specified, will delete matching found
+    /// relationships up to the count specified in optional_limit, and no more.</param>
+    /// <param name="limit">if non-zero, specifies the limit on the number of relationships to be deleted.
+    /// If there are more matching relationships found to be deleted than the limit specified here,
+    /// the deletion call will fail with an error to prevent partial deletion. If partial deletion
+    /// is needed, specify below that partial deletion is allowed. Partial deletions can be used
+    /// in a loop to delete large amounts of relationships in a *non-transactional* manner.</param>
     /// <param name="deadline">An optional deadline for the call. The call will be cancelled if deadline is hit.</param>
     /// <param name="cancellationToken">An optional token for canceling the call.</param>
     /// <returns></returns>
-    public async Task<ZedToken?> DeleteRelationshipsAsync(RelationshipFilter resourceFilter,
+    public async Task<DeleteRelationshipsResponse> DeleteRelationshipsAsync(RelationshipFilter resourceFilter,
         SubjectFilter? optionalSubjectFilter = null, List<Precondition>? optionalPreconditions = null,
+        bool allowPartialDeletions = false, int limit = 0,
         DateTime? deadline = null, CancellationToken cancellationToken = default)
     {
         RepeatedField<Authzed.Api.V1.Precondition> preconditionCollection = new();
@@ -251,12 +272,13 @@ public class SpiceDbClient : ISpiceDbClient
         preconditionCollection.AddRange(conditions);
 
         return (await _spiceDbCore.Permissions.DeleteRelationshipsAsync(EnsurePrefix(resourceFilter.Type)!,
-                resourceFilter.OptionalId, resourceFilter.OptionalRelation,
-                EnsurePrefix(optionalSubjectFilter?.Type) ?? string.Empty,
-                optionalSubjectFilter?.OptionalId ?? string.Empty,
-                optionalSubjectFilter?.OptionalRelation, preconditionCollection, deadline,
-                cancellationToken))
-            .ToSpiceDbToken();
+            resourceFilter.OptionalId, resourceFilter.OptionalRelation,
+            EnsurePrefix(optionalSubjectFilter?.Type) ?? string.Empty,
+            optionalSubjectFilter?.OptionalId ?? string.Empty,
+            optionalSubjectFilter?.OptionalRelation, preconditionCollection,
+            allowPartialDeletions, limit,
+            deadline,
+            cancellationToken));
     }
 
     /// <summary>
@@ -583,6 +605,16 @@ public class SpiceDbClient : ISpiceDbClient
         return (await _spiceDbCore.Permissions.WriteRelationshipsAsync(updateCollection)).WrittenAt.ToSpiceDbToken();
     }
 
+    /// <summary>
+    /// CheckBulkPermissionsAsync issues a check on whether a subject has permission or is a member of a relation on a specific
+    /// resource for each item in the list.
+    /// The ordering of the items in the response is maintained in the response.Checks with the same subject/permission
+    /// will automatically be batched for performance optimization.
+    /// </summary>
+    /// <param name="permissions"></param>
+    /// <param name="zedToken"></param>
+    /// <param name="cacheFreshness"></param>
+    /// <returns></returns>
     public async Task<CheckBulkPermissionsResponse?> CheckBulkPermissionsAsync(IEnumerable<string> permissions,
         ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
     {
@@ -592,6 +624,16 @@ public class SpiceDbClient : ISpiceDbClient
         return await CheckBulkPermissionsAsync(items, zedToken, cacheFreshness);
     }
 
+    /// <summary>
+    /// CheckBulkPermissionsAsync issues a check on whether a subject has permission or is a member of a relation on a specific
+    /// resource for each item in the list.
+    /// The ordering of the items in the response is maintained in the response.Checks with the same subject/permission
+    /// will automatically be batched for performance optimization.
+    /// </summary>
+    /// <param name="permissions"></param>
+    /// <param name="zedToken"></param>
+    /// <param name="cacheFreshness"></param>
+    /// <returns></returns>
     public async Task<CheckBulkPermissionsResponse?> CheckBulkPermissionsAsync(
         IEnumerable<Models.Permission> permissions,
         ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
@@ -601,6 +643,16 @@ public class SpiceDbClient : ISpiceDbClient
         return await CheckBulkPermissionsAsync(items, zedToken, cacheFreshness);
     }
 
+    /// <summary>
+    /// CheckBulkPermissionsAsync issues a check on whether a subject has permission or is a member of a relation on a specific
+    /// resource for each item in the list.
+    /// The ordering of the items in the response is maintained in the response.Checks with the same subject/permission
+    /// will automatically be batched for performance optimization.
+    /// </summary>
+    /// <param name="items"></param>
+    /// <param name="zedToken"></param>
+    /// <param name="cacheFreshness"></param>
+    /// <returns></returns>
     public async Task<CheckBulkPermissionsResponse?> CheckBulkPermissionsAsync(
         IEnumerable<CheckBulkPermissionsRequestItem> items,
         ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)

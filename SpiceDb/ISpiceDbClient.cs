@@ -6,16 +6,25 @@ namespace SpiceDb;
 public interface ISpiceDbClient
 {
     /// <summary>
-    /// ReadRelationships reads a set of the relationships matching one or more filters.
+    /// Asynchronously reads a set of relationships matching one or more filters.
     /// </summary>
-    /// <param name="resource"></param>
-    /// <param name="subject"></param>
-    /// <param name="excludePrefix">If true the schema prefix will be removed from all returned relationships</param>
-    /// <param name="zedToken"></param>
-    /// <param name="cacheFreshness"></param>
-    /// <returns></returns>
-    IAsyncEnumerable<SpiceDb.Models.ReadRelationshipsResponse> ReadRelationshipsAsync(Models.RelationshipFilter resource, Models.SubjectFilter? subject = null,
+    /// <param name="resource">The filter to apply to the resource part of the relationships.</param>
+    /// <param name="subject">An optional filter to apply to the subject part of the relationships.</param>
+    /// <param name="excludePrefix">Indicates whether the prefix should be excluded from the response.</param>
+    /// <param name="limit">If non-zero, specifies the limit on the number of relationships to return
+    /// before the stream is closed on the server side. By default, the stream will continue
+    /// resolving relationships until exhausted or the stream is closed due to the client or a
+    /// network issue.</param>
+    /// <param name="cursor">If provided indicates the cursor after which results should resume being returned.
+    /// The cursor can be found on the ReadRelationshipsResponse object.</param>
+    /// <param name="zedToken">An optional ZedToken for specifying a version of the data to read.</param>
+    /// <param name="cacheFreshness">Specifies the acceptable freshness of the data to be read from the cache.</param>
+    /// <returns>An async enumerable of <see cref="ReadRelationshipsResponse"/> objects matching the specified filters.</returns>
+    IAsyncEnumerable<ReadRelationshipsResponse> ReadRelationshipsAsync(RelationshipFilter resource,
+        SubjectFilter? subject = null,
         bool excludePrefix = false,
+        int limit = 0,
+        Cursor? cursor = null,
         ZedToken? zedToken = null,
         CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness);
 
@@ -36,11 +45,21 @@ public interface ISpiceDbClient
     /// <param name="resourceFilter">resourceFilter.Type is required, all other fields are optional</param>
     /// <param name="optionalSubjectFilter">An optional additional subject filter</param>
     /// <param name="optionalPreconditions">An optional set of preconditions can be provided that must be satisfied for the operation to commit.</param>
+    /// <param name="allowPartialDeletions">if true and a limit is specified, will delete matching found
+    /// relationships up to the count specified in optional_limit, and no more.</param>
+    /// <param name="limit">if non-zero, specifies the limit on the number of relationships to be deleted.
+    /// If there are more matching relationships found to be deleted than the limit specified here,
+    /// the deletion call will fail with an error to prevent partial deletion. If partial deletion
+    /// is needed, specify below that partial deletion is allowed. Partial deletions can be used
+    /// in a loop to delete large amounts of relationships in a *non-transactional* manner.</param>
     /// <param name="deadline">An optional deadline for the call. The call will be cancelled if deadline is hit.</param>
     /// <param name="cancellationToken">An optional token for canceling the call.</param>
     /// <returns></returns>
-    Task<ZedToken?> DeleteRelationshipsAsync(SpiceDb.Models.RelationshipFilter resourceFilter, Models.SubjectFilter? optionalSubjectFilter = null, List<SpiceDb.Models.Precondition>? optionalPreconditions = null, DateTime? deadline = null, CancellationToken cancellationToken = default(CancellationToken));
-    
+    Task<DeleteRelationshipsResponse> DeleteRelationshipsAsync(RelationshipFilter resourceFilter,
+        SubjectFilter? optionalSubjectFilter = null, List<Precondition>? optionalPreconditions = null,
+        bool allowPartialDeletions = false, int limit = 0,
+        DateTime? deadline = null, CancellationToken cancellationToken = default);
+
     /// <summary>
     /// CheckPermission determines for a given resource whether a subject computes to having a permission or is a direct member of
     /// a particular relation. Contains support for context as well where context objects can be string, bool, double, int, uint, or long.

@@ -1,8 +1,12 @@
-﻿using Authzed.Api.V1;
+﻿using System.Diagnostics;
+using System.Runtime.CompilerServices;
+using Authzed.Api.V1;
 using Google.Protobuf.Collections;
 using Grpc.Core;
 using SpiceDb.Enum;
 using SpiceDb.Models;
+using Cursor = SpiceDb.Models.Cursor;
+using DeleteRelationshipsResponse = SpiceDb.Models.DeleteRelationshipsResponse;
 using Precondition = Authzed.Api.V1.Precondition;
 using Relationship = Authzed.Api.V1.Relationship;
 using RelationshipUpdate = Authzed.Api.V1.RelationshipUpdate;
@@ -294,6 +298,8 @@ internal class SpiceDbPermissions
 
     public async IAsyncEnumerable<SpiceDb.Models.ReadRelationshipsResponse> ReadRelationshipsAsync(string resourceType, string optionalResourceId = "",
      string optionalRelation = "", string optionalSubjectType = "", string optionalSubjectId = "", string? optionalSubjectRelation = null,
+     int? limit = null,
+     Cursor? cursor = null,
      ZedToken? zedToken = null,
      CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness)
     {
@@ -305,7 +311,12 @@ internal class SpiceDbPermissions
         ReadRelationshipsRequest req = new ReadRelationshipsRequest()
         {
             Consistency = new Consistency { MinimizeLatency = true, AtExactSnapshot = zedToken },
-            RelationshipFilter = CreateRelationshipFilter(resourceType, optionalResourceId, optionalRelation, optionalSubjectType, optionalSubjectId, optionalSubjectRelation)
+            RelationshipFilter = CreateRelationshipFilter(resourceType, optionalResourceId, optionalRelation, optionalSubjectType, optionalSubjectId, optionalSubjectRelation),
+            OptionalLimit = limit != null ? Math.Clamp((uint)limit, 0, 1000) : 0,
+            OptionalCursor = cursor is null ? null : new Authzed.Api.V1.Cursor
+            {
+                Token = cursor.Token
+            }
         };
 
         if (cacheFreshness == CacheFreshness.AtLeastAsFreshAs)
@@ -334,7 +345,8 @@ internal class SpiceDbPermissions
                             Context = resp.Relationship.OptionalCaveat.Context.FromStruct()
                         }
                         : null
-                    )
+                    ),
+                AfterResultCursor = resp.AfterResultCursor != null ? new Cursor { Token = resp.AfterResultCursor.Token } : null
             };
 
             yield return response;
@@ -355,7 +367,11 @@ internal class SpiceDbPermissions
         }
     }
 
-    public async Task<ZedToken?> DeleteRelationshipsAsync(string resourceType, string optionalResourceId = "", string optionalRelation = "", string optionalSubjectType ="", string optionalSubjectId = "", string? optionalSubjectRelation = null, RepeatedField<Precondition>? optionalPreconditions = null, DateTime? deadline = null, CancellationToken cancellationToken = default(CancellationToken))
+    public async Task<Models.DeleteRelationshipsResponse> DeleteRelationshipsAsync(string resourceType, string optionalResourceId = "", string optionalRelation = "", string optionalSubjectType ="", string optionalSubjectId = "", string? optionalSubjectRelation = null, 
+        RepeatedField<Precondition>? optionalPreconditions = null,  
+        bool allowPartialDeletions = false,
+        int limit = 0,
+        DateTime? deadline = null, CancellationToken cancellationToken = default(CancellationToken))
     {
         var req = new DeleteRelationshipsRequest
         {
@@ -363,9 +379,26 @@ internal class SpiceDbPermissions
             RelationshipFilter = CreateRelationshipFilter(resourceType, optionalResourceId, optionalRelation, optionalSubjectType, optionalSubjectId, optionalSubjectRelation)
         };
 
+        if (allowPartialDeletions)
+        {
+            req.OptionalLimit = (uint)Math.Clamp(limit, 0, 1000);
+            req.OptionalAllowPartialDeletions = allowPartialDeletions;
+        }
+
         var response = await _acl!.DeleteRelationshipsAsync(req, deadline: deadline, cancellationToken: cancellationToken);
 
-        return response?.DeletedAt;
+        return new DeleteRelationshipsResponse
+        {
+            DeletedAt = response.DeletedAt?.ToSpiceDbToken(),
+            DeletionProgress = response.DeletionProgress switch
+            {
+                Authzed.Api.V1.DeleteRelationshipsResponse.Types.DeletionProgress.Unspecified => DeletionProgress
+                    .Unspecified,
+                Authzed.Api.V1.DeleteRelationshipsResponse.Types.DeletionProgress.Complete => DeletionProgress.Complete,
+                Authzed.Api.V1.DeleteRelationshipsResponse.Types.DeletionProgress.Partial => DeletionProgress.Partial,
+                _ => throw new SwitchExpressionException(response.DeletionProgress)
+            }
+        };
     }
 
     public RelationshipUpdate GetRelationshipUpdate(string resourceType, string resourceId,

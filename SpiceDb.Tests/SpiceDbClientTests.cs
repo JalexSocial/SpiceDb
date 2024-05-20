@@ -85,7 +85,7 @@ public class SpiceDbClientTests
         var expected = GetRelationships("group:security");
         List<string> relationships = new();
 
-        await foreach (var response in _client!.ReadRelationshipsAsync(new RelationshipFilter { Type = "group" }, new RelationshipFilter { Type = "user", OptionalId = "jimmy" }, excludePrefix: true))
+        await foreach (var response in _client!.ReadRelationshipsAsync(new RelationshipFilter { Type = "group" }, new SubjectFilter { Type = "user", OptionalId = "jimmy" }, excludePrefix: true))
         {
             relationships.Add(response.Relationship.ToString()!);
         }
@@ -127,7 +127,7 @@ public class SpiceDbClientTests
 
         List<string> relationships = new();
 
-        await foreach (var response in _client!.ReadRelationshipsAsync(new RelationshipFilter { Type = "group", OptionalId = "delete" }, new RelationshipFilter { Type = "user" }, excludePrefix: true))
+        await foreach (var response in _client!.ReadRelationshipsAsync(new RelationshipFilter { Type = "group", OptionalId = "delete" }, new SubjectFilter { Type = "user" }, excludePrefix: true))
         {
             relationships.Add(response.Relationship.ToString()!);
         }
@@ -138,14 +138,14 @@ public class SpiceDbClientTests
             OptionalId = "delete",
             OptionalRelation = "manager"
         },
-            new RelationshipFilter
+            new SubjectFilter
             {
                 Type = "user"
             });
 
         List<string> relationships2 = new();
 
-        await foreach (var response in _client!.ReadRelationshipsAsync(new RelationshipFilter { Type = "group", OptionalId = "delete" }, new RelationshipFilter { Type = "user" }, excludePrefix: true))
+        await foreach (var response in _client!.ReadRelationshipsAsync(new RelationshipFilter { Type = "group", OptionalId = "delete" }, new SubjectFilter { Type = "user" }, excludePrefix: true))
         {
             relationships2.Add(response.Relationship.ToString()!);
         }
@@ -163,7 +163,7 @@ public class SpiceDbClientTests
 
         List<string> relationships = new();
 
-        await foreach (var response in _client!.ReadRelationshipsAsync(new RelationshipFilter { Type = "group", OptionalId = "delete" }, new RelationshipFilter { Type = "user" }, excludePrefix: true))
+        await foreach (var response in _client!.ReadRelationshipsAsync(new RelationshipFilter { Type = "group", OptionalId = "delete" }, new SubjectFilter { Type = "user" }, excludePrefix: true))
         {
             relationships.Add(response.Relationship.ToString()!);
         }
@@ -174,7 +174,7 @@ public class SpiceDbClientTests
             OptionalId = "delete",
             OptionalRelation = "manager"
         },
-            new RelationshipFilter
+            new SubjectFilter
             {
                 Type = "user",
                 OptionalId = "test1"
@@ -182,7 +182,7 @@ public class SpiceDbClientTests
 
         List<string> relationships2 = new();
 
-        await foreach (var response in _client!.ReadRelationshipsAsync(new RelationshipFilter { Type = "group", OptionalId = "delete" }, new RelationshipFilter { Type = "user" }, excludePrefix: true))
+        await foreach (var response in _client!.ReadRelationshipsAsync(new RelationshipFilter { Type = "group", OptionalId = "delete" }, new SubjectFilter { Type = "user" }, excludePrefix: true))
         {
             relationships2.Add(response.Relationship.ToString()!);
         }
@@ -205,7 +205,7 @@ public class SpiceDbClientTests
 
         // Assert: Check that a valid ZedToken is returned, indicating success
         ClassicAssert.IsNotNull(resultToken);
-        ClassicAssert.IsNotEmpty(resultToken.Token);
+        ClassicAssert.IsNotEmpty(resultToken!.Token);
     }
 
     [Test]

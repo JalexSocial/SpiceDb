@@ -156,7 +156,11 @@ public interface ISpiceDbClient
         DateTime? deadline = null, CancellationToken cancellationToken = default);
 
     Task<List<string>> GetResourcePermissionsAsync(string resourceType, string permission, ResourceReference subject, ZedToken? zedToken = null, CacheFreshness cacheFreshness = CacheFreshness.AnyFreshness);
+    
     string ReadSchema();
+    
+    Task<string> ReadSchemaAsync();
+    
     Task WriteSchemaAsync(string schema);
 
     Task ImportSchemaFromFileAsync(string filePath);

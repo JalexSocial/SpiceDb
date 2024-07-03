@@ -13,9 +13,9 @@ using System.Text.RegularExpressions;
 
 namespace SpiceDb;
 
-public class SpiceDbClient : ISpiceDbClient
+public sealed class SpiceDbClient : ISpiceDbClient
 {
-    private readonly string _prefix;
+    private readonly string? _prefix;
     private readonly SpiceDbCore _spiceDbCore;
 
     /// <summary>
@@ -34,12 +34,12 @@ public class SpiceDbClient : ISpiceDbClient
     /// <param name="token">The token with admin privileges for manipulating the desired permission system.</param>
     /// <param name="schemaPrefix">The schema prefix used for the permission system.</param>
     /// <exception cref="Exception">Thrown when the server address or token is null or empty, or if the schema prefix does not meet the required format.</exception>
-    public SpiceDbClient(string serverAddress, string token, string schemaPrefix)
+    public SpiceDbClient(string serverAddress, string token, string? schemaPrefix)
     {
         if (string.IsNullOrEmpty(serverAddress) || !serverAddress.StartsWith("http"))
             throw new ArgumentException("Expecting http:// or https:// in the SpiceDb endpoint.");
 
-        if (!Regex.IsMatch(schemaPrefix, @"^[a-zA-Z0-9_]{3,63}[a-zA-Z0-9]$"))
+        if (schemaPrefix is not null && !Regex.IsMatch(schemaPrefix, @"^[a-zA-Z0-9_]{3,63}[a-zA-Z0-9]$"))
             throw new Exception(
                 "Schema prefixes must be alphanumeric, lowercase, between 4-64 characters and not end in an underscore");
 
@@ -675,7 +675,7 @@ public class SpiceDbClient : ISpiceDbClient
 
     private string? EnsurePrefix(string? type)
     {
-        if (string.IsNullOrEmpty(type)) return type;
+        if (string.IsNullOrEmpty(type) || string.IsNullOrEmpty(_prefix)) return type;
 
         return type.StartsWith(_prefix + "/") ? type : $"{_prefix}/{type}";
     }

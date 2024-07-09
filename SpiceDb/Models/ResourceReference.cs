@@ -46,7 +46,7 @@ public class ResourceReference
     /// <summary>
     /// Sets up a resource reference that can reference a specific relation/permission inside an object
     /// For example: organization:easd may be an original reference, but to reference members of easd
-    /// the reference should be: organization:easd#members 
+    /// the reference should be: organization:easd#members
     /// </summary>
     /// <param name="relation"></param>
     /// <returns></returns>
@@ -55,6 +55,10 @@ public class ResourceReference
     public ResourceReference EnsurePrefix(string prefix)
     {
         var type = this.Type;
+        if (string.IsNullOrEmpty(prefix))
+        {
+            return  new ResourceReference(type, this.Id, this.Relation);
+        }
         type = string.IsNullOrEmpty(type) ? type : type.StartsWith(prefix + "/") ? type : $"{prefix}/{type}";
 
         if (type == this.Type)
@@ -63,9 +67,13 @@ public class ResourceReference
         return new ResourceReference(type, this.Id, this.Relation);
     }
 
-    public ResourceReference ExcludePrefix(string prefix)
+    public ResourceReference ExcludePrefix(string? prefix)
     {
         var type = this.Type;
+        if (string.IsNullOrEmpty(prefix))
+        {
+            return  new ResourceReference(type, this.Id, this.Relation);
+        }
 
         if (!prefix.EndsWith("/")) prefix += "/";
 

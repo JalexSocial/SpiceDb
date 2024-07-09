@@ -10,6 +10,11 @@ SpiceDb.net was created by Michael Tanczos and has contributions from Pavel Akim
 
 ## What's New?
 
+1.5.3
+- BREAKING CHANGE: The constructors for `SpiceDbClient` now accept a nullable `schemaPrefix` instead of a required string. If not provided, it defaults to null.
+- @williamgraver added empty schema prefix handling for dedicated version of SpiceDb
+- @dystopiandev exposed ReadSchemaAsync method
+
 1.5.2
 - BREAKING CHANGE: ReadRelationships now accepts a SubjectFilter (thanks to @epbensimpson)  for the second parameter along with an optional relationship limit and cursor
 - BREAKING CHANGE: DeleteRelationshipsAsync utilizes an optional SubjectFilter (thanks to @epbensimpson) instead of a RelationshipFilter
@@ -113,7 +118,7 @@ The `SpiceDbClient` class provides a client for interacting with Authzed's Spice
 
 ## Constructors
 
-### SpiceDbClient(string token, string schemaPrefix)
+### SpiceDbClient(string token, string? schemaPrefix = null)
 
 Initializes a new instance of the `SpiceDbClient` class using the default Authzed server address.
 
@@ -122,7 +127,7 @@ Initializes a new instance of the `SpiceDbClient` class using the default Authze
 - `token` - Token with admin privileges for manipulating the desired permission system.
 - `schemaPrefix` - Schema prefix used for the permission system.
 
-### SpiceDbClient(string serverAddress, string token, string schemaPrefix)
+### SpiceDbClient(string serverAddress, string token, string? schemaPrefix = null)
 
 Initializes a new instance of the `SpiceDbClient` class with the specified server address, token, and schema prefix.
 

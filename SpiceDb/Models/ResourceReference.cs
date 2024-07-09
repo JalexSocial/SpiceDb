@@ -52,7 +52,7 @@ public class ResourceReference
     /// <returns></returns>
     public ResourceReference WithSubjectRelation(string relation) => new ResourceReference(this.Type, this.Id, relation);
 
-    public ResourceReference EnsurePrefix(string prefix)
+    public ResourceReference EnsurePrefix(string? prefix)
     {
         var type = this.Type;
         if (string.IsNullOrEmpty(prefix))

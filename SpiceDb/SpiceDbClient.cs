@@ -22,8 +22,8 @@ public sealed class SpiceDbClient : ISpiceDbClient
     /// Create a new client with the default Authzed server address
     /// </summary>
     /// <param name="token">Token with admin privileges that can manipulate the desired permission system</param>
-    /// <param name="schemaPrefix">Schema prefix used for permission system</param>
-    public SpiceDbClient(string token, string schemaPrefix) : this("https://grpc.authzed.com", token, schemaPrefix)
+    /// <param name="schemaPrefix">(Optional) Schema prefix used for permission system</param>
+    public SpiceDbClient(string token, string? schemaPrefix = null) : this("https://grpc.authzed.com", token, schemaPrefix)
     {
     }
 
@@ -32,9 +32,9 @@ public sealed class SpiceDbClient : ISpiceDbClient
     /// </summary>
     /// <param name="serverAddress">The server address of the Authzed server.</param>
     /// <param name="token">The token with admin privileges for manipulating the desired permission system.</param>
-    /// <param name="schemaPrefix">The schema prefix used for the permission system.</param>
+    /// <param name="schemaPrefix">(Optional) The schema prefix used for the permission system.</param>
     /// <exception cref="Exception">Thrown when the server address or token is null or empty, or if the schema prefix does not meet the required format.</exception>
-    public SpiceDbClient(string serverAddress, string token, string? schemaPrefix)
+    public SpiceDbClient(string serverAddress, string token, string? schemaPrefix = null)
     {
         if (string.IsNullOrEmpty(serverAddress) || !serverAddress.StartsWith("http"))
             throw new ArgumentException("Expecting http:// or https:// in the SpiceDb endpoint.");
@@ -55,9 +55,9 @@ public sealed class SpiceDbClient : ISpiceDbClient
     /// <param name="channel">The grpc channel used to connect to server</param>
     /// <param name="schemaPrefix">The schema prefix used for the permission system.</param>
     /// <exception cref="Exception">Thrown when the server address or token is null or empty, or if the schema prefix does not meet the required format.</exception>
-    public SpiceDbClient(ChannelBase channel, string schemaPrefix)
+    public SpiceDbClient(ChannelBase channel, string? schemaPrefix = null)
     {
-        if (!Regex.IsMatch(schemaPrefix, @"^[a-zA-Z0-9_]{3,63}[a-zA-Z0-9]$"))
+        if (schemaPrefix is not null && !Regex.IsMatch(schemaPrefix, @"^[a-zA-Z0-9_]{3,63}[a-zA-Z0-9]$"))
             throw new Exception(
                 "Schema prefixes must be alphanumeric, lowercase, between 4-64 characters and not end in an underscore");
 
@@ -288,6 +288,7 @@ public sealed class SpiceDbClient : ISpiceDbClient
     /// <param name="permission">Permission relationship to evaluate</param>
     /// <param name="context">Additional context information that may be needed for evaluating caveats</param>
     /// <param name="zedToken"></param>
+    /// <param name="cacheFreshness"></param>
     /// <returns></returns>
     public async Task<PermissionResponse> CheckPermissionAsync(Models.Permission permission,
         Dictionary<string, object>? context = null, ZedToken? zedToken = null,
@@ -542,7 +543,7 @@ public sealed class SpiceDbClient : ISpiceDbClient
     /// <returns></returns>
     public async Task ImportSchemaFromStringAsync(string schema)
     {
-        var prefix = _prefix;
+        var prefix = _prefix ?? string.Empty;
 
         if (prefix.Length > 0 && !prefix.EndsWith("/")) prefix += "/";
 

@@ -10,6 +10,9 @@ SpiceDb.net was created by Michael Tanczos and has contributions from Pavel Akim
 
 ## What's New?
 
+1.6.0
+- Dropped .NET 7 dependency and introduced new targets for .NET 8 and .NET 9
+
 1.5.3
 - BREAKING CHANGE: The constructors for `SpiceDbClient` now accept a nullable `schemaPrefix` instead of a required string. If not provided, it defaults to null.
 - @williamgraver added empty schema prefix handling for dedicated version of SpiceDb

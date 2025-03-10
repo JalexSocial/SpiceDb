@@ -1,17 +1,14 @@
 <img src="https://jalexsocial.github.io/spicedb.docs/images/spicedb-logo.png">
 
-SpiceDb is an open-source, Zanzibar-inspired authorization system that provides a robust and scalable solution for managing fine-grained permissions across distributed systems. Its implementation closely follows the principles set out in Googleï¿½s Zanzibar paper, adapting them into a practical and deployable system.
+SpiceDb is an open-source, Zanzibar-inspired authorization system that provides a robust and scalable solution for managing fine-grained permissions across distributed systems. Its implementation closely follows the principles set out in Google’s Zanzibar paper, adapting them into a practical and deployable system.
 
 SpiceDb was created by [AuthZed](https://authzed.com/) and [documentation](https://authzed.com/docs/spicedb/getting-started/discovering-spicedb) specifically for SpiceDb can be found on their site.
 
 ## SpiceDb.net Documentation 
-SpiceDb.net was created by Michael Tanczos and has contributions from Pavel Akimov, Mahesh Bailwal, Vinï¿½cius Gajo, and others.  Documentation for SpiceDb.net is in progress and can be found here:
+SpiceDb.net was created by Michael Tanczos and has contributions from Pavel Akimov, Mahesh Bailwal, Vinícius Gajo, and others.  Documentation for SpiceDb.net is in progress and can be found here:
 [https://jalexsocial.github.io/spicedb.docs/](https://jalexsocial.github.io/spicedb.docs/)
 
 ## What's New?
-
-1.6.1
-- Updated Grpc dependencies to latest version
 
 1.6.0
 - Dropped .NET 7 dependency and introduced new targets for .NET 8 and .NET 9

@@ -24,6 +24,11 @@ public class CheckBulkPermissions
 	/// </summary>
 	public Permissionship Permissionship { get; set; } = Permissionship.Unspecified;
 
+    /// <summary>
+    /// Returns true if Permissionship is HasPermission
+    /// </summary>
+	public bool HasPermission => Permissionship is Permissionship.HasPermission;
+
 	/// <summary>
 	/// Gets or sets additional caveat information if the permission was only partially evaluated.
 	/// </summary>

@@ -54,7 +54,9 @@ internal class SpiceDbWatch
                         {
                             Name = x.Relationship.OptionalCaveat.CaveatName,
                             Context = x.Relationship.OptionalCaveat.Context.FromStruct()
-                        })
+                        },
+                        optionalExpiresAt: x.Relationship.OptionalExpiresAt),
+						
                 }).ToList()
             };
 

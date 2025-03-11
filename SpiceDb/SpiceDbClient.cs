@@ -393,7 +393,7 @@ public sealed class SpiceDbClient : ISpiceDbClient
         var request = relationships.Select(x => new RelationshipUpdate
         {
             Relationship = new Relationship(
-                x.Resource.EnsurePrefix(_prefix), x.Relation, x.Subject.EnsurePrefix(_prefix), EnsureCaveatIsPrefixed(x.OptionalCaveat)
+                x.Resource.EnsurePrefix(_prefix), x.Relation, x.Subject.EnsurePrefix(_prefix), EnsureCaveatIsPrefixed(x.OptionalCaveat), x.OptionalExpiresAt
             ),
             Operation = RelationshipUpdateOperation.Upsert
         }).ToList();

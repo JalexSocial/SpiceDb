@@ -7,8 +7,20 @@ using System.Threading.Tasks;
 
 namespace SpiceDb.Models;
 
+/// <summary>
+/// Represents the result of a delete relationships operation.
+/// Contains the deletion token and an indicator of whether the deletion was complete or partial.
+/// </summary>
 public class DeleteRelationshipsResponse
 {
-    public ZedToken? DeletedAt { get; set; }
-    public DeletionProgress DeletionProgress { get; set; } = DeletionProgress.Unspecified;
+	/// <summary>
+	/// Gets or sets the token representing the state of the system at which the relationships were deleted.
+	/// </summary>
+	public ZedToken? DeletedAt { get; set; }
+
+	/// <summary>
+	/// Gets or sets the progress of the deletion operation.
+	/// Maps to the DeletionProgress enum in the protobuf.
+	/// </summary>
+	public DeletionProgress DeletionProgress { get; set; } = DeletionProgress.Unspecified;
 }

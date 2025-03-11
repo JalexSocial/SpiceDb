@@ -344,7 +344,8 @@ internal class SpiceDbPermissions
                             Name = resp.Relationship.OptionalCaveat.CaveatName,
                             Context = resp.Relationship.OptionalCaveat.Context.FromStruct()
                         }
-                        : null
+                        : null,
+                    optionalExpiresAt: resp.Relationship.OptionalExpiresAt
                     ),
                 AfterResultCursor = resp.AfterResultCursor != null ? new Cursor { Token = resp.AfterResultCursor.Token } : null
             };

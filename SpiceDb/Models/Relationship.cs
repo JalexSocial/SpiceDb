@@ -2,26 +2,48 @@
 
 public class Relationship
 {
-    public Relationship(ResourceReference resource, string relation, ResourceReference subject, Caveat? optionalCaveat = null)
+	/// <summary>
+	/// Initializes a new instance of the <see cref="Relationship"/> class.
+	/// </summary>
+	/// <param name="resource">The resource reference for the relationship.</param>
+	/// <param name="relation">The name of the relation or permission.</param>
+	/// <param name="subject">The subject reference.</param>
+	/// <param name="optionalCaveat">An optional caveat to be enforced over the relationship.</param>
+	/// <param name="optionalExpiresAt">An optional timestamp.</param>
+	/// <exception cref="ArgumentException">Thrown if the resource reference already contains a relation.</exception>
+    public Relationship(ResourceReference resource, string relation, ResourceReference subject, Caveat? optionalCaveat = null, Google.Protobuf.WellKnownTypes.Timestamp? optionalExpiresAt = null)
     {
         Resource = resource;
         Relation = relation;
         Subject = subject;
         OptionalCaveat = optionalCaveat;
+        OptionalExpiresAt = optionalExpiresAt;
 
         if (!string.IsNullOrEmpty(Resource.Relation))
         {
             throw new ArgumentException("Error: Resource cannot have a relation");
         }
+
+        OptionalExpiresAt = optionalExpiresAt;
     }
 
-    public Relationship(string resource, string relation, string subject, Caveat? optionalCaveat = null)
+	/// <summary>
+	/// Initializes a new instance of the <see cref="Relationship"/> class using string parameters.
+	/// </summary>
+	/// <param name="resource">The resource identifier as a string.</param>
+	/// <param name="relation">The relation or permission name.</param>
+	/// <param name="subject">The subject identifier as a string.</param>
+	/// <param name="optionalCaveat">An optional caveat for the relationship.</param>
+	/// <param name="optionalExpiresAt">An optional timestamp.</param>
+	/// <exception cref="ArgumentException">Thrown if the resource identifier contains a relation.</exception>
+    public Relationship(string resource, string relation, string subject, Caveat? optionalCaveat = null, Google.Protobuf.WellKnownTypes.Timestamp? optionalExpiresAt = null)
     {
         Resource = new ResourceReference(resource);
         Relation = relation;
         Subject = new ResourceReference(subject);
         OptionalCaveat = optionalCaveat;
-
+        OptionalExpiresAt = optionalExpiresAt;
+         
         if (!string.IsNullOrEmpty(Resource.Relation))
         {
             throw new ArgumentException("Error: Resource cannot have a relation");
@@ -67,6 +89,11 @@ public class Relationship
     /// OptionalCaveat is a reference to a the caveat that must be enforced over the relationship
     /// </summary>
     public Caveat? OptionalCaveat { get; set; }
+
+    /// <summary>
+    /// The time at which the relationship expires, if any.
+    /// </summary>
+    public Google.Protobuf.WellKnownTypes.Timestamp? OptionalExpiresAt { get; set; }
 
     public override string ToString()
     {

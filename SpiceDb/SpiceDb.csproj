@@ -15,7 +15,7 @@
 	<PackageIcon>logo.png</PackageIcon>
 	<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
 	<PackageReadmeFile>README.md</PackageReadmeFile>
-	<Version>1.6.0</Version>
+	<Version>1.6.1</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

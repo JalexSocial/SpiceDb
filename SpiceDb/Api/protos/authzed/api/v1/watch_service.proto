@@ -3,8 +3,10 @@ package authzed.api.v1;
 
 option go_package = "github.com/authzed/authzed-go/proto/authzed/api/v1";
 option java_package = "com.authzed.api.v1";
+option java_multiple_files = true;
 
 import "google/api/annotations.proto";
+import "google/protobuf/struct.proto";
 import "validate/validate.proto";
 
 import "authzed/api/v1/core.proto";
@@ -57,6 +59,17 @@ message WatchRequest {
 // encoded in the watch response. The client can use the snapshot to resume
 // watching where the previous watch response left off.
 message WatchResponse {
+  // updates are the RelationshipUpdate events that have occurred since the
+  // last watch response.
   repeated RelationshipUpdate updates = 1;
+
+  // changes_through is the ZedToken that represents the point in time
+  // that the watch response is current through. This token can be used
+  // in a subsequent WatchRequest to resume watching from this point.
   ZedToken changes_through = 2;
+
+  // optional_transaction_metadata is an optional field that returns the transaction metadata
+  // given to SpiceDB during the transaction that produced the changes in this response.
+  // This field may not exist if no transaction metadata was provided.
+  google.protobuf.Struct optional_transaction_metadata = 3;
 }

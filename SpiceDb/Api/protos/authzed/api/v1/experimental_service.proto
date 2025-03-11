@@ -3,6 +3,7 @@ package authzed.api.v1;
 
 option go_package = "github.com/authzed/authzed-go/proto/authzed/api/v1";
 option java_package = "com.authzed.api.v1";
+option java_multiple_files = true;
 
 import "google/api/annotations.proto";
 import "validate/validate.proto";
@@ -15,7 +16,6 @@ import "authzed/api/v1/permission_service.proto";
 // ExperimentalService exposes a number of APIs that are currently being
 // prototyped and tested for future inclusion in the stable API.
 service ExperimentalService {
-
   // BulkImportRelationships is a faster path to writing a large number of
   // relationships at once. It is both batched and streaming. For maximum
   // performance, the caller should attempt to write relationships in as close
@@ -44,19 +44,142 @@ service ExperimentalService {
       };
     }
 
+  // NOTE: BulkCheckPermission has been promoted to the stable API as "CheckBulkPermission" and the
+  // API will be removed from experimental in a future release.
   rpc BulkCheckPermission(BulkCheckPermissionRequest)
     returns (BulkCheckPermissionResponse) {
       option (google.api.http) = {
         post: "/v1/experimental/permissions/bulkcheckpermission"
         body: "*"
       };
+      option deprecated = true;
     }
+
+  // DEPRECATED: Promoted to ReflectSchema in the stable API.
+  rpc ExperimentalReflectSchema(ExperimentalReflectSchemaRequest)
+    returns (ExperimentalReflectSchemaResponse) {
+      option (google.api.http) = {
+        post: "/v1/experimental/reflectschema"
+        body: "*"
+      };
+      option deprecated = true;
+    }
+
+  // DEPRECATED: Promoted to ComputablePermissions in the stable API.
+  rpc ExperimentalComputablePermissions(ExperimentalComputablePermissionsRequest)
+    returns (ExperimentalComputablePermissionsResponse) {
+      option (google.api.http) = {
+        post: "/v1/experimental/permissions/computable"
+        body: "*"
+      };
+      option deprecated = true;
+    }
+  
+  // DEPRECATED: Promoted to DependentRelations in the stable API.
+  rpc ExperimentalDependentRelations(ExperimentalDependentRelationsRequest)
+    returns (ExperimentalDependentRelationsResponse) {
+      option (google.api.http) = {
+        post: "/v1/experimental/permissions/dependent"
+        body: "*"
+      };
+      option deprecated = true;
+    }
+
+  // DEPRECATED: Promoted to DiffSchema in the stable API.
+  rpc ExperimentalDiffSchema(ExperimentalDiffSchemaRequest)
+    returns (ExperimentalDiffSchemaResponse) {
+      option (google.api.http) = {
+        post: "/v1/experimental/diffschema"
+        body: "*"
+      };
+      option deprecated = true;
+    }
+
+  // EXPERIMENTAL: RegisterRelationshipCounter registers a new filter for counting relationships. A filter must be registered before
+  // a count can be requested.
+  rpc ExperimentalRegisterRelationshipCounter(ExperimentalRegisterRelationshipCounterRequest)
+    returns (ExperimentalRegisterRelationshipCounterResponse) {
+      option (google.api.http) = {
+        post: "/v1/experimental/registerrelationshipcounter"
+        body: "*"
+      };
+    }
+
+  // EXPERIMENTAL: CountRelationships returns the count of relationships for *pre-registered* filter.
+  rpc ExperimentalCountRelationships(ExperimentalCountRelationshipsRequest)
+    returns (ExperimentalCountRelationshipsResponse) {
+      option (google.api.http) = {
+        post: "/v1/experimental/countrelationships"
+        body: "*"
+      };
+    }
+
+  // EXPERIMENTAL: UnregisterRelationshipCounter unregisters an existing filter for counting relationships.
+  rpc ExperimentalUnregisterRelationshipCounter(ExperimentalUnregisterRelationshipCounterRequest)
+    returns (ExperimentalUnregisterRelationshipCounterResponse) {
+      option (google.api.http) = {
+        post: "/v1/experimental/unregisterrelationshipcounter"
+        body: "*"
+      };
+  }
 }
 
+message ExperimentalRegisterRelationshipCounterRequest {
+  // name is the name of the counter being registered.
+  string name = 1[ (validate.rules).string = {
+    pattern : "^([a-z][a-z0-9_]{1,62}[a-z0-9])?$",
+    max_bytes : 64,
+  } ];
+
+  // relationship_filter defines the filter to be applied to the relationships
+  // to be counted.
+  RelationshipFilter relationship_filter = 2
+      [ (validate.rules).message.required = true ];
+}
+
+message ExperimentalRegisterRelationshipCounterResponse {}
+
+message ExperimentalCountRelationshipsRequest {
+  // name is the name of the counter whose count is being requested.
+  string name = 1[ (validate.rules).string = {
+    pattern : "^([a-z][a-z0-9_]{1,62}[a-z0-9])?$",
+    max_bytes : 64,
+  } ];
+}
+
+message ExperimentalCountRelationshipsResponse {
+  oneof counter_result {
+    // counter_still_calculating is true if the counter is still calculating the count.
+    bool counter_still_calculating = 1;
+
+    // read_counter_value is the value of the counter at the time of the read.
+    ReadCounterValue read_counter_value = 2;
+  }
+}
+
+message ReadCounterValue {
+  // relationship_count is the count of relationships that match the filter.
+  uint64 relationship_count = 1;
+
+  // read_at is the ZedToken at which the relationship count applies.
+  ZedToken read_at = 2 [ (validate.rules).message.required = true ];
+}
+
+message ExperimentalUnregisterRelationshipCounterRequest {
+  // name is the name of the counter being unregistered.
+  string name = 1[ (validate.rules).string = {
+    pattern : "^([a-z][a-z0-9_]{1,62}[a-z0-9])?$",
+    max_bytes : 64,
+  } ];
+}
+
+message ExperimentalUnregisterRelationshipCounterResponse {}
+
+// NOTE: Deprecated now that BulkCheckPermission has been promoted to the stable API as "CheckBulkPermission".
 message BulkCheckPermissionRequest {
   Consistency consistency = 1;
 
-  repeated BulkCheckPermissionRequestItem items = 2 [ (validate.rules).repeated .items.message.required = true ];
+  repeated BulkCheckPermissionRequestItem items = 2 [ (validate.rules).repeated .items.message.required = true, deprecated=true ];
 }
 
 message BulkCheckPermissionRequestItem {
@@ -95,7 +218,10 @@ message BulkCheckPermissionResponseItem {
 // BulkImportRelationshipsRequest represents one batch of the streaming
 // BulkImportRelationships API. The maximum size is only limited by the backing
 // datastore, and optimal size should be determined by the calling client
-// experimentally.
+// experimentally. When BulkImport is invoked and receives its first request message,
+// a transaction is opened to import the relationships. All requests sent to the same
+// invocation are executed under this single transaction. If a relationship already
+// exists within the datastore, the entire transaction will fail with an error.
 message BulkImportRelationshipsRequest {
   repeated Relationship relationships = 1
       [ (validate.rules).repeated .items.message.required = true ];
@@ -116,7 +242,7 @@ message BulkExportRelationshipsRequest {
   // relationships the server can return in one page. By default, the server
   // will pick a page size, and the server is free to choose a smaller size
   // at will.
-  uint32 optional_limit = 2 [(validate.rules).uint32 = {gte:0, lte: 10000}];
+  uint32 optional_limit = 2 [(validate.rules).uint32 = {gte:0}];
 
   // optional_cursor, if specified, indicates the cursor after which results
   // should resume being returned. The cursor can be found on the
@@ -135,4 +261,197 @@ message BulkExportRelationshipsRequest {
 message BulkExportRelationshipsResponse {
   Cursor after_result_cursor  = 1;
   repeated Relationship relationships = 2;
+}
+
+// Reflection types ////////////////////////////////////////////
+
+message ExperimentalReflectSchemaRequest {
+  Consistency consistency = 1;
+ 
+  // optional_filters defines optional filters that are applied in
+  // an OR fashion to the schema, before being returned
+  repeated ExpSchemaFilter optional_filters = 2;
+}
+
+message ExperimentalReflectSchemaResponse {
+  // definitions are the definitions defined in the schema.
+  repeated ExpDefinition definitions = 1;
+
+  // caveats are the caveats defined in the schema.
+  repeated ExpCaveat caveats = 2;
+
+  // read_at is the ZedToken at which the schema was read.
+  ZedToken read_at = 3;
+}
+
+// ExpSchemaFilter is a filter that can be applied to the schema on reflection.
+message ExpSchemaFilter {
+  // optional_definition_name_filter is a prefix that is matched against the definition name.
+  string optional_definition_name_filter = 1;
+
+  // optional_caveat_name_filter is a prefix that is matched against the caveat name.
+  string optional_caveat_name_filter = 2;
+
+  // optional_relation_name_filter is a prefix that is matched against the relation name.
+  string optional_relation_name_filter = 3;
+
+  // optional_permission_name_filter is a prefix that is matched against the permission name.
+  string optional_permission_name_filter = 4;
+}
+
+// ExpDefinition is the representation of a definition in the schema.
+message ExpDefinition {
+  string name = 1;
+
+  // comment is a human-readable comments on the definition. Will include
+  // delimiter characters.
+  string comment = 2;
+  
+  repeated ExpRelation relations = 3;
+  repeated ExpPermission permissions = 4;
+}
+
+// ExpCaveat is the representation of a caveat in the schema.
+message ExpCaveat {
+  string name = 1;
+
+  // comment is a human-readable comments on the caveat. Will include
+  // delimiter characters.
+  string comment = 2;
+
+  repeated ExpCaveatParameter parameters = 3;
+  string expression = 4;
+}
+
+// ExpCaveatParameter is the representation of a parameter in a caveat.
+message ExpCaveatParameter {
+  string name = 1;
+
+  // type is the type of the parameter. Will be a string representing the
+  // type, e.g. `int` or `list<string>`
+  string type = 2;
+  string parent_caveat_name = 3;
+}
+
+// ExpRelation is the representation of a relation in the schema.
+message ExpRelation {
+  string name = 1;
+  string comment = 2;
+  string parent_definition_name = 3;
+  repeated ExpTypeReference subject_types = 4;
+}
+
+// ExpTypeReference is the representation of a type reference in the schema.
+message ExpTypeReference {
+  // subject_definition_name is the name of the subject's definition.
+  string subject_definition_name = 1;
+
+  // optional_caveat_name is the name of the caveat that is applied to the subject, if any.
+  string optional_caveat_name = 2;
+
+  oneof typeref {
+    // is_terminal_subject is true if the subject is terminal, meaning it is referenced directly vs a sub-relation.
+    bool is_terminal_subject = 3;
+    
+    // optional_relation_name is the name of the relation that is applied to the subject, if any.
+    string optional_relation_name = 4;
+
+    // is_public_wildcard is true if the subject is a public wildcard.
+    bool is_public_wildcard  = 5;
+  }
+}
+
+// ExpPermission is the representation of a permission in the schema.
+message ExpPermission {
+  string name = 1;
+
+  // comment is a human-readable comments on the permission. Will include
+  // delimiter characters.
+  string comment = 2;
+  string parent_definition_name = 3;
+}
+
+message ExperimentalComputablePermissionsRequest {
+  Consistency consistency = 1;
+  string definition_name = 2;
+  string relation_name = 3;
+
+  // optional_definition_name_match is a prefix that is matched against the definition name(s)
+  // for the permissions returned.
+  // If not specified, will be ignored.
+  string optional_definition_name_filter = 4;
+}
+
+// ExpRelationReference is a reference to a relation or permission in the schema.
+message ExpRelationReference {
+  string definition_name = 1;
+  string relation_name = 2;
+  bool is_permission = 3;
+}
+
+message ExperimentalComputablePermissionsResponse {
+  repeated ExpRelationReference permissions = 1;
+
+  // read_at is the ZedToken at which the schema was read.
+  ZedToken read_at = 2;
+}
+
+message ExperimentalDependentRelationsRequest {
+  Consistency consistency = 1;
+  string definition_name = 2;
+  string permission_name = 3;
+}
+
+message ExperimentalDependentRelationsResponse {
+  repeated ExpRelationReference relations = 1;
+
+  // read_at is the ZedToken at which the schema was read.
+  ZedToken read_at = 2;
+}
+
+message ExperimentalDiffSchemaRequest {
+  Consistency consistency = 1;
+  string comparison_schema = 2;
+}
+
+message ExperimentalDiffSchemaResponse {
+  repeated ExpSchemaDiff diffs = 1;
+
+  // read_at is the ZedToken at which the schema was read.
+  ZedToken read_at = 2;
+}
+
+message ExpRelationSubjectTypeChange {
+  ExpRelation relation = 1;
+  ExpTypeReference changed_subject_type = 2;
+}
+
+message ExpCaveatParameterTypeChange {
+  ExpCaveatParameter parameter = 1;
+  string previous_type = 2;
+}
+
+// ExpSchemaDiff is the representation of a diff between two schemas.
+message ExpSchemaDiff {
+  oneof diff {
+    ExpDefinition definition_added = 1;
+    ExpDefinition definition_removed = 2;
+    ExpDefinition definition_doc_comment_changed = 3;
+    ExpRelation relation_added = 4;
+    ExpRelation relation_removed = 5;
+    ExpRelation relation_doc_comment_changed = 6;
+    ExpRelationSubjectTypeChange relation_subject_type_added = 7;
+    ExpRelationSubjectTypeChange relation_subject_type_removed = 8;
+    ExpPermission permission_added = 9;
+    ExpPermission permission_removed = 10;
+    ExpPermission permission_doc_comment_changed = 11;
+    ExpPermission permission_expr_changed = 12;
+    ExpCaveat caveat_added = 13;
+    ExpCaveat caveat_removed = 14;
+    ExpCaveat caveat_doc_comment_changed = 15;
+    ExpCaveat caveat_expr_changed = 16;
+    ExpCaveatParameter caveat_parameter_added = 17;
+    ExpCaveatParameter caveat_parameter_removed = 18;
+    ExpCaveatParameterTypeChange caveat_parameter_type_changed = 19;
+  }
 }

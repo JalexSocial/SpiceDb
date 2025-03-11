@@ -10,6 +10,9 @@ SpiceDb.net was created by Michael Tanczos and has contributions from Pavel Akim
 
 ## What's New?
 
+1.6.1
+- updates GRPC dependencies
+
 1.6.0
 - Dropped .NET 7 dependency and introduced new targets for .NET 8 and .NET 9
 

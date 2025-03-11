@@ -3,10 +3,12 @@ package authzed.api.v1;
 
 option go_package = "github.com/authzed/authzed-go/proto/authzed/api/v1";
 option java_package = "com.authzed.api.v1";
+option java_multiple_files = true;
 
 import "google/protobuf/struct.proto";
 import "google/api/annotations.proto";
 import "google/rpc/status.proto";
+import "google/protobuf/timestamp.proto";
 import "validate/validate.proto";
 
 import "authzed/api/v1/core.proto";
@@ -95,6 +97,32 @@ service PermissionsService {
     returns (stream LookupSubjectsResponse) {
       option (google.api.http) = {
         post: "/v1/permissions/subjects"
+        body: "*"
+      };
+    }
+
+  // ImportBulkRelationships is a faster path to writing a large number of
+  // relationships at once. It is both batched and streaming. For maximum
+  // performance, the caller should attempt to write relationships in as close
+  // to relationship sort order as possible: (resource.object_type,
+  // resource.object_id, relation, subject.object.object_type,
+  // subject.object.object_id, subject.optional_relation). All relationships
+  // written are done so under a single transaction.
+  rpc ImportBulkRelationships(stream ImportBulkRelationshipsRequest)
+    returns (ImportBulkRelationshipsResponse) {
+      option (google.api.http) = {
+        post: "/v1/relationships/importbulk"
+        body: "*"
+      };
+    }
+
+  // ExportBulkRelationships is the fastest path available to exporting
+  // relationships from the server. It is resumable, and will return results
+  // in an order determined by the server.
+  rpc ExportBulkRelationships(ExportBulkRelationshipsRequest)
+    returns (stream ExportBulkRelationshipsResponse) {
+      option (google.api.http) = {
+        post: "/v1/relationships/exportbulk"
         body: "*"
       };
     }
@@ -212,7 +240,7 @@ message ReadRelationshipsRequest {
   // before the stream is closed on the server side. By default, the stream will continue
   // resolving relationships until exhausted or the stream is closed due to the client or a
   // network issue.
-  uint32 optional_limit = 3 [(validate.rules).uint32 = {gte:0, lte: 1000}];
+  uint32 optional_limit = 3 [(validate.rules).uint32 = {gte:0}];
 
   // optional_cursor, if specified, indicates the cursor after which results should resume being returned.
   // The cursor can be found on the ReadRelationshipsResponse object.
@@ -256,7 +284,8 @@ message Precondition {
 // WriteRelationshipsRequest contains a list of Relationship mutations that
 // should be applied to the service. If the optional_preconditions parameter
 // is included, all of the specified preconditions must also be satisfied before
-// the write will be committed.
+// the write will be committed. All updates will be applied transactionally,
+// and if any preconditions fail, the entire transaction will be reverted.
 message WriteRelationshipsRequest {
   repeated RelationshipUpdate updates = 1
       [ (validate.rules).repeated .items.message.required = true ];
@@ -264,6 +293,11 @@ message WriteRelationshipsRequest {
   repeated Precondition optional_preconditions = 2
       [ (validate.rules).repeated .items.message.required =
             true ]; // To be bounded by configuration
+
+  // optional_transaction_metadata is an optional field that can be used to store metadata about the transaction.
+  // If specified, this metadata will be supplied in the WatchResponse for the updates associated with this
+  // transaction.
+  google.protobuf.Struct optional_transaction_metadata = 3 [ (validate.rules).message.required = false ];
 }
 
 message WriteRelationshipsResponse { ZedToken written_at = 1; }
@@ -286,11 +320,16 @@ message DeleteRelationshipsRequest {
   // the deletion call will fail with an error to prevent partial deletion. If partial deletion
   // is needed, specify below that partial deletion is allowed. Partial deletions can be used
   // in a loop to delete large amounts of relationships in a *non-transactional* manner.
-  uint32 optional_limit = 3 [(validate.rules).uint32 = {gte:0, lte: 1000}];
+  uint32 optional_limit = 3 [(validate.rules).uint32 = {gte:0}];
 
   // optional_allow_partial_deletions, if true and a limit is specified, will delete matching found
   // relationships up to the count specified in optional_limit, and no more.
   bool optional_allow_partial_deletions = 4;
+
+  // optional_transaction_metadata is an optional field that can be used to store metadata about the transaction.
+  // If specified, this metadata will be supplied in the WatchResponse for the deletions associated with
+  // this transaction.
+  google.protobuf.Struct optional_transaction_metadata = 5 [ (validate.rules).message.required = false ];
 }
 
 message DeleteRelationshipsResponse {
@@ -367,6 +406,10 @@ message CheckPermissionResponse {
 
   // debug_trace is the debugging trace of this check, if requested.
   DebugInformation debug_trace = 4;
+
+  // optional_expires_at is the time at which at least one of the relationships used to
+  // compute this result, expires (if any). This is *not* related to the caching window.
+  google.protobuf.Timestamp optional_expires_at = 5;
 }
 
 // CheckBulkPermissionsRequest issues a check on whether a subject has permission 
@@ -378,6 +421,11 @@ message CheckBulkPermissionsRequest {
   Consistency consistency = 1;
 
   repeated CheckBulkPermissionsRequestItem items = 2 [ (validate.rules).repeated .items.message.required = true ];
+
+  // with_tracing, if true, indicates that each response should include a debug trace.
+  // This can be useful for debugging and performance analysis, but adds a small amount
+  // of compute overhead to the request.
+  bool with_tracing = 3;
 }
 
 message CheckBulkPermissionsRequestItem {
@@ -411,6 +459,9 @@ message CheckBulkPermissionsResponseItem {
   CheckPermissionResponse.Permissionship permissionship = 1 [ (validate.rules).enum = {defined_only: true, not_in: [0]} ];
 
   PartialCaveatInfo partial_caveat_info = 2 [ (validate.rules).message.required = false ];
+
+  // debug_trace is the debugging trace of this check, if requested.
+  DebugInformation debug_trace = 3;
 }
 
 // ExpandPermissionTreeRequest returns a tree representing the expansion of all
@@ -473,7 +524,7 @@ message LookupResourcesRequest {
   // before the stream is closed on the server side. By default, the stream will continue
   // resolving resources until exhausted or the stream is closed due to the client or a
   // network issue.
-  uint32 optional_limit = 6 [(validate.rules).uint32 = {gte:0, lte: 1000}];
+  uint32 optional_limit = 6 [(validate.rules).uint32 = {gte:0}];
 
   // optional_cursor, if specified, indicates the cursor after which results should resume being returned.
   // The cursor can be found on the LookupResourcesResponse object.
@@ -566,7 +617,7 @@ message LookupSubjectsRequest {
   // for each invocation of the API.
   //
   // ***IT IS UP TO THE CALLER IN THIS CASE TO COMBINE THE EXCLUSIONS IF DESIRED***
-  uint32 optional_concrete_limit = 7 [(validate.rules).uint32 = {gte:0, lte: 1000}];
+  uint32 optional_concrete_limit = 7 [(validate.rules).uint32 = {gte:0}];
 
   // optional_cursor, if specified, indicates the cursor after which results should resume being returned.
   // The cursor can be found on the LookupSubjectsResponse object.
@@ -627,4 +678,52 @@ message ResolvedSubject {
 
   // partial_caveat_info holds information of a partially-evaluated caveated response
   PartialCaveatInfo partial_caveat_info = 3 [ (validate.rules).message.required = false ];
+}
+
+// ImportBulkRelationshipsRequest represents one batch of the streaming
+// ImportBulkRelationships API. The maximum size is only limited by the backing
+// datastore, and optimal size should be determined by the calling client
+// experimentally. When ImportBulk is invoked and receives its first request message,
+// a transaction is opened to import the relationships. All requests sent to the same
+// invocation are executed under this single transaction. If a relationship already
+// exists within the datastore, the entire transaction will fail with an error.
+message ImportBulkRelationshipsRequest {
+  repeated Relationship relationships = 1
+      [ (validate.rules).repeated .items.message.required = true ];
+}
+
+// ImportBulkRelationshipsResponse is returned on successful completion of the
+// bulk load stream, and contains the total number of relationships loaded.
+message ImportBulkRelationshipsResponse {
+  uint64 num_loaded = 1;
+}
+
+// ExportBulkRelationshipsRequest represents a resumable request for
+// all relationships from the server.
+message ExportBulkRelationshipsRequest {
+  Consistency consistency = 1;
+
+  // optional_limit, if non-zero, specifies the limit on the number of
+  // relationships the server can return in one page. By default, the server
+  // will pick a page size, and the server is free to choose a smaller size
+  // at will.
+  uint32 optional_limit = 2 [(validate.rules).uint32 = {gte:0}];
+
+  // optional_cursor, if specified, indicates the cursor after which results
+  // should resume being returned. The cursor can be found on the
+  // BulkExportRelationshipsResponse object.
+  Cursor optional_cursor = 3;
+
+  // optional_relationship_filter, if specified, indicates the
+  // filter to apply to each relationship to be exported.
+  RelationshipFilter optional_relationship_filter = 4;
+}
+
+// ExportBulkRelationshipsResponse is one page in a stream of relationship
+// groups that meet the criteria specified by the originating request. The
+// server will continue to stream back relationship groups as quickly as it can
+// until all relationships have been transmitted back.
+message ExportBulkRelationshipsResponse {
+  Cursor after_result_cursor  = 1;
+  repeated Relationship relationships = 2;
 }

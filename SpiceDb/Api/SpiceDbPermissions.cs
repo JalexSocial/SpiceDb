@@ -327,7 +327,8 @@ internal class SpiceDbPermissions
         {
             req.Consistency.FullyConsistent = true;
         }
-        var call = _acl!.ReadRelationships(req);
+        
+        using var call = _acl!.ReadRelationships(req);
 
         await foreach (var resp in call.ResponseStream.ReadAllAsync())
         {

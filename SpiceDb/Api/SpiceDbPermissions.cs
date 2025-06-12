@@ -48,7 +48,7 @@ internal class SpiceDbPermissions
         }
 
         //Server streaming call, reads messages streamed from the service
-        var call = _acl!.LookupResources(req);
+        using var call = _acl!.LookupResources(req);
 
         var list = new List<string>();
 
@@ -112,7 +112,7 @@ internal class SpiceDbPermissions
             req.Consistency.FullyConsistent = true;
         }
 
-        var call = await _acl!.CheckPermissionAsync(req);
+        using var call = await _acl!.CheckPermissionAsync(req);
 
         return new PermissionResponse
         {
@@ -145,7 +145,7 @@ internal class SpiceDbPermissions
             req.Consistency.FullyConsistent = true;
         }
 
-        var call = await _acl!.CheckBulkPermissionsAsync(req);
+        using var call = await _acl!.CheckBulkPermissionsAsync(req);
 
         if (call == null)
             return null;
@@ -206,7 +206,7 @@ internal class SpiceDbPermissions
             req.Consistency.FullyConsistent = true;
         }
 
-        var call = _acl!.LookupSubjects(req);
+        using var call = _acl!.LookupSubjects(req);
 
         await foreach (var resp in call.ResponseStream.ReadAllAsync())
         {
@@ -271,7 +271,7 @@ internal class SpiceDbPermissions
             req.Consistency.FullyConsistent = true;
         }
 
-        var call = _acl!.LookupResources(req);
+        using var call = _acl!.LookupResources(req);
 
 
         await foreach (var resp in call.ResponseStream.ReadAllAsync())

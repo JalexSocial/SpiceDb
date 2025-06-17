@@ -112,7 +112,7 @@ internal class SpiceDbPermissions
             req.Consistency.FullyConsistent = true;
         }
 
-        using var call = await _acl!.CheckPermissionAsync(req);
+        var call = await _acl!.CheckPermissionAsync(req);
 
         return new PermissionResponse
         {
@@ -145,7 +145,7 @@ internal class SpiceDbPermissions
             req.Consistency.FullyConsistent = true;
         }
 
-        using var call = await _acl!.CheckBulkPermissionsAsync(req);
+        var call = await _acl!.CheckBulkPermissionsAsync(req);
 
         if (call == null)
             return null;

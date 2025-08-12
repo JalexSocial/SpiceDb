@@ -4,5 +4,6 @@ public enum CacheFreshness
 {
     AnyFreshness,
     AtLeastAsFreshAs,
-    MustRefresh
+    MustRefresh,
+    AtExactSnapshot
 }

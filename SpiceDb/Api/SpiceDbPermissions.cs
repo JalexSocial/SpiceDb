@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using Authzed.Api.V1;
 using Google.Protobuf.Collections;
 using Grpc.Core;
@@ -32,20 +31,11 @@ internal class SpiceDbPermissions
     {
         LookupResourcesRequest req = new LookupResourcesRequest
         {
-            Consistency = new Authzed.Api.V1.Consistency { MinimizeLatency = true, AtExactSnapshot = zedToken },
+            Consistency = CreateConsistency(zedToken, cacheFreshness),
             Permission = permission,
             ResourceObjectType = resourceType,
             Subject = new SubjectReference { Object = new ObjectReference { ObjectType = subjectType, ObjectId = subjectId } }
         };
-
-        if (cacheFreshness == CacheFreshness.AtLeastAsFreshAs)
-        {
-            req.Consistency.AtLeastAsFresh = zedToken;
-        }
-        else if (cacheFreshness == CacheFreshness.MustRefresh || zedToken == null)
-        {
-            req.Consistency.FullyConsistent = true;
-        }
 
         //Server streaming call, reads messages streamed from the service
         using var call = _acl!.LookupResources(req);
@@ -68,19 +58,10 @@ internal class SpiceDbPermissions
     {
         var req = new ExpandPermissionTreeRequest
         {
-            Consistency = new Consistency { MinimizeLatency = true, AtExactSnapshot = zedToken },
+            Consistency = CreateConsistency(zedToken, cacheFreshness),
             Permission = permission,
             Resource = new ObjectReference { ObjectType = resourceType, ObjectId = resourceId }
         };
-
-        if (cacheFreshness == CacheFreshness.AtLeastAsFreshAs)
-        {
-            req.Consistency.AtLeastAsFresh = zedToken;
-        }
-        else if (cacheFreshness == CacheFreshness.MustRefresh || zedToken == null)
-        {
-            req.Consistency.FullyConsistent = true;
-        }
 
         return await _acl!.ExpandPermissionTreeAsync(req);
     }
@@ -96,21 +77,12 @@ internal class SpiceDbPermissions
     {
         var req = new CheckPermissionRequest
         {
-            Consistency = new Consistency { MinimizeLatency = true, AtExactSnapshot = zedToken },
+            Consistency = CreateConsistency(zedToken, cacheFreshness),
             Permission = permission,
             Resource = new ObjectReference { ObjectType = resourceType, ObjectId = resourceId },
             Subject = new SubjectReference { Object = new ObjectReference { ObjectType = subjectType, ObjectId = subjectId } },
             Context = context?.ToStruct()
         };
-
-        if (cacheFreshness == CacheFreshness.AtLeastAsFreshAs)
-        {
-            req.Consistency.AtLeastAsFresh = zedToken;
-        }
-        else if (cacheFreshness == CacheFreshness.MustRefresh || zedToken == null)
-        {
-            req.Consistency.FullyConsistent = true;
-        }
 
         var call = await _acl!.CheckPermissionAsync(req);
 
@@ -131,19 +103,10 @@ internal class SpiceDbPermissions
     {
         var req = new CheckBulkPermissionsRequest()
         {
-            Consistency = new Consistency { MinimizeLatency = true, AtExactSnapshot = zedToken },
+            Consistency = CreateConsistency(zedToken, cacheFreshness),
         };
 
         req.Items.AddRange(items);
-
-        if (cacheFreshness == CacheFreshness.AtLeastAsFreshAs)
-        {
-            req.Consistency.AtLeastAsFresh = zedToken;
-        }
-        else if (cacheFreshness == CacheFreshness.MustRefresh || zedToken == null)
-        {
-            req.Consistency.FullyConsistent = true;
-        }
 
         var call = await _acl!.CheckBulkPermissionsAsync(req);
 
@@ -189,23 +152,14 @@ internal class SpiceDbPermissions
     {
         LookupSubjectsRequest req = new LookupSubjectsRequest
         {
-            Consistency = new Consistency { MinimizeLatency = true, AtExactSnapshot = zedToken },
+            Consistency = CreateConsistency(zedToken, cacheFreshness),
             Resource = new ObjectReference { ObjectType = resourceType, ObjectId = resourceId },
             Permission = permission,
             SubjectObjectType = subjectType,
             OptionalSubjectRelation = optionalSubjectRelation,
             Context = context?.ToStruct()
         };
-
-        if (cacheFreshness == CacheFreshness.AtLeastAsFreshAs)
-        {
-            req.Consistency.AtLeastAsFresh = zedToken;
-        }
-        else if (cacheFreshness == CacheFreshness.MustRefresh || zedToken == null)
-        {
-            req.Consistency.FullyConsistent = true;
-        }
-
+        
         using var call = _acl!.LookupSubjects(req);
 
         await foreach (var resp in call.ResponseStream.ReadAllAsync())
@@ -251,7 +205,7 @@ internal class SpiceDbPermissions
     {
         LookupResourcesRequest req = new LookupResourcesRequest
         {
-            Consistency = new Consistency { MinimizeLatency = true, AtExactSnapshot = zedToken },
+            Consistency = CreateConsistency(zedToken, cacheFreshness),
             ResourceObjectType = resourceType,
             Permission = permission,
             Subject = new SubjectReference
@@ -262,17 +216,7 @@ internal class SpiceDbPermissions
             Context = context?.ToStruct()
         };
 
-        if (cacheFreshness == CacheFreshness.AtLeastAsFreshAs)
-        {
-            req.Consistency.AtLeastAsFresh = zedToken;
-        }
-        else if (cacheFreshness == CacheFreshness.MustRefresh || zedToken == null)
-        {
-            req.Consistency.FullyConsistent = true;
-        }
-
         using var call = _acl!.LookupResources(req);
-
 
         await foreach (var resp in call.ResponseStream.ReadAllAsync())
         {
@@ -310,7 +254,7 @@ internal class SpiceDbPermissions
 
         ReadRelationshipsRequest req = new ReadRelationshipsRequest()
         {
-            Consistency = new Consistency { MinimizeLatency = true, AtExactSnapshot = zedToken },
+            Consistency = CreateConsistency(zedToken, cacheFreshness),
             RelationshipFilter = CreateRelationshipFilter(resourceType, optionalResourceId, optionalRelation, optionalSubjectType, optionalSubjectId, optionalSubjectRelation),
             OptionalLimit = limit != null ? Math.Clamp((uint)limit, 0, 1000) : 0,
             OptionalCursor = cursor is null ? null : new Authzed.Api.V1.Cursor
@@ -318,15 +262,6 @@ internal class SpiceDbPermissions
                 Token = cursor.Token
             }
         };
-
-        if (cacheFreshness == CacheFreshness.AtLeastAsFreshAs)
-        {
-            req.Consistency.AtLeastAsFresh = zedToken;
-        }
-        else if (cacheFreshness == CacheFreshness.MustRefresh || zedToken == null)
-        {
-            req.Consistency.FullyConsistent = true;
-        }
         
         using var call = _acl!.ReadRelationships(req);
 
@@ -354,7 +289,6 @@ internal class SpiceDbPermissions
             yield return response;
         }
     }
-
 
     public bool UpdateRelationships(ref RepeatedField<RelationshipUpdate> updateCollection, RelationshipUpdate updateItem, bool addOrDelete = true)
     {
@@ -419,8 +353,7 @@ internal class SpiceDbPermissions
             }
         };
     }
-
-
+    
     public async Task<WriteRelationshipsResponse> WriteRelationshipsAsync(RepeatedField<RelationshipUpdate> updateCollection, RepeatedField<Authzed.Api.V1.Precondition>? optionalPreconditions = null)
     {
         WriteRelationshipsRequest req = new WriteRelationshipsRequest()
@@ -431,8 +364,6 @@ internal class SpiceDbPermissions
 
         return await _acl!.WriteRelationshipsAsync(req);
     }
-
-
 
     public async Task<ZedToken> UpdateRelationshipAsync(string resourceType, string resourceId, string relation,
            string subjectType, string subjectId, string optionalSubjectRelation = "",
@@ -495,4 +426,15 @@ internal class SpiceDbPermissions
 
         return filter;
     }
+
+    private static Consistency CreateConsistency(ZedToken? zedToken, CacheFreshness cacheFreshness) =>
+        (cacheFreshness, zedToken) switch
+        {
+            (CacheFreshness.AnyFreshness, _) => new Consistency { MinimizeLatency = true },
+            (CacheFreshness.MustRefresh, _) => new Consistency { FullyConsistent = true},
+            (CacheFreshness.AtLeastAsFreshAs, not null) => new Consistency { AtLeastAsFresh = zedToken },
+            (CacheFreshness.AtExactSnapshot, not null) => new Consistency { AtExactSnapshot = zedToken },
+            (CacheFreshness.AtExactSnapshot or CacheFreshness.AtLeastAsFreshAs, null) => throw new ArgumentException("ZedToken must be provided when using AtExactSnapshot or AtLeastAsFreshAs"),
+            _ => throw new ArgumentOutOfRangeException(nameof(cacheFreshness), cacheFreshness, "Invalid cache freshness value")
+        };
 }
